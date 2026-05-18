@@ -28,6 +28,14 @@ localPort = 8081
 externalPort = 80
 
 [[ports]]
+localPort = 8082
+externalPort = 3002
+
+[[ports]]
+localPort = 8083
+externalPort = 3001
+
+[[ports]]
 localPort = 26082
 externalPort = 3000
 
@@ -35,6 +43,3 @@ externalPort = 3000
 channel = "stable-25_05"
 
 [userenv]
-
-[userenv.shared]
-ANTHROPIC_API_KEY = "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"
