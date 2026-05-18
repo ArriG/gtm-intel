@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccountBrief,
+  AccountBriefInput,
   Battlecard,
   BattlecardInput,
   BattlecardUpdate,
@@ -47,6 +49,77 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getGenerateAccountBriefUrl = () => {
+
+
+
+
+  return `/api/account-brief`
+}
+
+/**
+ * @summary Generate an AI-powered account brief for a company URL
+ */
+export const generateAccountBrief = async (accountBriefInput: AccountBriefInput, options?: RequestInit): Promise<AccountBrief> => {
+
+  return customFetch<AccountBrief>(getGenerateAccountBriefUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      accountBriefInput,)
+  }
+);}
+
+
+
+
+export const getGenerateAccountBriefMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateAccountBrief>>, TError,{data: BodyType<AccountBriefInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateAccountBrief>>, TError,{data: BodyType<AccountBriefInput>}, TContext> => {
+
+const mutationKey = ['generateAccountBrief'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateAccountBrief>>, {data: BodyType<AccountBriefInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateAccountBrief(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateAccountBriefMutationResult = NonNullable<Awaited<ReturnType<typeof generateAccountBrief>>>
+    export type GenerateAccountBriefMutationBody = BodyType<AccountBriefInput>
+    export type GenerateAccountBriefMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate an AI-powered account brief for a company URL
+ */
+export const useGenerateAccountBrief = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateAccountBrief>>, TError,{data: BodyType<AccountBriefInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateAccountBrief>>,
+        TError,
+        {data: BodyType<AccountBriefInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateAccountBriefMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

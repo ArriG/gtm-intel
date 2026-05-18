@@ -20,8 +20,29 @@ tags:
     description: Market signals and intel
   - name: dashboard
     description: Dashboard summaries
+  - name: account-brief
+    description: AI-powered account brief generation
 
 paths:
+  /account-brief:
+    post:
+      operationId: generateAccountBrief
+      tags: [account-brief]
+      summary: Generate an AI-powered account brief for a company URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountBriefInput"
+      responses:
+        "200":
+          description: Generated account brief
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountBrief"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -813,3 +834,73 @@ components:
           type: string
         reviewed:
           type: boolean
+
+    AccountBriefInput:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+
+    BuyingCommitteeMember:
+      type: object
+      required:
+        - title
+        - painPoint
+      properties:
+        title:
+          type: string
+        painPoint:
+          type: string
+
+    AccountBrief:
+      type: object
+      required:
+        - companySnapshot
+        - icpFitScore
+        - buyingCommittee
+        - topPainPoints
+        - recentNews
+        - suggestedOpeningLine
+      properties:
+        companySnapshot:
+          type: object
+          required:
+            - size
+            - industry
+            - location
+            - fundingStage
+          properties:
+            size:
+              type: string
+            industry:
+              type: string
+            location:
+              type: string
+            fundingStage:
+              type: string
+        icpFitScore:
+          type: object
+          required:
+            - score
+            - reason
+          properties:
+            score:
+              type: integer
+            reason:
+              type: string
+        buyingCommittee:
+          type: array
+          items:
+            $ref: "#/components/schemas/BuyingCommitteeMember"
+        topPainPoints:
+          type: array
+          items:
+            type: string
+        recentNews:
+          type: array
+          items:
+            type: string
+        suggestedOpeningLine:
+          type: string

@@ -9,6 +9,34 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Generate an AI-powered account brief for a company URL
+ */
+export const GenerateAccountBriefBody = zod.object({
+  "url": zod.string()
+})
+
+export const GenerateAccountBriefResponse = zod.object({
+  "companySnapshot": zod.object({
+  "size": zod.string(),
+  "industry": zod.string(),
+  "location": zod.string(),
+  "fundingStage": zod.string()
+}),
+  "icpFitScore": zod.object({
+  "score": zod.number(),
+  "reason": zod.string()
+}),
+  "buyingCommittee": zod.array(zod.object({
+  "title": zod.string(),
+  "painPoint": zod.string()
+})),
+  "topPainPoints": zod.array(zod.string()),
+  "recentNews": zod.array(zod.string()),
+  "suggestedOpeningLine": zod.string()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

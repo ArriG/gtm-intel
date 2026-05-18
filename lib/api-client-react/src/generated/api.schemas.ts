@@ -258,3 +258,33 @@ export interface SignalUpdate {
   reviewed?: boolean;
 }
 
+export interface AccountBriefInput {
+  url: string;
+}
+
+export interface BuyingCommitteeMember {
+  title: string;
+  painPoint: string;
+}
+
+export type AccountBriefCompanySnapshot = {
+  size: string;
+  industry: string;
+  location: string;
+  fundingStage: string;
+};
+
+export type AccountBriefIcpFitScore = {
+  score: number;
+  reason: string;
+};
+
+export interface AccountBrief {
+  companySnapshot: AccountBriefCompanySnapshot;
+  icpFitScore: AccountBriefIcpFitScore;
+  buyingCommittee: BuyingCommitteeMember[];
+  topPainPoints: string[];
+  recentNews: string[];
+  suggestedOpeningLine: string;
+}
+

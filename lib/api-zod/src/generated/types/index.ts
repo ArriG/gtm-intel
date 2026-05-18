@@ -6,9 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountBrief';
+export * from './accountBriefCompanySnapshot';
+export * from './accountBriefIcpFitScore';
+export * from './accountBriefInput';
 export * from './battlecard';
 export * from './battlecardInput';
 export * from './battlecardUpdate';
+export * from './buyingCommitteeMember';
 export * from './competitor';
 export * from './competitorInput';
 export * from './competitorInputTier';
