@@ -3,13 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GTM Intelligence API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: competitors
+    description: Competitor tracking
+  - name: icps
+    description: Ideal Customer Profiles
+  - name: battlecards
+    description: Competitive battlecards
+  - name: signals
+    description: Market signals and intel
+  - name: dashboard
+    description: Dashboard summaries
+
 paths:
   /healthz:
     get:
@@ -24,6 +35,357 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /competitors:
+    get:
+      operationId: listCompetitors
+      tags: [competitors]
+      summary: List all competitors
+      responses:
+        "200":
+          description: List of competitors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Competitor"
+    post:
+      operationId: createCompetitor
+      tags: [competitors]
+      summary: Create a competitor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompetitorInput"
+      responses:
+        "201":
+          description: Created competitor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competitor"
+
+  /competitors/{id}:
+    get:
+      operationId: getCompetitor
+      tags: [competitors]
+      summary: Get competitor by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Competitor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competitor"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCompetitor
+      tags: [competitors]
+      summary: Update competitor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompetitorUpdate"
+      responses:
+        "200":
+          description: Updated competitor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competitor"
+    delete:
+      operationId: deleteCompetitor
+      tags: [competitors]
+      summary: Delete competitor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /icps:
+    get:
+      operationId: listIcps
+      tags: [icps]
+      summary: List all ICPs
+      responses:
+        "200":
+          description: List of ICPs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Icp"
+    post:
+      operationId: createIcp
+      tags: [icps]
+      summary: Create an ICP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IcpInput"
+      responses:
+        "201":
+          description: Created ICP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Icp"
+
+  /icps/{id}:
+    get:
+      operationId: getIcp
+      tags: [icps]
+      summary: Get ICP by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: ICP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Icp"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateIcp
+      tags: [icps]
+      summary: Update ICP
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IcpUpdate"
+      responses:
+        "200":
+          description: Updated ICP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Icp"
+    delete:
+      operationId: deleteIcp
+      tags: [icps]
+      summary: Delete ICP
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /battlecards:
+    get:
+      operationId: listBattlecards
+      tags: [battlecards]
+      summary: List all battlecards
+      responses:
+        "200":
+          description: List of battlecards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Battlecard"
+    post:
+      operationId: createBattlecard
+      tags: [battlecards]
+      summary: Create a battlecard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BattlecardInput"
+      responses:
+        "201":
+          description: Created battlecard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Battlecard"
+
+  /battlecards/{id}:
+    get:
+      operationId: getBattlecard
+      tags: [battlecards]
+      summary: Get battlecard by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Battlecard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Battlecard"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBattlecard
+      tags: [battlecards]
+      summary: Update battlecard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BattlecardUpdate"
+      responses:
+        "200":
+          description: Updated battlecard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Battlecard"
+    delete:
+      operationId: deleteBattlecard
+      tags: [battlecards]
+      summary: Delete battlecard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /signals:
+    get:
+      operationId: listSignals
+      tags: [signals]
+      summary: List market signals
+      responses:
+        "200":
+          description: List of signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+    post:
+      operationId: createSignal
+      tags: [signals]
+      summary: Create a market signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalInput"
+      responses:
+        "201":
+          description: Created signal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Signal"
+
+  /signals/{id}:
+    patch:
+      operationId: updateSignal
+      tags: [signals]
+      summary: Update signal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalUpdate"
+      responses:
+        "200":
+          description: Updated signal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Signal"
+    delete:
+      operationId: deleteSignal
+      tags: [signals]
+      summary: Delete signal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +396,420 @@ components:
       required:
         - status
 
+    DashboardSummary:
+      type: object
+      required:
+        - competitorCount
+        - icpCount
+        - battlecardCount
+        - signalCount
+        - recentSignals
+        - topCompetitors
+      properties:
+        competitorCount:
+          type: integer
+        icpCount:
+          type: integer
+        battlecardCount:
+          type: integer
+        signalCount:
+          type: integer
+        recentSignals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Signal"
+        topCompetitors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Competitor"
+
+    Competitor:
+      type: object
+      required:
+        - id
+        - name
+        - website
+        - tier
+        - strengths
+        - weaknesses
+        - targetSegment
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        website:
+          type: string
+        tier:
+          type: string
+          enum: [primary, secondary, emerging]
+        tagline:
+          type: ["string", "null"]
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        targetSegment:
+          type: string
+        pricing:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CompetitorInput:
+      type: object
+      required:
+        - name
+        - website
+        - tier
+        - strengths
+        - weaknesses
+        - targetSegment
+      properties:
+        name:
+          type: string
+        website:
+          type: string
+        tier:
+          type: string
+          enum: [primary, secondary, emerging]
+        tagline:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        targetSegment:
+          type: string
+        pricing:
+          type: string
+        notes:
+          type: string
+
+    CompetitorUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        website:
+          type: string
+        tier:
+          type: string
+          enum: [primary, secondary, emerging]
+        tagline:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        targetSegment:
+          type: string
+        pricing:
+          type: string
+        notes:
+          type: string
+
+    Icp:
+      type: object
+      required:
+        - id
+        - name
+        - industry
+        - companySize
+        - painPoints
+        - goals
+        - channels
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        industry:
+          type: string
+        companySize:
+          type: string
+        jobTitles:
+          type: array
+          items:
+            type: string
+        painPoints:
+          type: array
+          items:
+            type: string
+        goals:
+          type: array
+          items:
+            type: string
+        channels:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    IcpInput:
+      type: object
+      required:
+        - name
+        - industry
+        - companySize
+        - painPoints
+        - goals
+        - channels
+      properties:
+        name:
+          type: string
+        industry:
+          type: string
+        companySize:
+          type: string
+        jobTitles:
+          type: array
+          items:
+            type: string
+        painPoints:
+          type: array
+          items:
+            type: string
+        goals:
+          type: array
+          items:
+            type: string
+        channels:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    IcpUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        industry:
+          type: string
+        companySize:
+          type: string
+        jobTitles:
+          type: array
+          items:
+            type: string
+        painPoints:
+          type: array
+          items:
+            type: string
+        goals:
+          type: array
+          items:
+            type: string
+        channels:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    Battlecard:
+      type: object
+      required:
+        - id
+        - competitorId
+        - competitorName
+        - ourStrengths
+        - theirStrengths
+        - objections
+        - winThemes
+        - createdAt
+      properties:
+        id:
+          type: integer
+        competitorId:
+          type: integer
+        competitorName:
+          type: string
+        ourStrengths:
+          type: array
+          items:
+            type: string
+        theirStrengths:
+          type: array
+          items:
+            type: string
+        objections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Objection"
+        winThemes:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    Objection:
+      type: object
+      required:
+        - objection
+        - response
+      properties:
+        objection:
+          type: string
+        response:
+          type: string
+
+    BattlecardInput:
+      type: object
+      required:
+        - competitorId
+        - competitorName
+        - ourStrengths
+        - theirStrengths
+        - objections
+        - winThemes
+      properties:
+        competitorId:
+          type: integer
+        competitorName:
+          type: string
+        ourStrengths:
+          type: array
+          items:
+            type: string
+        theirStrengths:
+          type: array
+          items:
+            type: string
+        objections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Objection"
+        winThemes:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    BattlecardUpdate:
+      type: object
+      properties:
+        ourStrengths:
+          type: array
+          items:
+            type: string
+        theirStrengths:
+          type: array
+          items:
+            type: string
+        objections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Objection"
+        winThemes:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    Signal:
+      type: object
+      required:
+        - id
+        - title
+        - type
+        - source
+        - importance
+        - reviewed
+        - createdAt
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        type:
+          type: string
+          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
+        source:
+          type: string
+        importance:
+          type: string
+          enum: [high, medium, low]
+        competitorId:
+          type: ["integer", "null"]
+        competitorName:
+          type: ["string", "null"]
+        reviewed:
+          type: boolean
+        createdAt:
+          type: string
+
+    SignalInput:
+      type: object
+      required:
+        - title
+        - type
+        - source
+        - importance
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
+        source:
+          type: string
+        importance:
+          type: string
+          enum: [high, medium, low]
+        competitorId:
+          type: integer
+        competitorName:
+          type: string
+
+    SignalUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
+        source:
+          type: string
+        importance:
+          type: string
+          enum: [high, medium, low]
+        competitorId:
+          type: integer
+        competitorName:
+          type: string
+        reviewed:
+          type: boolean
