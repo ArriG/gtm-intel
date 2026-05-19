@@ -12,17 +12,17 @@ import Battlecards from "@/pages/battlecards";
 import BattlecardDetail from "@/pages/battlecard-detail";
 import Signals from "@/pages/signals";
 import AccountBriefPage from "@/pages/account-brief";
-import { LayoutDashboard, Shield, Users, Swords, Activity, Sparkles } from "lucide-react";
+import { LayoutDashboard, Shield, Users, Swords, Activity, Search } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 const NAV_LINKS = [
+  { href: "/account-brief", label: "Search Companies", icon: Search },
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/competitors", label: "Competitors", icon: Shield },
   { href: "/icps", label: "ICPs", icon: Users },
   { href: "/battlecards", label: "Battlecards", icon: Swords },
   { href: "/signals", label: "Signals Feed", icon: Activity },
-  { href: "/account-brief", label: "Account Brief", icon: Sparkles },
 ];
 
 function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
