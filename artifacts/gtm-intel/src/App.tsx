@@ -123,8 +123,11 @@ function SourceChips({ sources, sectionId }: { sources?: BriefSource[]; sectionI
   const [open, setOpen] = useState(false);
   if (!sources || sources.length === 0) return null;
 
-  const verifiedCount = sources.filter(s => s.confidence === "verified").length;
-  const assumedCount = sources.filter(s => s.confidence === "assumed").length;
+  const safeSources = sources.filter(Boolean) as BriefSource[];
+  if (safeSources.length === 0) return null;
+
+  const verifiedCount = safeSources.filter(s => s.confidence === "verified").length;
+  const assumedCount = safeSources.filter(s => s.confidence === "assumed").length;
 
   return (
     <div className="mt-3">
@@ -133,24 +136,28 @@ function SourceChips({ sources, sectionId }: { sources?: BriefSource[]; sectionI
         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <div className="flex gap-1">
-          {sources.slice(0, 4).map((s, i) => {
+          {safeSources.slice(0, 4).map((s, i) => {
             const cfg = SOURCE_CONFIG[s.type] || SOURCE_CONFIG.web;
             return (
               <span key={i} style={{ background: cfg.bg, color: cfg.color, border: `0.5px solid ${cfg.border}` }}
                 className="text-[10px] font-medium px-2 py-0.5 rounded-full">{cfg.label}</span>
             );
           })}
-          {sources.length > 4 && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">+{sources.length - 4}</span>}
+          {safeSources.length > 4 && (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              +{safeSources.length - 4}
+            </span>
+          )}
         </div>
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
-        <span>{sources.length} source{sources.length !== 1 ? "s" : ""}</span>
+        <span>{safeSources.length} source{safeSources.length !== 1 ? "s" : ""}</span>
         {verifiedCount > 0 && <span className="text-green-600 font-medium">· {verifiedCount} verified</span>}
         {assumedCount > 0 && <span className="text-orange-500 font-medium">· {assumedCount} inferred</span>}
       </button>
 
       {open && (
         <div className="mt-2 bg-muted/30 rounded-lg border border-border overflow-hidden">
-          {sources.map((s, i) => {
+          {safeSources.map((s, i) => {
             const cfg = SOURCE_CONFIG[s.type] || SOURCE_CONFIG.web;
             return (
               <div key={i} className="flex items-start gap-3 px-3 py-2.5 border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
@@ -485,7 +492,7 @@ export default function AccountBriefPage() {
 
   const copyAll = () => {
     if (!brief) return "";
-    return `GTM BRIEF: ${lastLabel}\n\nCOMPANY\n${brief.companySnapshot.size} | ${brief.companySnapshot.industry} | ${brief.companySnapshot.location} | ${brief.companySnapshot.fundingStage}\n\nICP FIT: ${brief.icpFitScore.score}/10\n${brief.icpFitScore.reason}\n\nTHEIR WORLD\n${brief.theirWorld.narrative}\n\nBUYING COMMITTEE\n${brief.buyingCommittee.map(p => `• ${p.title}: ${p.painPoint}`).join("\n")}\n\nRECENT TRIGGERS\n${brief.recentTriggers.items.map(t => `• ${t.event} (${t.recency})`).join("\n")}\n\nCOLD EMAIL\n${brief.coldEmail.fullEmail || brief.coldEmail.opener}`;
+    return `GTM BRIEF: ${lastLabel}\n\nCOMPANY\n${brief.companySnapshot.size} | ${brief.companySnapshot.industry} | ${brief.companySnapshot.location} | ${brief.companySnapshot.fundingStage}\n\nICP FIT: ${brief.icpFitScore.score}/10\n${brief.icpFitScore.reason}\n\nTHEIR WORLD\n${brief.theirWorld?.narrative ?? ""}\n\nBUYING COMMITTEE\n${brief.buyingCommittee.map(p => `• ${p.title}: ${p.painPoint}`).join("\n")}\n\nRECENT TRIGGERS\n${(brief.recentTriggers?.items ?? []).map(t => `• ${t.event} (${t.recency})`).join("\n")}\n\nCOLD EMAIL\n${brief.coldEmail?.fullEmail || brief.coldEmail?.opener || ""}`;
   };
 
   return (
@@ -574,7 +581,7 @@ export default function AccountBriefPage() {
                   {brief.theirWorld?.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
 
                 </CardTitle>
-                <CopyButton getText={() => brief.theirWorld.narrative} />
+                <CopyButton getText={() => brief.theirWorld?.narrative ?? ""} />
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-foreground leading-relaxed">{brief.theirWorld?.narrative ?? ""}</p>
@@ -616,7 +623,7 @@ export default function AccountBriefPage() {
                   <Newspaper className="w-4 h-4 text-purple-500" />Recent Triggers & News
                   <Badge variant="outline" className="text-xs font-mono gap-1 hidden sm:flex"><Globe className="w-2.5 h-2.5" />live search</Badge>
                 </CardTitle>
-                <CopyButton getText={() => brief.recentTriggers.items.map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
+                <CopyButton getText={() => (brief.recentTriggers?.items ?? []).map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
               </CardHeader>
               <CardContent>
                 <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
@@ -631,7 +638,7 @@ export default function AccountBriefPage() {
                     </div>
                   ))}
                 </div>
-                <SourceChips sources={brief.recentTriggers.sources} sectionId="triggers" />
+                <SourceChips sources={brief.recentTriggers?.sources} sectionId="triggers" />
               </CardContent>
             </Card>
 
@@ -643,14 +650,14 @@ export default function AccountBriefPage() {
                   <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-muted-foreground">
                     {showFullEmail ? "Show opener" : "Show full email"}
                   </Button>
-                  <CopyButton getText={() => showFullEmail && brief.coldEmail.fullEmail ? brief.coldEmail.fullEmail : brief.coldEmail.opener} />
+                  <CopyButton getText={() => showFullEmail && brief.coldEmail?.fullEmail ? brief.coldEmail.fullEmail : brief.coldEmail?.opener ?? ""} />
                 </div>
               </CardHeader>
               <CardContent>
-                {showFullEmail && brief.coldEmail.fullEmail
+                {showFullEmail && brief.coldEmail?.fullEmail
                   ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{brief.coldEmail.fullEmail}</pre>
-                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{brief.coldEmail.opener}"</blockquote>}
-                <SourceChips sources={brief.coldEmail.sources} sectionId="email" />
+                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{brief.coldEmail?.opener ?? ""}"</blockquote>}
+                <SourceChips sources={brief.coldEmail?.sources} sectionId="email" />
               </CardContent>
             </Card>
 
