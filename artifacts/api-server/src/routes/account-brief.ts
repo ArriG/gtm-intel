@@ -204,7 +204,7 @@ ${icpContext}${linkedinContext}${ownIntelContext}`;
   try {
     const message = await Promise.race([
       client.messages.create({
-        model: "claude-sonnet-4-5",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 4000,
         tools: [
           { type: "web_search_20250305", name: "web_search" } as any,
