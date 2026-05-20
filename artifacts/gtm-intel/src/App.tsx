@@ -571,13 +571,14 @@ export default function AccountBriefPage() {
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                   <Globe className="w-4 h-4 text-purple-500" />What's Going On In Their World
-                  {brief.theirWorld.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
+                  {brief.theirWorld?.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
+
                 </CardTitle>
                 <CopyButton getText={() => brief.theirWorld.narrative} />
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{brief.theirWorld.narrative}</p>
-                <SourceChips sources={brief.theirWorld.sources} sectionId="world" />
+                <p className="text-sm text-foreground leading-relaxed">{brief.theirWorld?.narrative ?? ""}</p>
+                <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
               </CardContent>
             </Card>
 
@@ -619,7 +620,7 @@ export default function AccountBriefPage() {
               </CardHeader>
               <CardContent>
                 <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
-                  {brief.recentTriggers.items.map((item, i) => (
+                  {(brief.recentTriggers?.items ?? []).map((item, i) => (
                     <div key={i} className="flex items-start gap-3 p-4 bg-muted/20 hover:bg-muted/40 transition-colors">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 shrink-0" />
                       <div className="flex-1">
