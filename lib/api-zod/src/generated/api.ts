@@ -12,7 +12,12 @@ import * as zod from 'zod';
  * @summary Generate an AI-powered account brief for a company URL
  */
 export const GenerateAccountBriefBody = zod.object({
-  "url": zod.string()
+  "url": zod.string(),
+  "linkedinPosts": zod.array(zod.object({
+  "role": zod.string(),
+  "content": zod.string()
+})).optional(),
+  "ownIntel": zod.string().optional()
 })
 
 export const GenerateAccountBriefResponse = zod.object({
@@ -20,19 +25,83 @@ export const GenerateAccountBriefResponse = zod.object({
   "size": zod.string(),
   "industry": zod.string(),
   "location": zod.string(),
-  "fundingStage": zod.string()
+  "fundingStage": zod.string(),
+  "abn": zod.string().optional(),
+  "techStack": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
 }),
   "icpFitScore": zod.object({
   "score": zod.number(),
-  "reason": zod.string()
+  "reason": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
 }),
   "buyingCommittee": zod.array(zod.object({
   "title": zod.string(),
-  "painPoint": zod.string()
+  "painPoint": zod.string(),
+  "linkedinSignal": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
 })),
-  "topPainPoints": zod.array(zod.string()),
-  "recentNews": zod.array(zod.string()),
-  "suggestedOpeningLine": zod.string()
+  "theirWorld": zod.object({
+  "narrative": zod.string(),
+  "confidence": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "recentTriggers": zod.object({
+  "items": zod.array(zod.object({
+  "event": zod.string(),
+  "significance": zod.string(),
+  "recency": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "coldEmail": zod.object({
+  "opener": zod.string(),
+  "fullEmail": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "sourceSummary": zod.object({
+  "totalSources": zod.number(),
+  "sourceTypes": zod.array(zod.string()),
+  "australianSources": zod.number(),
+  "overallConfidence": zod.string(),
+  "confidenceReason": zod.string()
+}).optional()
 })
 
 

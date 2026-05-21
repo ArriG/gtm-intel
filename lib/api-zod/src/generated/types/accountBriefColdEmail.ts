@@ -7,9 +7,8 @@
  */
 import type { BriefSource } from './briefSource';
 
-export interface BuyingCommitteeMember {
-  title: string;
-  painPoint: string;
-  linkedinSignal?: string;
+export type AccountBriefColdEmail = {
+  opener: string;
+  fullEmail?: string;
   sources?: BriefSource[];
-}
+};

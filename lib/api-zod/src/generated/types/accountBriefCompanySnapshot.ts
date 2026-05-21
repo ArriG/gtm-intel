@@ -5,10 +5,14 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
+import type { BriefSource } from './briefSource';
 
 export type AccountBriefCompanySnapshot = {
   size: string;
   industry: string;
   location: string;
   fundingStage: string;
+  abn?: string;
+  techStack?: string;
+  sources?: BriefSource[];
 };

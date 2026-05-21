@@ -7,12 +7,20 @@
  */
 
 export * from './accountBrief';
+export * from './accountBriefColdEmail';
 export * from './accountBriefCompanySnapshot';
 export * from './accountBriefIcpFitScore';
 export * from './accountBriefInput';
+export * from './accountBriefRecentTriggerItem';
+export * from './accountBriefRecentTriggers';
+export * from './accountBriefSourceSummary';
+export * from './accountBriefTheirWorld';
 export * from './battlecard';
 export * from './battlecardInput';
 export * from './battlecardUpdate';
+export * from './briefSource';
+export * from './briefSourceConfidence';
+export * from './briefSourceType';
 export * from './buyingCommitteeMember';
 export * from './competitor';
 export * from './competitorInput';
@@ -25,6 +33,7 @@ export * from './healthStatus';
 export * from './icp';
 export * from './icpInput';
 export * from './icpUpdate';
+export * from './linkedInPost';
 export * from './objection';
 export * from './signal';
 export * from './signalImportance';

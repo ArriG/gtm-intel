@@ -10,62 +10,9 @@ import {
   ChevronRight, Trash2, Clock, ChevronDown, MapPin,
   Briefcase, Brain, BookOpen, AlertCircle, ExternalLink
 } from "lucide-react";
+import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost } from "@workspace/api-client-react";
 
 // --- Types ---
-interface BriefSource {
-  type: "web" | "linkedin" | "asic" | "abn" | "seek_job" | "crunchbase" | "industry_press" | "builtwith" | "g2" | "asx_filing" | "mfaa" | "own_intel" | "assumed";
-  label: string;
-  detail: string;
-  url?: string;
-  confidence: "verified" | "informed" | "assumed";
-}
-
-interface BuyingCommitteeMember {
-  title: string;
-  painPoint: string;
-  linkedinSignal?: string;
-  sources?: BriefSource[];
-}
-
-interface AccountBrief {
-  companySnapshot: {
-    size: string;
-    industry: string;
-    location: string;
-    fundingStage: string;
-    abn?: string;
-    techStack?: string;
-    sources?: BriefSource[];
-  };
-  icpFitScore: {
-    score: number;
-    reason: string;
-    sources?: BriefSource[];
-  };
-  buyingCommittee: BuyingCommitteeMember[];
-  theirWorld: {
-    narrative: string;
-    confidence: string;
-    sources?: BriefSource[];
-  };
-  recentTriggers: {
-    items: Array<{ event: string; significance: string; recency: string }>;
-    sources?: BriefSource[];
-  };
-  coldEmail: {
-    opener: string;
-    fullEmail?: string;
-    sources?: BriefSource[];
-  };
-  sourceSummary?: {
-    totalSources: number;
-    sourceTypes: string[];
-    australianSources: number;
-    overallConfidence: string;
-    confidenceReason: string;
-  };
-}
-
 interface HistoryEntry {
   id: string;
   label: string;
@@ -74,8 +21,6 @@ interface HistoryEntry {
   savedAt: string;
   brief: AccountBrief;
 }
-
-interface LinkedInPost { role: string; content: string; }
 
 // --- localStorage ---
 const HISTORY_KEY = "gtm_brief_history_v2";
@@ -576,7 +521,7 @@ export default function AccountBriefPage() {
                 <CopyButton getText={() => brief.theirWorld.narrative} />
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{brief.theirWorld?.narrative ?? brief.topPainPoints?.join(" ") ?? ""}</p>
+                <p className="text-sm text-foreground leading-relaxed">{brief.theirWorld?.narrative ?? ""}</p>
                 <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
               </CardContent>
             </Card>

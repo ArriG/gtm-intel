@@ -835,12 +835,72 @@ components:
         reviewed:
           type: boolean
 
+    BriefSourceType:
+      type: string
+      enum:
+        - web
+        - linkedin
+        - asic
+        - abn
+        - seek_job
+        - crunchbase
+        - industry_press
+        - builtwith
+        - g2
+        - asx_filing
+        - mfaa
+        - own_intel
+        - assumed
+
+    BriefSourceConfidence:
+      type: string
+      enum:
+        - verified
+        - informed
+        - assumed
+
+    BriefSource:
+      type: object
+      required:
+        - type
+        - label
+        - detail
+        - confidence
+      properties:
+        type:
+          $ref: "#/components/schemas/BriefSourceType"
+        label:
+          type: string
+        detail:
+          type: string
+        url:
+          type: string
+        confidence:
+          $ref: "#/components/schemas/BriefSourceConfidence"
+
+    LinkedInPost:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+        content:
+          type: string
+
     AccountBriefInput:
       type: object
       required:
         - url
       properties:
         url:
+          type: string
+        linkedinPosts:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkedInPost"
+        ownIntel:
           type: string
 
     BuyingCommitteeMember:
@@ -853,6 +913,26 @@ components:
           type: string
         painPoint:
           type: string
+        linkedinSignal:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    AccountBriefRecentTriggerItem:
+      type: object
+      required:
+        - event
+        - significance
+        - recency
+      properties:
+        event:
+          type: string
+        significance:
+          type: string
+        recency:
+          type: string
 
     AccountBrief:
       type: object
@@ -860,9 +940,9 @@ components:
         - companySnapshot
         - icpFitScore
         - buyingCommittee
-        - topPainPoints
-        - recentNews
-        - suggestedOpeningLine
+        - theirWorld
+        - recentTriggers
+        - coldEmail
       properties:
         companySnapshot:
           type: object
@@ -880,6 +960,14 @@ components:
               type: string
             fundingStage:
               type: string
+            abn:
+              type: string
+            techStack:
+              type: string
+            sources:
+              type: array
+              items:
+                $ref: "#/components/schemas/BriefSource"
         icpFitScore:
           type: object
           required:
@@ -890,17 +978,72 @@ components:
               type: integer
             reason:
               type: string
+            sources:
+              type: array
+              items:
+                $ref: "#/components/schemas/BriefSource"
         buyingCommittee:
           type: array
           items:
             $ref: "#/components/schemas/BuyingCommitteeMember"
-        topPainPoints:
-          type: array
-          items:
-            type: string
-        recentNews:
-          type: array
-          items:
-            type: string
-        suggestedOpeningLine:
-          type: string
+        theirWorld:
+          type: object
+          required:
+            - narrative
+            - confidence
+          properties:
+            narrative:
+              type: string
+            confidence:
+              type: string
+            sources:
+              type: array
+              items:
+                $ref: "#/components/schemas/BriefSource"
+        recentTriggers:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/AccountBriefRecentTriggerItem"
+            sources:
+              type: array
+              items:
+                $ref: "#/components/schemas/BriefSource"
+        coldEmail:
+          type: object
+          required:
+            - opener
+          properties:
+            opener:
+              type: string
+            fullEmail:
+              type: string
+            sources:
+              type: array
+              items:
+                $ref: "#/components/schemas/BriefSource"
+        sourceSummary:
+          type: object
+          required:
+            - totalSources
+            - sourceTypes
+            - australianSources
+            - overallConfidence
+            - confidenceReason
+          properties:
+            totalSources:
+              type: integer
+            sourceTypes:
+              type: array
+              items:
+                type: string
+            australianSources:
+              type: integer
+            overallConfidence:
+              type: string
+            confidenceReason:
+              type: string

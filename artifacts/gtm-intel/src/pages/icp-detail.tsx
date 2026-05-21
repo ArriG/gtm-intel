@@ -41,11 +41,11 @@ export default function IcpDetail() {
         </div>
       </div>
 
-      {icp.jobTitles.length > 0 && (
+      {(icp.jobTitles?.length ?? 0) > 0 && (
         <div>
           <p className="text-sm font-mono text-muted-foreground uppercase mb-2">Key Roles</p>
           <div className="flex flex-wrap gap-2">
-            {icp.jobTitles.map((t, i) => <Badge key={i} variant="secondary">{t}</Badge>)}
+            {icp.jobTitles?.map((t, i) => <Badge key={i} variant="secondary">{t}</Badge>)}
           </div>
         </div>
       )}

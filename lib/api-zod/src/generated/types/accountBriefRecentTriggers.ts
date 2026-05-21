@@ -5,11 +5,10 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountBriefRecentTriggerItem } from './accountBriefRecentTriggerItem';
 import type { BriefSource } from './briefSource';
 
-export interface BuyingCommitteeMember {
-  title: string;
-  painPoint: string;
-  linkedinSignal?: string;
+export type AccountBriefRecentTriggers = {
+  items: AccountBriefRecentTriggerItem[];
   sources?: BriefSource[];
-}
+};

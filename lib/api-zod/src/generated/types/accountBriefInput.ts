@@ -5,7 +5,10 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
+import type { LinkedInPost } from './linkedInPost';
 
 export interface AccountBriefInput {
   url: string;
+  linkedinPosts?: LinkedInPost[];
+  ownIntel?: string;
 }

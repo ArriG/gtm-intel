@@ -258,13 +258,64 @@ export interface SignalUpdate {
   reviewed?: boolean;
 }
 
+export type BriefSourceType = typeof BriefSourceType[keyof typeof BriefSourceType];
+
+
+export const BriefSourceType = {
+  web: 'web',
+  linkedin: 'linkedin',
+  asic: 'asic',
+  abn: 'abn',
+  seek_job: 'seek_job',
+  crunchbase: 'crunchbase',
+  industry_press: 'industry_press',
+  builtwith: 'builtwith',
+  g2: 'g2',
+  asx_filing: 'asx_filing',
+  mfaa: 'mfaa',
+  own_intel: 'own_intel',
+  assumed: 'assumed',
+} as const;
+
+export type BriefSourceConfidence = typeof BriefSourceConfidence[keyof typeof BriefSourceConfidence];
+
+
+export const BriefSourceConfidence = {
+  verified: 'verified',
+  informed: 'informed',
+  assumed: 'assumed',
+} as const;
+
+export interface BriefSource {
+  type: BriefSourceType;
+  label: string;
+  detail: string;
+  url?: string;
+  confidence: BriefSourceConfidence;
+}
+
+export interface LinkedInPost {
+  role: string;
+  content: string;
+}
+
 export interface AccountBriefInput {
   url: string;
+  linkedinPosts?: LinkedInPost[];
+  ownIntel?: string;
 }
 
 export interface BuyingCommitteeMember {
   title: string;
   painPoint: string;
+  linkedinSignal?: string;
+  sources?: BriefSource[];
+}
+
+export interface AccountBriefRecentTriggerItem {
+  event: string;
+  significance: string;
+  recency: string;
 }
 
 export type AccountBriefCompanySnapshot = {
@@ -272,19 +323,49 @@ export type AccountBriefCompanySnapshot = {
   industry: string;
   location: string;
   fundingStage: string;
+  abn?: string;
+  techStack?: string;
+  sources?: BriefSource[];
 };
 
 export type AccountBriefIcpFitScore = {
   score: number;
   reason: string;
+  sources?: BriefSource[];
+};
+
+export type AccountBriefTheirWorld = {
+  narrative: string;
+  confidence: string;
+  sources?: BriefSource[];
+};
+
+export type AccountBriefRecentTriggers = {
+  items: AccountBriefRecentTriggerItem[];
+  sources?: BriefSource[];
+};
+
+export type AccountBriefColdEmail = {
+  opener: string;
+  fullEmail?: string;
+  sources?: BriefSource[];
+};
+
+export type AccountBriefSourceSummary = {
+  totalSources: number;
+  sourceTypes: string[];
+  australianSources: number;
+  overallConfidence: string;
+  confidenceReason: string;
 };
 
 export interface AccountBrief {
   companySnapshot: AccountBriefCompanySnapshot;
   icpFitScore: AccountBriefIcpFitScore;
   buyingCommittee: BuyingCommitteeMember[];
-  topPainPoints: string[];
-  recentNews: string[];
-  suggestedOpeningLine: string;
+  theirWorld: AccountBriefTheirWorld;
+  recentTriggers: AccountBriefRecentTriggers;
+  coldEmail: AccountBriefColdEmail;
+  sourceSummary?: AccountBriefSourceSummary;
 }
 
