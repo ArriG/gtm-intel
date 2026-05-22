@@ -186,7 +186,7 @@ function SourceSummaryBar({ summary }: { summary?: AccountBrief["sourceSummary"]
 // --- Autocomplete ---
 interface CompanySuggestion { name: string; domain: string; logo: string; }
 
-function CompanySearchInput({ onSearch, loading }: { onSearch: (url: string, label: string) => void; loading: boolean; }) {
+function CompanySearchInput({ onSearch, loading, cooldownSeconds }: { onSearch: (url: string, label: string) => void; loading: boolean; cooldownSeconds: number; }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -238,8 +238,8 @@ function CompanySearchInput({ onSearch, loading }: { onSearch: (url: string, lab
             placeholder="Type a company name or paste a URL..."
             className="flex-1 font-mono text-sm border-0 shadow-none focus-visible:ring-0 bg-transparent"
             disabled={loading} autoComplete="off" />
-          <Button type="submit" disabled={loading || !query.trim()} className="gap-2 shrink-0 rounded-lg">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Researching...</> : <><Zap className="w-4 h-4" />Enrich</>}
+          <Button type="submit" disabled={loading || cooldownSeconds > 0 || !query.trim()} className="gap-2 shrink-0 rounded-lg">
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Researching...</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
           </Button>
         </div>
       </form>
@@ -402,6 +402,13 @@ export default function AccountBriefPage() {
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([{ role: "CFO", content: "" }]);
   const [ownIntel, setOwnIntel] = useState("");
   const [showFullEmail, setShowFullEmail] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    const id = setInterval(() => setCooldownSeconds(s => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldownSeconds]);
 
   async function handleSearch(url: string, label: string) {
     setLoading(true); setError(null); setBrief(null); setLastLabel(label); setShowFullEmail(false);
@@ -420,7 +427,7 @@ export default function AccountBriefPage() {
       setHistory(loadHistory());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-    } finally { setLoading(false); }
+    } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
@@ -440,14 +447,14 @@ export default function AccountBriefPage() {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="secondary" className="gap-1 text-xs font-mono">
-              <Sparkles className="w-3 h-3" />AI · 10 Source Types · AU-Aware
+              <Sparkles className="w-3 h-3" />AI · 5 Source Types · AU-Aware
             </Badge>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-1">Search Companies</h1>
           <p className="text-muted-foreground mb-6 text-sm">Type a company name or URL — get a sourced GTM brief in 30 seconds.</p>
-          <CompanySearchInput onSearch={handleSearch} loading={loading} />
+          <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} />
           <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
-          {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 10 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
+          {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
           <HistoryPanel history={history} onSelect={handleHistorySelect} onClear={() => { clearHistory(); setHistory([]); }} />
         </div>
       </div>
