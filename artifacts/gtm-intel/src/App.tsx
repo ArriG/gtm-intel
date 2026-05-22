@@ -1,6 +1,6 @@
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Sparkles, Target, LayoutDashboard, Swords, Shield, Activity } from "lucide-react";
+import { Sparkles, Users, Newspaper, Flag, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import AccountBriefPage from "./pages/account-brief";
@@ -9,8 +9,6 @@ import ICPDetail from "./pages/icp-detail";
 import Dashboard from "./pages/dashboard";
 import Competitors from "./pages/competitors";
 import CompetitorDetail from "./pages/competitor-detail";
-import Battlecards from "./pages/battlecards";
-import BattlecardDetail from "./pages/battlecard-detail";
 import Signals from "./pages/signals";
 import NotFound from "./pages/not-found";
 
@@ -18,11 +16,10 @@ const queryClient = new QueryClient();
 
 const NAV_ITEMS = [
   { href: "/",            label: "Search",      icon: Sparkles },
-  { href: "/icps",        label: "ICPs",        icon: Target },
-  { href: "/dashboard",   label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/competitors", label: "Competitors", icon: Swords },
-  { href: "/battlecards", label: "Battlecards", icon: Shield },
-  { href: "/signals",     label: "Signals",     icon: Activity },
+  { href: "/icps",        label: "ICPs",        icon: Users },
+  { href: "/dashboard",   label: "Dashboard",   icon: Newspaper },
+  { href: "/competitors", label: "Competitors", icon: Flag },
+  { href: "/signals",     label: "Signals",     icon: Radio },
 ];
 
 function Sidebar() {
@@ -33,7 +30,7 @@ function Sidebar() {
     <aside className="w-56 shrink-0 border-r border-border bg-muted/30 flex flex-col">
       <div className="px-5 py-5 border-b border-border">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <Sparkles className="w-4 h-4 text-primary" />
+          <Sparkles className="w-4 h-4 text-slate-500" />
           <span>GTM Intel</span>
         </Link>
       </div>
@@ -71,8 +68,6 @@ export default function App() {
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/competitors" component={Competitors} />
             <Route path="/competitors/:id" component={CompetitorDetail} />
-            <Route path="/battlecards" component={Battlecards} />
-            <Route path="/battlecards/:id" component={BattlecardDetail} />
             <Route path="/signals" component={Signals} />
             <Route component={NotFound} />
           </Switch>

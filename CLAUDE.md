@@ -59,20 +59,28 @@ gtm-intel/
 
 ## Current backlog (in priority order)
 
-### Quick wins
-- [ ] Fix "10 source types" text — it's hardcoded in `account-brief.tsx` lines ~499 and ~505; backend now uses 5 sources
-- [ ] Add 30-second cooldown on the Enrich button — prevents double-firing and wasted API calls
+### Done in this session (2026-05-22)
+- [x] Fix "10 source types" hardcoded text → now "5 source types" (commit `be2f6d2`)
+- [x] Wire `main.tsx` to render `pages/account-brief.tsx` (the refactored file) and delete dead `App.tsx` (commit `be2f6d2`)
+- [x] 30-second cooldown on the Enrich button (commit `be2f6d2`)
+- [x] Sidebar layout + wouter routing for all existing pages; added missing `QueryClientProvider` (commit `d858753`)
 
-### Core feature gaps
-- [ ] ICP scoring — score returns a real value when ICPs are defined in DB, but prompt needs tuning to better use LinkedIn/intel context
-- [ ] Save to ICP from brief — "Save as ICP reference" button on the brief that pre-populates an ICP from the company snapshot
-- [ ] Cold email tone toggle — Formal / Direct / Conversational, regenerates the email with one click
+### Next: in this order — don't reorder without revisiting
+1. **Polish pass** — type scale, spacing rhythm, one accent colour, brandmark in sidebar, empty/loading states across all pages. Visual references: clay.com and https://practihealth.webflow.io (pull simple concepts, don't redesign from scratch). Tone should be consultative, not salesy.
+2. **Solution Profile** (sidebar item) — persistent seller context injected as highest-priority context into every cold email. v1 fields:
+   - Your company name
+   - What you sell (1–2 sentences)
+   - Who you typically sell to (industry/segment)
+   - Top 3 pain points you solve
+   - Customer outcomes you can cite (optional)
+   Backend pattern follows the existing `linkedinPosts` / `ownIntel` injection on `POST /api/account-brief`.
+3. **Save to ICP from brief** — "Save as ICP reference" button on the brief that pre-populates an ICP from the company snapshot. Now meaningful because the ICPs page is reachable via the sidebar.
 
-### High demo-value features
-- [ ] Talk track generator — one button from brief → discovery call questions based on their specific pain points (highest "wow factor" for demos)
-- [ ] Market prospecting ("dentist feature") — describe a target market in plain English, get 8–10 matching company names back, click any to run a full brief. Turns the tool from research → prospecting engine.
-
-### Portfolio
+### Parked — revisit after Save-to-ICP ships
+- [ ] ICP scoring prompt tuning — score returns a real value when ICPs are defined, but prompt could better use LinkedIn/intel context
+- [ ] Cold email tone toggle — Formal / Direct / Conversational, regenerates the email with one click (gets much better once Solution Profile exists)
+- [ ] Talk track generator — one button from brief → discovery call questions based on their specific pain points (needs Solution Profile to be good)
+- [ ] Market prospecting ("dentist feature") — describe a target market in plain English, get 8–10 matching company names back, click any to run a full brief. Could be driven automatically by Solution Profile.
 - [ ] GitHub README — angle: "Built by a Senior AE with 15+ years SaaS experience and zero prior coding background." Include screenshot, live URL, stack.
 - [ ] Export brief — copy-all or PDF download
 
