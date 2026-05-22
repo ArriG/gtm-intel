@@ -2,6 +2,7 @@ import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Sparkles, Users, Newspaper, Flag, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useHistory, clearHistory } from "@/lib/history";
 
 import AccountBriefPage from "./pages/account-brief";
 import ICPs from "./pages/icps";
@@ -22,6 +23,31 @@ const NAV_ITEMS = [
   { href: "/signals",     label: "Signals",     icon: Radio },
 ];
 
+function RecentSearches() {
+  const history = useHistory();
+  if (history.length === 0) return null;
+  return (
+    <div className="ml-6 mt-1 mb-1">
+      {history.slice(0, 5).map(entry => (
+        <Link
+          key={entry.id}
+          href={`/?h=${entry.id}`}
+          className="block px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-md transition-colors truncate"
+        >
+          {entry.label}
+        </Link>
+      ))}
+      <button
+        type="button"
+        onClick={clearHistory}
+        className="px-2.5 pt-1.5 text-[11px] text-muted-foreground/60 hover:text-destructive transition-colors"
+      >
+        Clear
+      </button>
+    </div>
+  );
+}
+
 function Sidebar() {
   const [location] = useLocation();
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
@@ -36,19 +62,21 @@ function Sidebar() {
       </div>
       <nav className="flex-1 p-2 space-y-0.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
-              isActive(href)
-                ? "bg-background text-foreground font-medium shadow-sm"
-                : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
-            )}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </Link>
+          <div key={href}>
+            <Link
+              href={href}
+              className={cn(
+                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
+                isActive(href)
+                  ? "bg-background text-foreground font-medium shadow-sm"
+                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </Link>
+            {href === "/" && <RecentSearches />}
+          </div>
         ))}
       </nav>
     </aside>

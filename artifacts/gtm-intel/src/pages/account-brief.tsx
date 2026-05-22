@@ -6,34 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
-  Sparkles, Copy, Check, Globe, Zap, Search, History,
-  ChevronRight, Trash2, Clock, ChevronDown, MapPin,
+  Sparkles, Copy, Check, Globe, Zap, Search,
+  Trash2, Clock, ChevronDown, MapPin,
   Briefcase, Brain, BookOpen, AlertCircle, ExternalLink
 } from "lucide-react";
 import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost } from "@workspace/api-client-react";
-
-// --- Types ---
-interface HistoryEntry {
-  id: string;
-  label: string;
-  url: string;
-  icpScore: number;
-  savedAt: string;
-  brief: AccountBrief;
-}
-
-// --- localStorage ---
-const HISTORY_KEY = "gtm_brief_history_v2";
-function loadHistory(): HistoryEntry[] {
-  try { const r = localStorage.getItem(HISTORY_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
-}
-function saveToHistory(e: HistoryEntry) {
-  try {
-    const existing = loadHistory().filter(h => h.url !== e.url);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify([e, ...existing].slice(0, 10)));
-  } catch { /* full */ }
-}
-function clearHistory() { localStorage.removeItem(HISTORY_KEY); }
+import { useSearchParams } from "wouter";
+import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 
 // --- Source chip config ---
 const SOURCE_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -262,43 +241,6 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds }: { onSearch: 
   );
 }
 
-// --- History panel ---
-function HistoryPanel({ history, onSelect, onClear }: { history: HistoryEntry[]; onSelect: (e: HistoryEntry) => void; onClear: () => void; }) {
-  if (history.length === 0) return null;
-  function timeAgo(iso: string) {
-    const d = Date.now() - new Date(iso).getTime();
-    const m = Math.floor(d / 60000), h = Math.floor(d / 3600000), days = Math.floor(d / 86400000);
-    if (m < 1) return "just now"; if (m < 60) return `${m}m ago`; if (h < 24) return `${h}h ago`; return `${days}d ago`;
-  }
-  return (
-    <div className="mt-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><History className="w-3.5 h-3.5" />Recent searches</div>
-        <button onClick={onClear} className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"><Trash2 className="w-3 h-3" />Clear</button>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        {history.map(entry => (
-          <button key={entry.id} onClick={() => onSelect(entry)}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-background/80 hover:bg-background border border-border rounded-lg transition-all text-left group">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-foreground truncate">{entry.label}</span>
-                <span className={`text-xs font-mono font-bold flex-shrink-0 ${entry.icpScore >= 8 ? "text-green-600" : entry.icpScore >= 5 ? "text-yellow-600" : "text-red-500"}`}>{entry.icpScore}/10</span>
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Clock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs text-muted-foreground">{timeAgo(entry.savedAt)}</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-xs text-muted-foreground font-mono truncate">{entry.url.replace("https://", "")}</span>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // --- Context panels ---
 const ROLE_OPTIONS = ["CEO / Founder", "CFO", "CRO / Chief Revenue Officer", "COO", "CMO", "Head of Growth", "Head of RevOps", "Head of Sales", "Head of Operations", "VP Engineering", "Other"];
@@ -398,11 +340,12 @@ export default function AccountBriefPage() {
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastLabel, setLastLabel] = useState("");
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([{ role: "CFO", content: "" }]);
   const [ownIntel, setOwnIntel] = useState("");
   const [showFullEmail, setShowFullEmail] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const historyParam = searchParams.get("h");
 
   useEffect(() => {
     if (cooldownSeconds <= 0) return;
@@ -410,8 +353,15 @@ export default function AccountBriefPage() {
     return () => clearInterval(id);
   }, [cooldownSeconds]);
 
+  useEffect(() => {
+    if (!historyParam) return;
+    const entry = loadHistory().find(h => h.id === historyParam);
+    if (entry) handleHistorySelect(entry);
+  }, [historyParam]);
+
   async function handleSearch(url: string, label: string) {
     setLoading(true); setError(null); setBrief(null); setLastLabel(label); setShowFullEmail(false);
+    if (historyParam) setSearchParams(new URLSearchParams());
     const postsToSend = linkedinPosts.filter(p => p.content.trim());
     try {
       const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -424,7 +374,6 @@ export default function AccountBriefPage() {
       const data = await res.json() as AccountBrief;
       setBrief(data);
       saveToHistory({ id: Date.now().toString(), label, url, icpScore: data.icpFitScore?.score ?? 0, savedAt: new Date().toISOString(), brief: data });
-      setHistory(loadHistory());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally { setLoading(false); setCooldownSeconds(30); }
@@ -444,7 +393,7 @@ export default function AccountBriefPage() {
     <div className="min-h-screen">
       {/* Hero */}
       <div className="border-b border-border bg-gradient-to-br from-background via-background to-primary/5 px-8 py-10">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="secondary" className="gap-1 text-xs font-mono">
               <Sparkles className="w-3 h-3" />AI · 5 Source Types · AU-Aware
@@ -455,12 +404,11 @@ export default function AccountBriefPage() {
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} />
           <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
           {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
-          <HistoryPanel history={history} onSelect={handleHistorySelect} onClear={() => { clearHistory(); setHistory([]); }} />
         </div>
       </div>
 
       {/* Results */}
-      <div className="px-8 py-8 max-w-3xl mx-auto space-y-4">
+      <div className="px-8 py-8 max-w-5xl mx-auto space-y-4">
         {error && <Card className="border-destructive bg-destructive/5"><CardContent className="p-4 text-sm text-destructive flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{error}</CardContent></Card>}
         {loading && !brief && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}</div>}
 
@@ -475,6 +423,7 @@ export default function AccountBriefPage() {
             {/* Source summary */}
             <SourceSummaryBar summary={brief.sourceSummary} />
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Company Snapshot */}
             <Card>
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
@@ -517,6 +466,7 @@ export default function AccountBriefPage() {
                 <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
               </CardContent>
             </Card>
+            </div>
 
             {/* Their World */}
             <Card>
