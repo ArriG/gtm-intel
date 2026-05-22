@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
-  Sparkles, Copy, Check, Globe, Zap, Search,
+  Aperture, Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
   Briefcase, Brain, BookOpen, AlertCircle, ExternalLink
 } from "lucide-react";
@@ -396,7 +396,7 @@ export default function AccountBriefPage() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="secondary" className="gap-1 text-xs font-mono">
-              <Sparkles className="w-3 h-3" />AI · 5 Source Types · AU-Aware
+              <Aperture className="w-3 h-3 text-primary" />AI · 5 Source Types · AU-Aware
             </Badge>
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-1">Search Companies</h1>

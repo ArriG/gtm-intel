@@ -59,28 +59,31 @@ gtm-intel/
 
 ## Current backlog (in priority order)
 
-### Done in this session (2026-05-22)
-- [x] Fix "10 source types" hardcoded text → now "5 source types" (commit `be2f6d2`)
-- [x] Wire `main.tsx` to render `pages/account-brief.tsx` (the refactored file) and delete dead `App.tsx` (commit `be2f6d2`)
+### Done so far (2026-05-22 → 2026-05-23)
+- [x] Fix "10 source types" hardcoded text → "5 source types" (commit `be2f6d2`)
+- [x] Wire `main.tsx` to render `pages/account-brief.tsx`; delete dead `App.tsx` (commit `be2f6d2`)
 - [x] 30-second cooldown on the Enrich button (commit `be2f6d2`)
-- [x] Sidebar layout + wouter routing for all existing pages; added missing `QueryClientProvider` (commit `d858753`)
+- [x] Sidebar layout + wouter routing for all pages; added missing `QueryClientProvider` (commit `d858753`)
+- [x] Remove Battlecards page + sidebar nav (commit `12e8e4a`). Backend hooks/routes for battlecards still exist in `@workspace/api-client-react` — cleaning those up is a separate task (touches `openapi.yaml` + codegen).
+- [x] Refresh sidebar icons (Users/Newspaper/Flag/Radio); softer brandmark colour (commit `12e8e4a`)
+- [x] Recent searches moved to sidebar; results layout widened to `max-w-5xl`; Company Snapshot + ICP Fit side-by-side at top (commit `4804b58`)
+- [x] Polish pass — teal `#0d9488` accent, page headings `text-4xl`, crafted empty states across pages (commit `68313d1`)
+- [x] Recent searches now collapsible (chevron, expands to show all up to 10)
+- [x] Brand mark refresh: Aperture icon (teal) replaces Sparkles in sidebar header + Search hero badge
+- [x] **Your Company** page (Phase A — UI + localStorage only). New sidebar item as first nav entry, banner + 5-field form. Backend wiring is still TODO (Phase B + C below).
 
 ### Next: in this order — don't reorder without revisiting
-1. **Polish pass** — type scale, spacing rhythm, one accent colour, brandmark in sidebar, empty/loading states across all pages. Visual references: clay.com and https://practihealth.webflow.io (pull simple concepts, don't redesign from scratch). Tone should be consultative, not salesy.
-2. **Solution Profile** (sidebar item) — persistent seller context injected as highest-priority context into every cold email. v1 fields:
-   - Your company name
-   - What you sell (1–2 sentences)
-   - Who you typically sell to (industry/segment)
-   - Top 3 pain points you solve
-   - Customer outcomes you can cite (optional)
-   Backend pattern follows the existing `linkedinPosts` / `ownIntel` injection on `POST /api/account-brief`.
-3. **Save to ICP from brief** — "Save as ICP reference" button on the brief that pre-populates an ICP from the company snapshot. Now meaningful because the ICPs page is reachable via the sidebar.
+1. **Your Company Phase B + C** — wire it up end-to-end:
+   - Phase B: frontend reads `loadYourCompany()` and includes it in POST `/api/account-brief` body
+   - Phase C: backend reads body field and injects into Claude prompt at highest-priority level; update `lib/api-spec/openapi.yaml` accordingly and re-run Orval codegen
+2. **Save to ICP from brief** — "Save as ICP reference" button on the brief that pre-populates an ICP from the company snapshot.
 
 ### Parked — revisit after Save-to-ICP ships
 - [ ] ICP scoring prompt tuning — score returns a real value when ICPs are defined, but prompt could better use LinkedIn/intel context
-- [ ] Cold email tone toggle — Formal / Direct / Conversational, regenerates the email with one click (gets much better once Solution Profile exists)
-- [ ] Talk track generator — one button from brief → discovery call questions based on their specific pain points (needs Solution Profile to be good)
-- [ ] Market prospecting ("dentist feature") — describe a target market in plain English, get 8–10 matching company names back, click any to run a full brief. Could be driven automatically by Solution Profile.
+- [ ] Cold email tone toggle — Formal / Direct / Conversational, regenerates with one click (gets better once Your Company is fully wired up)
+- [ ] Talk track generator — one button from brief → discovery call questions tailored to Your Company's pain points
+- [ ] Market prospecting ("dentist feature") — describe a target market in plain English, get 8–10 matching companies back, click any to run a full brief. Could be driven automatically by Your Company.
+- [ ] Clean up phantom battlecard endpoints from the backend / openapi spec
 - [ ] GitHub README — angle: "Built by a Senior AE with 15+ years SaaS experience and zero prior coding background." Include screenshot, live URL, stack.
 - [ ] Export brief — copy-all or PDF download
 
