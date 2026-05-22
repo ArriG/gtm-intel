@@ -399,7 +399,7 @@ export default function AccountBriefPage() {
               <Sparkles className="w-3 h-3" />AI · 5 Source Types · AU-Aware
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Search Companies</h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-1">Search Companies</h1>
           <p className="text-muted-foreground mb-6 text-sm">Type a company name or URL — get a sourced GTM brief in 30 seconds.</p>
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} />
           <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />

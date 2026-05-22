@@ -36,7 +36,7 @@ export default function IcpDetail() {
           <Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{icp.name}</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{icp.name}</h1>
           <p className="text-muted-foreground mt-1">{icp.industry} · {icp.companySize}</p>
         </div>
       </div>

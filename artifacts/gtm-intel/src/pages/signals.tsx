@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Activity } from "lucide-react";
+import { Plus, Trash2, Check, Activity, Radio } from "lucide-react";
 
 const IMPORTANCE_COLORS: Record<string, string> = {
   high: "bg-red-100 text-red-800 border-red-200",
@@ -144,7 +144,7 @@ export default function Signals() {
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Signals Feed</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Signals Feed</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Market Intelligence</p>
         </div>
         <CreateSignalDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() })} />
@@ -172,9 +172,10 @@ export default function Signals() {
       {isLoading ? (
         <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
       ) : filtered?.length === 0 ? (
-        <Card className="p-12 text-center bg-muted/50 border-dashed">
-          <Activity className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No signals match your filters. Log your first market signal.</p>
+        <Card className="p-12 text-center bg-muted/30 border-dashed">
+          <Radio className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold mb-1">No signals yet</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">Log market triggers — funding rounds, exec hires, layoffs, expansions. They'll feed your daily Dashboard.</p>
         </Card>
       ) : (
         <div className="space-y-3">

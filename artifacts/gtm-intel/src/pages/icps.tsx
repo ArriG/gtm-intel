@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronRight, Users } from "lucide-react";
 
 function CreateIcpDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -112,7 +112,7 @@ export default function Icps() {
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ideal Customer Profiles</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Ideal Customer Profiles</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Who You Serve</p>
         </div>
         <CreateIcpDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListIcpsQueryKey() })} />
@@ -121,8 +121,10 @@ export default function Icps() {
       {isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
       ) : icps?.length === 0 ? (
-        <Card className="p-12 text-center bg-muted/50 border-dashed">
-          <p className="text-muted-foreground">No ICPs defined yet. Add your first target customer profile.</p>
+        <Card className="p-12 text-center bg-muted/30 border-dashed">
+          <Users className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold mb-1">No ICPs yet</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">Define the kinds of companies you sell to — every brief will be scored against them, and you'll be able to save companies as new ICPs.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

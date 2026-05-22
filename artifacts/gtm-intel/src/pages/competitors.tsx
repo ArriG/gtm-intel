@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, ExternalLink, Trash2, ChevronRight } from "lucide-react";
+import { Plus, ExternalLink, Trash2, ChevronRight, Flag } from "lucide-react";
 
 const TIER_COLORS: Record<string, string> = {
   primary: "bg-red-100 text-red-800 border-red-200",
@@ -134,7 +134,7 @@ export default function Competitors() {
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Competitors</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Competitors</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Competitive Landscape</p>
         </div>
         <CreateCompetitorDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListCompetitorsQueryKey() })} />
@@ -145,8 +145,10 @@ export default function Competitors() {
           {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
         </div>
       ) : competitors?.length === 0 ? (
-        <Card className="p-12 text-center bg-muted/50 border-dashed">
-          <p className="text-muted-foreground">No competitors tracked yet. Add your first one.</p>
+        <Card className="p-12 text-center bg-muted/30 border-dashed">
+          <Flag className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold mb-1">No competitors yet</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">Add the companies you sell against. They'll inform every brief and surface in your daily signals feed.</p>
         </Card>
       ) : (
         <div className="space-y-3">
