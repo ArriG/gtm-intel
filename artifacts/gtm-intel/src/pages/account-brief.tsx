@@ -23,6 +23,9 @@ import { loadYourCompany, type YourCompany } from "@/lib/your-company";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { PageHeader } from "@/components/page-header";
+import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
+import { getValidTriggers } from "@/lib/brief-triggers";
+import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
   { value: EmailToneValues.formal, label: "Formal" },
@@ -148,15 +151,15 @@ function ConfidenceBadge({ level }: { level: string }) {
 }
 
 // --- Source summary bar ---
-function SourceSummaryBar({ summary }: { summary?: AccountBrief["sourceSummary"] }) {
+function SourceSummaryBar({ summary, triggersFound }: { summary?: AccountBrief["sourceSummary"]; triggersFound?: boolean }) {
   if (!summary) return null;
   const typeConfig = SOURCE_CONFIG;
   const auTypes = ["asic", "abn", "mfaa", "asx_filing"];
   const hasAU = summary.sourceTypes.some(t => auTypes.includes(t));
   return (
-    <div className="flex items-center gap-3 flex-wrap px-4 py-3 bg-muted/40 rounded-lg border border-border text-xs text-muted-foreground">
-      <div className="flex items-center gap-1.5 font-medium text-foreground">
-        <BookOpen className="w-3.5 h-3.5" />
+    <div className="flex items-center gap-3 flex-wrap px-5 py-3.5 bg-[#F7FAFC] rounded-2xl border border-[#E2E8F0] text-xs text-[#5A677C]">
+      <div className="flex items-center gap-1.5 font-medium text-[#2D3748]">
+        <BookOpen className="w-3.5 h-3.5 text-primary" />
         {summary.totalSources} sources searched
       </div>
       <div className="flex gap-1.5 flex-wrap">
@@ -169,6 +172,11 @@ function SourceSummaryBar({ summary }: { summary?: AccountBrief["sourceSummary"]
       {hasAU && (
         <div className="flex items-center gap-1 text-[10px] font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
           <MapPin className="w-2.5 h-2.5" />AU sources included
+        </div>
+      )}
+      {triggersFound === false && (
+        <div className="flex items-center gap-1 text-[10px] font-medium text-[#5A677C] bg-white px-2 py-0.5 rounded-full border border-[#E2E8F0]">
+          No recent triggers found in AU sources
         </div>
       )}
       <div className="ml-auto">
@@ -280,23 +288,23 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
   function removePost(i: number) { setLinkedinPosts(linkedinPosts.filter((_, idx) => idx !== i)); }
 
   return (
-    <div className="flex flex-col gap-2 mt-3">
+    <div className="flex flex-col gap-3 mt-3">
       {/* LinkedIn accordion */}
-      <div className="border border-border rounded-xl overflow-hidden">
-        <button onClick={() => setLiOpen(!liOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-primary/5 hover:bg-primary/10 transition-colors">
-          <div className="flex items-center gap-2 text-sm font-medium text-primary">
-            <span className="text-base">in</span>
+      <BriefCard className="overflow-hidden">
+        <button type="button" onClick={() => setLiOpen(!liOpen)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7FAFC] transition-colors">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#2D3748]">
+            <span className="text-base text-primary font-bold">in</span>
             LinkedIn signals
-            <span className="text-xs font-normal text-muted-foreground">— paste posts from their leadership</span>
+            <span className="text-xs font-normal text-[#5A677C]">— paste posts from their leadership</span>
           </div>
           <div className="flex items-center gap-2">
-            {liCount > 0 && <Badge variant="secondary" className="text-xs">{liCount} added</Badge>}
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${liOpen ? "rotate-180" : ""}`} />
+            {liCount > 0 && <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">{liCount} added</Badge>}
+            <ChevronDown className={`w-4 h-4 text-[#5A677C] transition-transform ${liOpen ? "rotate-180" : ""}`} />
           </div>
         </button>
         {liOpen && (
-          <div className="px-4 py-3 border-t border-border space-y-3">
+          <div className="px-6 pb-5 border-t border-[#E2E8F0] space-y-3">
             {linkedinPosts.map((post, i) => (
               <div key={i} className="flex gap-3 items-start">
                 <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0 mt-1">
@@ -304,49 +312,88 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
                 </div>
                 <div className="flex-1 space-y-2">
                   <select value={post.role} onChange={e => updatePost(i, "role", e.target.value)}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-border bg-background text-foreground w-full">
+                    className="text-xs px-3 py-2 rounded-xl border border-[#E2E8F0] bg-white text-[#2D3748] w-full">
                     {ROLE_OPTIONS.map(r => <option key={r}>{r}</option>)}
                   </select>
                   <textarea value={post.content} onChange={e => updatePost(i, "content", e.target.value)}
                     placeholder="Paste their LinkedIn post here..."
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-border bg-background text-foreground resize-none h-20 leading-relaxed" />
+                    className="w-full text-sm px-3 py-2.5 rounded-xl border border-[#E2E8F0] bg-white text-[#2D3748] placeholder:text-[#5A677C] resize-none h-20 leading-relaxed" />
                 </div>
-                <button onClick={() => removePost(i)} className="text-muted-foreground hover:text-destructive mt-1 flex-shrink-0">
+                <button type="button" onClick={() => removePost(i)} className="text-[#5A677C] hover:text-destructive mt-1 flex-shrink-0">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
-            <button onClick={addPost} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors">
+            <button type="button" onClick={addPost} className="text-xs text-[#5A677C] hover:text-[#2D3748] flex items-center gap-1.5 transition-colors">
               <span className="text-base leading-none">+</span>Add another post
             </button>
           </div>
         )}
-      </div>
+      </BriefCard>
 
       {/* Own intel accordion */}
-      <div className="border border-border rounded-xl overflow-hidden">
-        <button onClick={() => setOwnOpen(!ownOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-green-50 hover:bg-green-100 transition-colors dark:bg-green-950/20 dark:hover:bg-green-950/30">
-          <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-            <Brain className="w-4 h-4" />
+      <BriefCard className="overflow-hidden">
+        <button type="button" onClick={() => setOwnOpen(!ownOpen)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7FAFC] transition-colors">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#2D3748]">
+            <Brain className="w-4 h-4 text-primary" />
             Your intel
-            <span className="text-xs font-normal text-muted-foreground">— discovery notes, previous interactions, what you know</span>
+            <span className="text-xs font-normal text-[#5A677C]">— discovery notes, previous interactions, what you know</span>
           </div>
           <div className="flex items-center gap-2">
-            {hasOwn && <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Added</Badge>}
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${ownOpen ? "rotate-180" : ""}`} />
+            {hasOwn && <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">Added</Badge>}
+            <ChevronDown className={`w-4 h-4 text-[#5A677C] transition-transform ${ownOpen ? "rotate-180" : ""}`} />
           </div>
         </button>
         {ownOpen && (
-          <div className="px-4 py-3 border-t border-border">
+          <div className="px-6 pb-5 border-t border-[#E2E8F0]">
             <textarea value={ownIntel} onChange={e => setOwnIntel(e.target.value)}
               placeholder="Add anything you already know — discovery call notes, previous interactions, what they mentioned, who the champion is, budget cycle, failed solutions they've tried..."
-              className="w-full text-xs px-3 py-2.5 rounded-lg border border-border bg-background text-foreground resize-none h-28 leading-relaxed" />
-            <p className="text-[10px] text-muted-foreground mt-2">Private — this context is only used to improve your brief and is never stored or shared.</p>
+              className="w-full text-sm px-3 py-2.5 rounded-xl border border-[#E2E8F0] bg-white text-[#2D3748] placeholder:text-[#5A677C] resize-none h-28 leading-relaxed" />
+            <p className="text-xs text-[#5A677C] mt-2">Private — this context is only used to improve your brief and is never stored or shared.</p>
           </div>
         )}
-      </div>
+      </BriefCard>
     </div>
+  );
+}
+
+function RecentTriggersCard({ items, sources }: { items: NonNullable<AccountBrief["recentTriggers"]>["items"]; sources?: BriefSource[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? items : items.slice(0, 3);
+  const hiddenCount = items.length - 3;
+
+  return (
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><Newspaper className="w-4 h-4 text-primary" />Recent Triggers & News</BriefCardTitle>
+        <CopyButton getText={() => items.map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
+      </BriefCardHeader>
+      <BriefCardContent>
+        <div className="space-y-3">
+          {visible.map((item, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-[#2D3748]">{item.event}</p>
+                <p className={`${briefCardBodyClass} mt-0.5`}>{item.significance}</p>
+                <p className="text-xs text-[#5A677C]/70 mt-1">{item.recency}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setExpanded(e => !e)}
+            className="mt-4 text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+          >
+            {expanded ? <>Show less<ChevronDown className="w-4 h-4 rotate-180" /></> : <>+{hiddenCount} more<ChevronDown className="w-4 h-4" /></>}
+          </button>
+        )}
+        <SourceChips sources={sources} sectionId="triggers" />
+      </BriefCardContent>
+    </BriefCard>
   );
 }
 
@@ -499,6 +546,8 @@ export default function AccountBriefPage() {
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastLabel, setLastLabel] = useState("");
+  const [lastDomain, setLastDomain] = useState("");
+  const [logoFailed, setLogoFailed] = useState(false);
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([{ role: "CFO", content: "" }]);
   const [ownIntel, setOwnIntel] = useState("");
   const [showFullEmail, setShowFullEmail] = useState(false);
@@ -524,7 +573,7 @@ export default function AccountBriefPage() {
   }, [historyParam]);
 
   async function handleSearch(url: string, label: string) {
-    setLoading(true); setError(null); setBrief(null); setLastLabel(label); setShowFullEmail(false);
+    setLoading(true); setError(null); setBrief(null); setLastLabel(label); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
     setTalkTrack(null);
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
     const postsToSend = linkedinPosts.filter(p => p.content.trim());
@@ -552,7 +601,7 @@ export default function AccountBriefPage() {
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
-    setLastLabel(entry.label); setBrief(entry.brief); setError(null); setTalkTrack(null);
+    setLastLabel(entry.label); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -619,7 +668,9 @@ export default function AccountBriefPage() {
             subtitleClassName="mb-6"
           />
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
-          <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+          {!brief && (
+            <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+          )}
           {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
         </div>
       </div>
@@ -627,18 +678,41 @@ export default function AccountBriefPage() {
       {/* Results */}
       <div className="px-8 py-8 max-w-5xl mx-auto space-y-4">
         {error && <Card className="border-destructive bg-destructive/5"><CardContent className="p-4 text-sm text-destructive flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{error}</CardContent></Card>}
-        {loading && !brief && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}</div>}
+        {loading && !brief && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
 
-        {brief && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Top bar */}
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground font-mono">Brief for <span className="font-semibold text-foreground">{lastLabel}</span></p>
-              <div className="flex items-center gap-2 flex-wrap justify-end">
-                <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-7 px-2">
+        {brief && (() => {
+          const validTriggers = getValidTriggers(brief.recentTriggers?.items);
+          const hasTriggers = validTriggers.length > 0;
+          const companyLogo = lastDomain ? clearbitLogoUrl(lastDomain) : "";
+
+          return (
+          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Company header + actions */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {companyLogo && !logoFailed ? (
+                  <img
+                    src={companyLogo}
+                    alt=""
+                    className="w-14 h-14 rounded-2xl border border-[#E2E8F0] object-contain bg-white p-1.5 shrink-0"
+                    onError={() => setLogoFailed(true)}
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl border border-[#E2E8F0] bg-[#F7FAFC] flex items-center justify-center shrink-0">
+                    <Building2 className="w-6 h-6 text-primary" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-medium text-primary">Brief for</p>
+                  <h2 className="text-3xl font-bold tracking-tight leading-[1.15] text-[#2D3748]">{lastLabel}</h2>
+                  <p className="text-base text-[#5A677C] mt-1">{brief.companySnapshot.industry} · {brief.companySnapshot.location}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-[#E2E8F0]">
                   <Download className="w-3 h-3" />Download
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-7 px-2">
+                <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-[#E2E8F0]">
                   <FileText className="w-3 h-3" />PDF
                 </Button>
                 <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
@@ -646,85 +720,88 @@ export default function AccountBriefPage() {
               </div>
             </div>
 
-            {/* Source summary */}
-            <SourceSummaryBar summary={brief.sourceSummary} />
+            <SourceSummaryBar summary={brief.sourceSummary} triggersFound={hasTriggers} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Company Snapshot */}
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold"><Building2 className="w-4 h-4 text-primary" />Company Snapshot</CardTitle>
-                <CopyButton getText={() => `${brief.companySnapshot.size} | ${brief.companySnapshot.industry} | ${brief.companySnapshot.location} | ${brief.companySnapshot.fundingStage}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border border border-border rounded-lg overflow-hidden mb-3">
-                  {[{ label: "Size", value: brief.companySnapshot.size }, { label: "Industry", value: brief.companySnapshot.industry }, { label: "Location", value: brief.companySnapshot.location }, { label: "Stage", value: brief.companySnapshot.fundingStage }]
-                    .map(({ label, value }) => (
-                      <div key={label} className="px-4 py-3 bg-muted/30">
-                        <p className="text-xs text-muted-foreground uppercase font-mono mb-1">{label}</p>
-                        <p className="font-semibold text-sm">{value}</p>
-                      </div>
-                    ))}
-                </div>
-                {(brief.companySnapshot.abn || brief.companySnapshot.techStack) && (
-                  <div className="flex gap-4 flex-wrap">
-                    {brief.companySnapshot.abn && brief.companySnapshot.abn !== "Not found" && (
-                      <div className="flex items-center gap-1.5 text-xs"><MapPin className="w-3 h-3 text-green-600" /><span className="text-muted-foreground">ABN:</span><span className="font-mono font-medium">{brief.companySnapshot.abn}</span></div>
-                    )}
-                    {brief.companySnapshot.techStack && brief.companySnapshot.techStack !== "Not detected" && (
-                      <div className="flex items-center gap-1.5 text-xs"><Briefcase className="w-3 h-3 text-blue-500" /><span className="text-muted-foreground">Tech:</span><span className="font-medium">{brief.companySnapshot.techStack}</span></div>
-                    )}
+            {/* Top row: Snapshot · ICP · Triggers (optional) */}
+            <div className={hasTriggers
+              ? "grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_1fr] gap-4"
+              : "grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4"
+            }>
+              <BriefCard>
+                <BriefCardHeader>
+                  <BriefCardTitle><Building2 className="w-4 h-4 text-primary" />Company Snapshot</BriefCardTitle>
+                  <CopyButton getText={() => `${brief.companySnapshot.size} | ${brief.companySnapshot.industry} | ${brief.companySnapshot.location} | ${brief.companySnapshot.fundingStage}`} />
+                </BriefCardHeader>
+                <BriefCardContent>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {[{ label: "Size", value: brief.companySnapshot.size }, { label: "Industry", value: brief.companySnapshot.industry }, { label: "Location", value: brief.companySnapshot.location }, { label: "Stage", value: brief.companySnapshot.fundingStage }]
+                      .map(({ label, value }) => (
+                        <div key={label} className="px-4 py-3 rounded-xl bg-[#F7FAFC] border border-[#E2E8F0]">
+                          <p className={`${briefCardLabelClass} mb-1`}>{label}</p>
+                          <p className="font-semibold text-sm text-[#2D3748]">{value}</p>
+                        </div>
+                      ))}
                   </div>
-                )}
-                <SourceChips sources={brief.companySnapshot.sources} sectionId="snapshot" />
-              </CardContent>
-            </Card>
+                  {(brief.companySnapshot.abn || brief.companySnapshot.techStack) && (
+                    <div className="flex gap-4 flex-wrap mb-1">
+                      {brief.companySnapshot.abn && brief.companySnapshot.abn !== "Not found" && (
+                        <div className="flex items-center gap-1.5 text-xs text-[#5A677C]"><MapPin className="w-3 h-3 text-primary" /><span>ABN:</span><span className="font-medium text-[#2D3748]">{brief.companySnapshot.abn}</span></div>
+                      )}
+                      {brief.companySnapshot.techStack && brief.companySnapshot.techStack !== "Not detected" && (
+                        <div className="flex items-center gap-1.5 text-xs text-[#5A677C]"><Briefcase className="w-3 h-3 text-primary" /><span>Tech:</span><span className="font-medium text-[#2D3748]">{brief.companySnapshot.techStack}</span></div>
+                      )}
+                    </div>
+                  )}
+                  <SourceChips sources={brief.companySnapshot.sources} sectionId="snapshot" />
+                </BriefCardContent>
+              </BriefCard>
 
-            {/* ICP Fit */}
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold"><Star className="w-4 h-4 text-yellow-500" />ICP Fit Score</CardTitle>
-                <CopyButton getText={() => `ICP Score: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`} />
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <ScoreDots score={brief.icpFitScore.score} />
-                <p className="text-sm text-muted-foreground">{brief.icpFitScore.reason}</p>
-                <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
-              </CardContent>
-            </Card>
+              <BriefCard>
+                <BriefCardHeader>
+                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />ICP Fit Score</BriefCardTitle>
+                  <CopyButton getText={() => `ICP Score: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`} />
+                </BriefCardHeader>
+                <BriefCardContent className="space-y-2">
+                  <ScoreDots score={brief.icpFitScore.score} />
+                  <p className={briefCardBodyClass}>{brief.icpFitScore.reason}</p>
+                  <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
+                </BriefCardContent>
+              </BriefCard>
+
+              {hasTriggers && (
+                <RecentTriggersCard items={validTriggers} sources={brief.recentTriggers?.sources} />
+              )}
             </div>
 
-            {/* Their World */}
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                  <Globe className="w-4 h-4 text-purple-500" />What's Going On In Their World
+            <BriefCard>
+              <BriefCardHeader>
+                <BriefCardTitle>
+                  <Globe className="w-4 h-4 text-primary" />What's Going On In Their World
                   {brief.theirWorld?.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
-                </CardTitle>
+                </BriefCardTitle>
                 <CopyButton getText={() => brief.theirWorld.narrative} />
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
+              </BriefCardHeader>
+              <BriefCardContent>
+                <p className="text-sm text-[#2D3748] leading-relaxed">{stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
                 <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
-              </CardContent>
-            </Card>
+              </BriefCardContent>
+            </BriefCard>
 
-            {/* Buying Committee */}
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold"><Users className="w-4 h-4 text-primary" />Likely Buying Committee</CardTitle>
+            <BriefCard>
+              <BriefCardHeader>
+                <BriefCardTitle><Users className="w-4 h-4 text-primary" />Likely Buying Committee</BriefCardTitle>
                 <CopyButton getText={() => (brief.buyingCommittee ?? []).map(p => `${p.title}: ${p.painPoint}`).join("\n")} />
-              </CardHeader>
-              <CardContent>
-                <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
+              </BriefCardHeader>
+              <BriefCardContent>
+                <div className="space-y-3">
                   {(brief.buyingCommittee ?? []).map((person, i) => (
-                    <div key={i} className="flex items-start gap-3 p-4 bg-muted/20 hover:bg-muted/40 transition-colors">
+                    <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#F7FAFC] border border-[#E2E8F0]">
                       <ContactAvatar title={person.title} />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm">{person.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{person.painPoint}</p>
+                        <p className="font-semibold text-sm text-[#2D3748]">{person.title}</p>
+                        <p className={`${briefCardBodyClass} mt-0.5`}>{person.painPoint}</p>
                         {person.linkedinSignal && (
-                          <p className="text-xs text-purple-600 mt-1.5 flex items-start gap-1.5 italic">
+                          <p className="text-xs text-primary mt-1.5 flex items-start gap-1.5 italic">
                             <span className="font-bold not-italic">in</span>"{person.linkedinSignal}"
                           </p>
                         )}
@@ -733,55 +810,28 @@ export default function AccountBriefPage() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </BriefCardContent>
+            </BriefCard>
 
-            {/* Recent Triggers */}
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                  <Newspaper className="w-4 h-4 text-purple-500" />Recent Triggers & News
-                  <Badge variant="outline" className="text-xs font-mono gap-1 hidden sm:flex"><Globe className="w-2.5 h-2.5" />live search</Badge>
-                </CardTitle>
-                <CopyButton getText={() => (brief.recentTriggers?.items ?? []).map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
-              </CardHeader>
-              <CardContent>
-                <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
-                  {(brief.recentTriggers?.items ?? []).map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 p-4 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm">{item.event}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.significance}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1 font-mono">{item.recency}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <SourceChips sources={brief.recentTriggers?.sources} sectionId="triggers" />
-              </CardContent>
-            </Card>
-
-            {/* Cold Email */}
-            <Card className="border-primary/30 bg-primary/5">
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold"><Mail className="w-4 h-4 text-primary" />Cold Email</CardTitle>
+            <BriefCard className="border-primary/20">
+              <BriefCardHeader>
+                <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Cold Email</BriefCardTitle>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-muted-foreground">
+                  <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-[#5A677C]">
                     {showFullEmail ? "Show opener" : "Show full email"}
                   </Button>
                   <CopyButton getText={() => showFullEmail && brief.coldEmail.fullEmail ? brief.coldEmail.fullEmail : brief.coldEmail.opener} />
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
+              </BriefCardHeader>
+              <BriefCardContent className="space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-muted-foreground">Tone:</span>
+                  <span className={`${briefCardLabelClass}`}>Tone:</span>
                   {TONE_OPTIONS.map(({ value, label }) => (
                     <Button
                       key={value}
                       variant={emailTone === value ? "default" : "outline"}
                       size="sm"
-                      className="text-xs h-7 px-2.5"
+                      className="text-xs h-7 px-2.5 rounded-xl"
                       disabled={emailRegenerating}
                       onClick={() => regenerateColdEmail(value)}
                     >
@@ -790,51 +840,50 @@ export default function AccountBriefPage() {
                   ))}
                 </div>
                 {showFullEmail && brief.coldEmail.fullEmail
-                  ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
-                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
+                  ? <pre className="text-sm text-[#2D3748] leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
+                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-[#2D3748] leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
                 <SourceChips sources={brief.coldEmail.sources} sectionId="email" />
-              </CardContent>
-            </Card>
+              </BriefCardContent>
+            </BriefCard>
 
-            {/* Talk Track */}
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                  <MessageCircle className="w-4 h-4 text-teal-600" />Discovery Talk Track
-                </CardTitle>
+            <BriefCard>
+              <BriefCardHeader>
+                <BriefCardTitle><MessageCircle className="w-4 h-4 text-primary" />Discovery Talk Track</BriefCardTitle>
                 {!talkTrack && (
-                  <Button variant="outline" size="sm" onClick={generateTalkTrack} disabled={talkTrackLoading} className="text-xs h-7 gap-1.5">
+                  <Button variant="outline" size="sm" onClick={generateTalkTrack} disabled={talkTrackLoading} className="text-xs h-7 gap-1.5 rounded-xl border-[#E2E8F0]">
                     {talkTrackLoading ? <><Loader2 className="w-3 h-3 animate-spin" />Generating...</> : "Generate questions"}
                   </Button>
                 )}
-              </CardHeader>
-              <CardContent>
+              </BriefCardHeader>
+              <BriefCardContent>
                 {!talkTrack && !talkTrackLoading && (
-                  <p className="text-sm text-muted-foreground">One click to get a call opener and discovery questions tailored to this brief and Your Company.</p>
+                  <p className={briefCardBodyClass}>One click to get a call opener and discovery questions tailored to this brief and Your Company.</p>
                 )}
-                {talkTrackLoading && <Skeleton className="h-24 w-full" />}
+                {talkTrackLoading && <Skeleton className="h-24 w-full rounded-xl" />}
                 {talkTrack && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-mono text-muted-foreground uppercase mb-1.5">Opening</p>
-                      <p className="text-sm leading-relaxed">{talkTrack.opening}</p>
+                      <p className={`${briefCardLabelClass} mb-1.5`}>Opening</p>
+                      <p className="text-sm text-[#2D3748] leading-relaxed">{talkTrack.opening}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-mono text-muted-foreground uppercase mb-2">Discovery Questions</p>
+                      <p className={`${briefCardLabelClass} mb-2`}>Discovery Questions</p>
                       <ol className="space-y-2 list-decimal list-inside">
                         {talkTrack.discoveryQuestions.map((q, i) => (
-                          <li key={i} className="text-sm text-foreground leading-relaxed">{q}</li>
+                          <li key={i} className="text-sm text-[#2D3748] leading-relaxed">{q}</li>
                         ))}
                       </ol>
                     </div>
                     <CopyButton getText={() => `${talkTrack.opening}\n\n${talkTrack.discoveryQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`} />
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </BriefCardContent>
+            </BriefCard>
 
+            <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
