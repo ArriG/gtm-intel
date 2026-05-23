@@ -373,16 +373,18 @@ function briefActionBody(brief: AccountBrief, companyName: string, linkedinPosts
 }
 
 function briefToIcpForm(brief: AccountBrief, companyName: string) {
-  const goals = brief.recentTriggers.items.map(t => t.significance).filter(Boolean);
+  const triggerItems = brief.recentTriggers?.items ?? [];
+  const committee = brief.buyingCommittee ?? [];
+  const goals = triggerItems.map(t => t.significance).filter(Boolean);
   return {
     name: companyName,
-    industry: brief.companySnapshot.industry,
-    companySize: brief.companySnapshot.size,
-    jobTitles: brief.buyingCommittee.map(p => p.title).join("\n"),
-    painPoints: brief.buyingCommittee.map(p => p.painPoint).join("\n"),
-    goals: goals.length > 0 ? goals.join("\n") : brief.theirWorld.narrative,
+    industry: brief.companySnapshot?.industry ?? "",
+    companySize: brief.companySnapshot?.size ?? "",
+    jobTitles: committee.map(p => p.title).join("\n"),
+    painPoints: committee.map(p => p.painPoint).join("\n"),
+    goals: goals.length > 0 ? goals.join("\n") : (brief.theirWorld?.narrative ?? ""),
     channels: "Email\nLinkedIn",
-    notes: `Saved from GTM brief.\n\nICP fit: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`,
+    notes: `Saved from GTM brief.\n\nICP fit: ${brief.icpFitScore?.score ?? "?"}/10 — ${brief.icpFitScore?.reason ?? ""}`,
   };
 }
 
@@ -711,11 +713,11 @@ export default function AccountBriefPage() {
             <Card>
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold"><Users className="w-4 h-4 text-primary" />Likely Buying Committee</CardTitle>
-                <CopyButton getText={() => brief.buyingCommittee.map(p => `${p.title}: ${p.painPoint}`).join("\n")} />
+                <CopyButton getText={() => (brief.buyingCommittee ?? []).map(p => `${p.title}: ${p.painPoint}`).join("\n")} />
               </CardHeader>
               <CardContent>
                 <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
-                  {brief.buyingCommittee.map((person, i) => (
+                  {(brief.buyingCommittee ?? []).map((person, i) => (
                     <div key={i} className="flex items-start gap-3 p-4 bg-muted/20 hover:bg-muted/40 transition-colors">
                       <ContactAvatar title={person.title} />
                       <div className="flex-1 min-w-0">
@@ -741,7 +743,7 @@ export default function AccountBriefPage() {
                   <Newspaper className="w-4 h-4 text-purple-500" />Recent Triggers & News
                   <Badge variant="outline" className="text-xs font-mono gap-1 hidden sm:flex"><Globe className="w-2.5 h-2.5" />live search</Badge>
                 </CardTitle>
-                <CopyButton getText={() => brief.recentTriggers.items.map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
+                <CopyButton getText={() => (brief.recentTriggers?.items ?? []).map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
               </CardHeader>
               <CardContent>
                 <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
@@ -756,7 +758,7 @@ export default function AccountBriefPage() {
                     </div>
                   ))}
                 </div>
-                <SourceChips sources={brief.recentTriggers.sources} sectionId="triggers" />
+                <SourceChips sources={brief.recentTriggers?.sources} sectionId="triggers" />
               </CardContent>
             </Card>
 

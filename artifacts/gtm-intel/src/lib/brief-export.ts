@@ -19,13 +19,13 @@ export function formatBriefForExport(brief: AccountBrief, companyName: string, t
     brief.icpFitScore.reason,
     ``,
     `=== THEIR WORLD ===`,
-    stripCitationTags(brief.theirWorld.narrative),
+    stripCitationTags(brief.theirWorld?.narrative ?? ""),
     ``,
     `=== BUYING COMMITTEE ===`,
-    ...brief.buyingCommittee.map(p => `• ${p.title}: ${p.painPoint}`),
+    ...((brief.buyingCommittee ?? []).map(p => `• ${p.title}: ${p.painPoint}`)),
     ``,
     `=== RECENT TRIGGERS ===`,
-    ...brief.recentTriggers.items.map(t => `• ${t.event} (${t.recency}) — ${t.significance}`),
+    ...((brief.recentTriggers?.items ?? []).map(t => `• ${t.event} (${t.recency}) — ${t.significance}`)),
     ``,
     `=== COLD EMAIL ===`,
     stripCitationTags(brief.coldEmail.fullEmail || brief.coldEmail.opener),
@@ -74,11 +74,11 @@ export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrac
 <h2>ICP Fit — ${brief.icpFitScore.score}/10</h2>
 <p>${brief.icpFitScore.reason}</p>
 <h2>Their World</h2>
-<p>${brief.theirWorld.narrative}</p>
+<p>${stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
 <h2>Buying Committee</h2>
-<ul>${brief.buyingCommittee.map(p => `<li><strong>${p.title}</strong>: ${p.painPoint}</li>`).join("")}</ul>
+<ul>${(brief.buyingCommittee ?? []).map(p => `<li><strong>${p.title}</strong>: ${p.painPoint}</li>`).join("")}</ul>
 <h2>Recent Triggers</h2>
-<ul>${brief.recentTriggers.items.map(t => `<li>${t.event} (${t.recency}) — ${t.significance}</li>`).join("")}</ul>
+<ul>${(brief.recentTriggers?.items ?? []).map(t => `<li>${t.event} (${t.recency}) — ${t.significance}</li>`).join("")}</ul>
 <h2>Cold Email</h2>
 <pre>${brief.coldEmail.fullEmail || brief.coldEmail.opener}</pre>
 ${talkTrack ? `<h2>Discovery Talk Track</h2><p>${talkTrack.opening}</p><ol>${talkTrack.discoveryQuestions.map(q => `<li>${q}</li>`).join("")}</ol>` : ""}
