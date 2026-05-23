@@ -46,10 +46,12 @@ export default function CompetitorDetail() {
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-4xl font-bold tracking-tight">{competitor.name}</h1>
+            <h1 className="text-4xl font-bold tracking-tight leading-[1.15] text-[#2D3748]">{competitor.name}</h1>
             <Badge className={`text-xs border ${TIER_COLORS[competitor.tier] || ""}`}>{competitor.tier}</Badge>
           </div>
-          {competitor.tagline && <p className="text-muted-foreground mt-1">{competitor.tagline}</p>}
+          {competitor.tagline && (
+            <p className="mt-2 text-base font-normal leading-relaxed text-[#5A677C]">{competitor.tagline}</p>
+          )}
         </div>
         <a href={competitor.website} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" className="gap-2 shrink-0"><ExternalLink className="w-4 h-4" /> Website</Button>

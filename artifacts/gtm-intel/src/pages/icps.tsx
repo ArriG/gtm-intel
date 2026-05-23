@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, ChevronRight, Users } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 function CreateIcpDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -111,10 +112,7 @@ export default function Icps() {
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Ideal Customer Profiles</h1>
-          <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Who You Serve</p>
-        </div>
+        <PageHeader title="Ideal Customer Profiles" subtitle="Who you serve" />
         <CreateIcpDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListIcpsQueryKey() })} />
       </div>
 

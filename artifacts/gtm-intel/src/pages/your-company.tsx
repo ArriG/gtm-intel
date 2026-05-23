@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Info, Check } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,10 +25,7 @@ export default function YourCompanyPage() {
 
   return (
     <div className="p-8 space-y-6 max-w-3xl mx-auto">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">Your Company</h1>
-        <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Foundation</p>
-      </div>
+      <PageHeader title="Your Company" subtitle="Foundation" />
 
       <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
         <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />

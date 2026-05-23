@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, ExternalLink, Trash2, ChevronRight, Flag } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 const TIER_COLORS: Record<string, string> = {
   primary: "bg-red-100 text-red-800 border-red-200",
@@ -133,10 +134,7 @@ export default function Competitors() {
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Competitors</h1>
-          <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Competitive Landscape</p>
-        </div>
+        <PageHeader title="Competitors" subtitle="Competitive landscape" />
         <CreateCompetitorDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListCompetitorsQueryKey() })} />
       </div>
 

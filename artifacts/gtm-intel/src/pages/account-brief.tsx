@@ -22,6 +22,7 @@ import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 import { loadYourCompany, type YourCompany } from "@/lib/your-company";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
+import { PageHeader } from "@/components/page-header";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
   { value: EmailToneValues.formal, label: "Formal" },
@@ -612,8 +613,11 @@ export default function AccountBriefPage() {
       <div className="border-b border-border bg-gradient-to-br from-background via-background to-primary/5 px-8 py-10">
         <div className="max-w-5xl mx-auto">
           <Aperture className="w-6 h-6 text-primary mb-4" />
-          <h1 className="text-4xl font-bold tracking-tight leading-[1.15] text-[#2D3748] mb-2">Search Companies</h1>
-          <p className="text-[#5A677C] mb-6 text-base font-normal leading-relaxed">Sourced GTM brief with 5 source types - AU Aware</p>
+          <PageHeader
+            title="Search Companies"
+            subtitle="Sourced GTM brief with 5 source types - AU Aware"
+            subtitleClassName="mb-6"
+          />
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
           <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
           {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}

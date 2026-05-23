@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, AlertTriangle, Target, Radio } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 export default function IcpDetail() {
   const [, params] = useRoute("/icps/:id");
@@ -35,10 +36,7 @@ export default function IcpDetail() {
         <Link href="/icps">
           <Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
         </Link>
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">{icp.name}</h1>
-          <p className="text-muted-foreground mt-1">{icp.industry} · {icp.companySize}</p>
-        </div>
+        <PageHeader title={icp.name} subtitle={`${icp.industry} · ${icp.companySize}`} />
       </div>
 
       {(icp.jobTitles?.length ?? 0) > 0 && (

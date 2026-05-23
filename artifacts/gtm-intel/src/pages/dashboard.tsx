@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Users, Flag, Radio } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard();
@@ -10,10 +11,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-6">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Command Center</h1>
-          <p className="text-muted-foreground mt-2">Loading intelligence feed...</p>
-        </div>
+        <PageHeader title="Command Center" subtitle="Loading intelligence feed..." />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32 w-full" />
@@ -28,10 +26,7 @@ export default function Dashboard() {
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Command Center</h1>
-          <p className="text-muted-foreground mt-2 font-mono text-sm uppercase">Global Market Intelligence</p>
-        </div>
+        <PageHeader title="Command Center" subtitle="Global market intelligence" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -68,7 +63,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-xl font-bold">Recent Signals</h2>
+          <h2 className="text-xl font-bold text-[#2D3748]">Recent Signals</h2>
           {dashboard.recentSignals.length === 0 ? (
             <Card className="p-10 text-center bg-muted/30 border-dashed">
               <Radio className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
@@ -102,7 +97,7 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-xl font-bold">Top Competitors</h2>
+          <h2 className="text-xl font-bold text-[#2D3748]">Top Competitors</h2>
           {dashboard.topCompetitors.length === 0 ? (
             <Card className="p-10 text-center bg-muted/30 border-dashed">
               <Flag className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />

@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Search, Zap, Globe, AlertCircle, ChevronRight } from "lucide-react";
+import { Loader2, Search, Zap, AlertCircle, ChevronRight, Target } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import type { MarketProspectResponse } from "@workspace/api-client-react";
 import { loadYourCompany, type YourCompany } from "@/lib/your-company";
 
@@ -59,13 +60,12 @@ export default function MarketProspectPage() {
     <div className="min-h-screen">
       <div className="border-b border-border bg-gradient-to-br from-background via-background to-primary/5 px-8 py-10">
         <div className="max-w-3xl mx-auto">
-          <Badge variant="secondary" className="gap-1 text-xs font-mono mb-3">
-            <Globe className="w-3 h-3 text-primary" />AI · AU Market Focus
-          </Badge>
-          <h1 className="text-4xl font-bold tracking-tight mb-1">Market Prospecting</h1>
-          <p className="text-muted-foreground mb-6 text-sm">
-            Describe your target market in plain English — get 8–10 matching companies to research.
-          </p>
+          <Target className="w-6 h-6 text-primary mb-4" />
+          <PageHeader
+            title="Market Prospecting"
+            subtitle="Describe your target market in plain English — get 8–10 matching companies to research."
+            subtitleClassName="mb-6"
+          />
           <form onSubmit={handleSearch} className="space-y-3">
             <Textarea
               value={description}

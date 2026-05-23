@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Check, Activity, Radio } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 const IMPORTANCE_COLORS: Record<string, string> = {
   high: "bg-red-100 text-red-800 border-red-200",
@@ -143,10 +144,7 @@ export default function Signals() {
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Signals Feed</h1>
-          <p className="text-muted-foreground mt-1 font-mono text-sm uppercase">Market Intelligence</p>
-        </div>
+        <PageHeader title="Signals Feed" subtitle="Market intelligence" />
         <CreateSignalDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() })} />
       </div>
 
