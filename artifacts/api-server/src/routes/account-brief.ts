@@ -126,7 +126,8 @@ RULES:
 - The theirWorld narrative must read like a human AE wrote it — a story, not a list.
 - The fullEmail must reference at least one specific signal from your research.
 - Keep the entire JSON response concise — aim for quality over length.
-- Always include all 6 top-level keys even if some sections have limited data.`;
+- Always include all 6 top-level keys even if some sections have limited data.
+- CRITICAL: All JSON string values must be plain text only. Never include HTML, XML, <cite> tags, or any markup.`;
 
 function buildActionContext(
   linkedinPosts?: Array<{ role: string; content: string }>,
@@ -134,6 +135,11 @@ function buildActionContext(
   yourCompany?: YourCompanyInput,
 ) {
   return `${buildYourCompanyContext(yourCompany)}${buildOwnIntelContext(ownIntel)}${buildLinkedinContext(linkedinPosts)}`;
+}
+
+function briefWithoutColdEmail(brief: Record<string, unknown>): Record<string, unknown> {
+  const { coldEmail: _, ...rest } = brief;
+  return rest;
 }
 
 router.post("/account-brief", async (req, res): Promise<void> => {
@@ -253,13 +259,20 @@ router.post("/account-brief/cold-email", async (req, res): Promise<void> => {
   const tone = emailTone || "direct";
   const system = `You are a senior B2B AE writing cold outreach. Return ONLY valid JSON with this shape:
 { "opener": "...", "fullEmail": "Subject: ...\\n\\nHi [First name],\\n\\n...", "sources": [{ "type": "...", "label": "...", "detail": "...", "url": "", "confidence": "..." }] }
-Reference specific signals from the brief. Value outcomes, not features.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildEmailToneInstruction(tone)}`;
+
+Write a completely NEW email — do not reuse sentences from any previous draft. The ${tone.toUpperCase()} tone must be obvious from greeting, sentence structure, and sign-off.
+Reference specific signals from the research brief. Value outcomes, not features.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildEmailToneInstruction(tone)}`;
+
+  const researchBrief = briefWithoutColdEmail(brief);
 
   try {
     const result = await callClaudeJson(
       client,
       system,
-      `Write a cold email for ${companyName} using this research brief:\n${JSON.stringify(brief, null, 2)}\n\nReturn ONLY the JSON object.`,
+      `Write a ${tone} cold email for ${companyName} using this research (no existing email — write fresh):\n${JSON.stringify(researchBrief, null, 2)}\n\nReturn ONLY the JSON object.`,
+      1500,
+      30000,
+      0.85,
     );
     res.json(result);
   } catch (err) {

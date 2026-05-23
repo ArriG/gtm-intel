@@ -1,4 +1,5 @@
 import type { AccountBrief, TalkTrack } from "@workspace/api-client-react";
+import { stripCitationTags } from "./strip-citations";
 
 export function formatBriefForExport(brief: AccountBrief, companyName: string, talkTrack?: TalkTrack | null): string {
   const lines = [
@@ -18,7 +19,7 @@ export function formatBriefForExport(brief: AccountBrief, companyName: string, t
     brief.icpFitScore.reason,
     ``,
     `=== THEIR WORLD ===`,
-    brief.theirWorld.narrative,
+    stripCitationTags(brief.theirWorld.narrative),
     ``,
     `=== BUYING COMMITTEE ===`,
     ...brief.buyingCommittee.map(p => `• ${p.title}: ${p.painPoint}`),
@@ -27,7 +28,7 @@ export function formatBriefForExport(brief: AccountBrief, companyName: string, t
     ...brief.recentTriggers.items.map(t => `• ${t.event} (${t.recency}) — ${t.significance}`),
     ``,
     `=== COLD EMAIL ===`,
-    brief.coldEmail.fullEmail || brief.coldEmail.opener,
+    stripCitationTags(brief.coldEmail.fullEmail || brief.coldEmail.opener),
   ];
 
   if (talkTrack) {

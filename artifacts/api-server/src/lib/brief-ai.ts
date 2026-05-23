@@ -18,10 +18,40 @@ export type UserContextFlags = {
 };
 
 const EMAIL_TONE_INSTRUCTIONS: Record<EmailTone, string> = {
-  formal: "Write in a formal, executive tone — polished language, no slang, respectful distance. Suitable for C-suite or regulated industries.",
-  direct: "Write in a direct, peer-to-peer tone — clear and confident without being pushy. Default B2B SaaS AE voice.",
-  conversational: "Write in a warm, conversational tone — sounds like a thoughtful colleague, slightly informal but still professional.",
+  formal: `FORMAL tone requirements:
+- Greeting: "Dear [Name]" or "Hello [Name]"
+- Complete sentences, no contractions, no exclamation marks
+- Third-person company references where appropriate ("your organisation")
+- Close: "Kind regards" or "Best regards"`,
+  direct: `DIRECT tone requirements:
+- Greeting: "Hi [Name]"
+- Short sentences, confident and peer-level
+- Lead with the signal, then the outcome — no fluff
+- Close: "Worth a quick call?" or similar single-line CTA`,
+  conversational: `CONVERSATIONAL tone requirements:
+- Greeting: "Hey [Name]" or "Hi [Name]"
+- Warm, human phrasing — contractions OK ("you're", "it's")
+- One relatable observation before the pitch
+- Close: casual but professional ("Happy to chat if useful")`,
 };
+
+/** Strip Anthropic web-search citation markup that leaks into JSON text fields */
+export function stripCitationTags(text: string): string {
+  return text.replace(/<\/?cite[^>]*>/gi, "");
+}
+
+export function sanitizeAiStrings(value: unknown): unknown {
+  if (typeof value === "string") return stripCitationTags(value);
+  if (Array.isArray(value)) return value.map(sanitizeAiStrings);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = sanitizeAiStrings(v);
+    }
+    return out;
+  }
+  return value;
+}
 
 export function buildIcpScoringContext(
   icps: typeof icpsTable.$inferSelect[],
@@ -105,15 +135,17 @@ Incorporate throughout the brief and ICP scoring. Tag as type "own_intel", confi
 }
 
 export function buildEmailToneInstruction(emailTone: EmailTone = "direct"): string {
-  return `\n\nCOLD EMAIL TONE: ${emailTone.toUpperCase()}
-${EMAIL_TONE_INSTRUCTIONS[emailTone]}`;
+  return `\n\nCOLD EMAIL TONE (mandatory — the email MUST read as ${emailTone.toUpperCase()}):
+${EMAIL_TONE_INSTRUCTIONS[emailTone]}
+Do not use HTML, XML, or cite tags. Plain text only in all JSON string values.`;
 }
 
 export function parseJsonFromResponse(text: string): unknown {
   let jsonText = text.trim();
   const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]+?)```/);
   if (jsonMatch) jsonText = jsonMatch[1].trim();
-  return JSON.parse(jsonText);
+  jsonText = jsonText.replace(/<\/?cite[^>]*>/gi, "");
+  return sanitizeAiStrings(JSON.parse(jsonText));
 }
 
 export async function callClaudeJson(
@@ -122,6 +154,7 @@ export async function callClaudeJson(
   userMessage: string,
   maxTokens = 1500,
   timeoutMs = 30000,
+  temperature?: number,
 ): Promise<unknown> {
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Request timed out — please try again")), timeoutMs),
@@ -131,6 +164,7 @@ export async function callClaudeJson(
     client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
+      ...(temperature !== undefined ? { temperature } : {}),
       system,
       messages: [{ role: "user", content: userMessage }],
     }),

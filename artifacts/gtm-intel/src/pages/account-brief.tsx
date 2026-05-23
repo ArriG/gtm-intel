@@ -21,6 +21,7 @@ import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 import { loadYourCompany, type YourCompany } from "@/lib/your-company";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
+import { stripCitationTags } from "@/lib/strip-citations";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
   { value: EmailToneValues.formal, label: "Formal" },
@@ -570,6 +571,7 @@ export default function AccountBriefPage() {
       }
       const coldEmail = await res.json();
       setBrief({ ...brief, coldEmail });
+      setShowFullEmail(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to regenerate email.");
     } finally {
@@ -700,7 +702,7 @@ export default function AccountBriefPage() {
                 <CopyButton getText={() => brief.theirWorld.narrative} />
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{brief.theirWorld?.narrative ?? ""}</p>
+                <p className="text-sm text-foreground leading-relaxed">{stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
                 <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
               </CardContent>
             </Card>
@@ -786,8 +788,8 @@ export default function AccountBriefPage() {
                   ))}
                 </div>
                 {showFullEmail && brief.coldEmail.fullEmail
-                  ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{brief.coldEmail.fullEmail}</pre>
-                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{brief.coldEmail.opener}"</blockquote>}
+                  ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
+                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
                 <SourceChips sources={brief.coldEmail.sources} sectionId="email" />
               </CardContent>
             </Card>
