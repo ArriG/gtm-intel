@@ -21,10 +21,10 @@ import type {
 
 import type {
   AccountBrief,
+  AccountBriefColdEmail,
   AccountBriefInput,
-  Battlecard,
-  BattlecardInput,
-  BattlecardUpdate,
+  BriefActionInput,
+  ColdEmailRegenerateInput,
   Competitor,
   CompetitorInput,
   CompetitorUpdate,
@@ -33,9 +33,12 @@ import type {
   Icp,
   IcpInput,
   IcpUpdate,
+  MarketProspectInput,
+  MarketProspectResponse,
   Signal,
   SignalInput,
-  SignalUpdate
+  SignalUpdate,
+  TalkTrack
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -119,6 +122,219 @@ export const useGenerateAccountBrief = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGenerateAccountBriefMutationOptions(options));
+    }
+
+export const getRegenerateColdEmailUrl = () => {
+
+
+
+
+  return `/api/account-brief/cold-email`
+}
+
+/**
+ * @summary Regenerate cold email with a different tone
+ */
+export const regenerateColdEmail = async (coldEmailRegenerateInput: ColdEmailRegenerateInput, options?: RequestInit): Promise<AccountBriefColdEmail> => {
+
+  return customFetch<AccountBriefColdEmail>(getRegenerateColdEmailUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      coldEmailRegenerateInput,)
+  }
+);}
+
+
+
+
+export const getRegenerateColdEmailMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof regenerateColdEmail>>, TError,{data: BodyType<ColdEmailRegenerateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof regenerateColdEmail>>, TError,{data: BodyType<ColdEmailRegenerateInput>}, TContext> => {
+
+const mutationKey = ['regenerateColdEmail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof regenerateColdEmail>>, {data: BodyType<ColdEmailRegenerateInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  regenerateColdEmail(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegenerateColdEmailMutationResult = NonNullable<Awaited<ReturnType<typeof regenerateColdEmail>>>
+    export type RegenerateColdEmailMutationBody = BodyType<ColdEmailRegenerateInput>
+    export type RegenerateColdEmailMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Regenerate cold email with a different tone
+ */
+export const useRegenerateColdEmail = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof regenerateColdEmail>>, TError,{data: BodyType<ColdEmailRegenerateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof regenerateColdEmail>>,
+        TError,
+        {data: BodyType<ColdEmailRegenerateInput>},
+        TContext
+      > => {
+      return useMutation(getRegenerateColdEmailMutationOptions(options));
+    }
+
+export const getGenerateTalkTrackUrl = () => {
+
+
+
+
+  return `/api/account-brief/talk-track`
+}
+
+/**
+ * @summary Generate discovery call talk track from a brief
+ */
+export const generateTalkTrack = async (briefActionInput: BriefActionInput, options?: RequestInit): Promise<TalkTrack> => {
+
+  return customFetch<TalkTrack>(getGenerateTalkTrackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      briefActionInput,)
+  }
+);}
+
+
+
+
+export const getGenerateTalkTrackMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateTalkTrack>>, TError,{data: BodyType<BriefActionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateTalkTrack>>, TError,{data: BodyType<BriefActionInput>}, TContext> => {
+
+const mutationKey = ['generateTalkTrack'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateTalkTrack>>, {data: BodyType<BriefActionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateTalkTrack(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateTalkTrackMutationResult = NonNullable<Awaited<ReturnType<typeof generateTalkTrack>>>
+    export type GenerateTalkTrackMutationBody = BodyType<BriefActionInput>
+    export type GenerateTalkTrackMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate discovery call talk track from a brief
+ */
+export const useGenerateTalkTrack = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateTalkTrack>>, TError,{data: BodyType<BriefActionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateTalkTrack>>,
+        TError,
+        {data: BodyType<BriefActionInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateTalkTrackMutationOptions(options));
+    }
+
+export const getProspectMarketUrl = () => {
+
+
+
+
+  return `/api/market-prospect`
+}
+
+/**
+ * @summary Find matching companies for a target market description
+ */
+export const prospectMarket = async (marketProspectInput: MarketProspectInput, options?: RequestInit): Promise<MarketProspectResponse> => {
+
+  return customFetch<MarketProspectResponse>(getProspectMarketUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      marketProspectInput,)
+  }
+);}
+
+
+
+
+export const getProspectMarketMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prospectMarket>>, TError,{data: BodyType<MarketProspectInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof prospectMarket>>, TError,{data: BodyType<MarketProspectInput>}, TContext> => {
+
+const mutationKey = ['prospectMarket'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prospectMarket>>, {data: BodyType<MarketProspectInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  prospectMarket(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ProspectMarketMutationResult = NonNullable<Awaited<ReturnType<typeof prospectMarket>>>
+    export type ProspectMarketMutationBody = BodyType<MarketProspectInput>
+    export type ProspectMarketMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Find matching companies for a target market description
+ */
+export const useProspectMarket = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prospectMarket>>, TError,{data: BodyType<MarketProspectInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof prospectMarket>>,
+        TError,
+        {data: BodyType<MarketProspectInput>},
+        TContext
+      > => {
+      return useMutation(getProspectMarketMutationOptions(options));
     }
 
 export const getHealthCheckUrl = () => {
@@ -1008,373 +1224,6 @@ export const useDeleteIcp = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteIcpMutationOptions(options));
-    }
-
-export const getListBattlecardsUrl = () => {
-
-
-
-
-  return `/api/battlecards`
-}
-
-/**
- * @summary List all battlecards
- */
-export const listBattlecards = async ( options?: RequestInit): Promise<Battlecard[]> => {
-
-  return customFetch<Battlecard[]>(getListBattlecardsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListBattlecardsQueryKey = () => {
-    return [
-    `/api/battlecards`
-    ] as const;
-    }
-
-
-export const getListBattlecardsQueryOptions = <TData = Awaited<ReturnType<typeof listBattlecards>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBattlecards>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListBattlecardsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBattlecards>>> = ({ signal }) => listBattlecards({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBattlecards>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ListBattlecardsQueryResult = NonNullable<Awaited<ReturnType<typeof listBattlecards>>>
-export type ListBattlecardsQueryError = ErrorType<unknown>
-
-
-/**
- * @summary List all battlecards
- */
-
-export function useListBattlecards<TData = Awaited<ReturnType<typeof listBattlecards>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBattlecards>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getListBattlecardsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-
-export const getCreateBattlecardUrl = () => {
-
-
-
-
-  return `/api/battlecards`
-}
-
-/**
- * @summary Create a battlecard
- */
-export const createBattlecard = async (battlecardInput: BattlecardInput, options?: RequestInit): Promise<Battlecard> => {
-
-  return customFetch<Battlecard>(getCreateBattlecardUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      battlecardInput,)
-  }
-);}
-
-
-
-
-export const getCreateBattlecardMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBattlecard>>, TError,{data: BodyType<BattlecardInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createBattlecard>>, TError,{data: BodyType<BattlecardInput>}, TContext> => {
-
-const mutationKey = ['createBattlecard'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBattlecard>>, {data: BodyType<BattlecardInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  createBattlecard(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateBattlecardMutationResult = NonNullable<Awaited<ReturnType<typeof createBattlecard>>>
-    export type CreateBattlecardMutationBody = BodyType<BattlecardInput>
-    export type CreateBattlecardMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a battlecard
- */
-export const useCreateBattlecard = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBattlecard>>, TError,{data: BodyType<BattlecardInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof createBattlecard>>,
-        TError,
-        {data: BodyType<BattlecardInput>},
-        TContext
-      > => {
-      return useMutation(getCreateBattlecardMutationOptions(options));
-    }
-
-export const getGetBattlecardUrl = (id: number,) => {
-
-
-
-
-  return `/api/battlecards/${id}`
-}
-
-/**
- * @summary Get battlecard by ID
- */
-export const getBattlecard = async (id: number, options?: RequestInit): Promise<Battlecard> => {
-
-  return customFetch<Battlecard>(getGetBattlecardUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetBattlecardQueryKey = (id: number,) => {
-    return [
-    `/api/battlecards/${id}`
-    ] as const;
-    }
-
-
-export const getGetBattlecardQueryOptions = <TData = Awaited<ReturnType<typeof getBattlecard>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBattlecard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetBattlecardQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBattlecard>>> = ({ signal }) => getBattlecard(id, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBattlecard>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetBattlecardQueryResult = NonNullable<Awaited<ReturnType<typeof getBattlecard>>>
-export type GetBattlecardQueryError = ErrorType<void>
-
-
-/**
- * @summary Get battlecard by ID
- */
-
-export function useGetBattlecard<TData = Awaited<ReturnType<typeof getBattlecard>>, TError = ErrorType<void>>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBattlecard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetBattlecardQueryOptions(id,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-
-export const getUpdateBattlecardUrl = (id: number,) => {
-
-
-
-
-  return `/api/battlecards/${id}`
-}
-
-/**
- * @summary Update battlecard
- */
-export const updateBattlecard = async (id: number,
-    battlecardUpdate: BattlecardUpdate, options?: RequestInit): Promise<Battlecard> => {
-
-  return customFetch<Battlecard>(getUpdateBattlecardUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      battlecardUpdate,)
-  }
-);}
-
-
-
-
-export const getUpdateBattlecardMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBattlecard>>, TError,{id: number;data: BodyType<BattlecardUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateBattlecard>>, TError,{id: number;data: BodyType<BattlecardUpdate>}, TContext> => {
-
-const mutationKey = ['updateBattlecard'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBattlecard>>, {id: number;data: BodyType<BattlecardUpdate>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  updateBattlecard(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBattlecardMutationResult = NonNullable<Awaited<ReturnType<typeof updateBattlecard>>>
-    export type UpdateBattlecardMutationBody = BodyType<BattlecardUpdate>
-    export type UpdateBattlecardMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update battlecard
- */
-export const useUpdateBattlecard = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBattlecard>>, TError,{id: number;data: BodyType<BattlecardUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateBattlecard>>,
-        TError,
-        {id: number;data: BodyType<BattlecardUpdate>},
-        TContext
-      > => {
-      return useMutation(getUpdateBattlecardMutationOptions(options));
-    }
-
-export const getDeleteBattlecardUrl = (id: number,) => {
-
-
-
-
-  return `/api/battlecards/${id}`
-}
-
-/**
- * @summary Delete battlecard
- */
-export const deleteBattlecard = async (id: number, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getDeleteBattlecardUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getDeleteBattlecardMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBattlecard>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteBattlecard>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteBattlecard'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBattlecard>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteBattlecard(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteBattlecardMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBattlecard>>>
-
-    export type DeleteBattlecardMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete battlecard
- */
-export const useDeleteBattlecard = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBattlecard>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteBattlecard>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteBattlecardMutationOptions(options));
     }
 
 export const getListSignalsUrl = () => {

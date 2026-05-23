@@ -75,7 +75,6 @@ export interface Competitor {
 export interface DashboardSummary {
   competitorCount: number;
   icpCount: number;
-  battlecardCount: number;
   signalCount: number;
   recentSignals: Signal[];
   topCompetitors: Competitor[];
@@ -156,42 +155,6 @@ export interface IcpUpdate {
   painPoints?: string[];
   goals?: string[];
   channels?: string[];
-  notes?: string;
-}
-
-export interface Objection {
-  objection: string;
-  response: string;
-}
-
-export interface Battlecard {
-  id: number;
-  competitorId: number;
-  competitorName: string;
-  ourStrengths: string[];
-  theirStrengths: string[];
-  objections: Objection[];
-  winThemes: string[];
-  /** @nullable */
-  notes?: string | null;
-  createdAt: string;
-}
-
-export interface BattlecardInput {
-  competitorId: number;
-  competitorName: string;
-  ourStrengths: string[];
-  theirStrengths: string[];
-  objections: Objection[];
-  winThemes: string[];
-  notes?: string;
-}
-
-export interface BattlecardUpdate {
-  ourStrengths?: string[];
-  theirStrengths?: string[];
-  objections?: Objection[];
-  winThemes?: string[];
   notes?: string;
 }
 
@@ -307,12 +270,14 @@ export interface YourCompany {
   customerOutcomes?: string;
 }
 
-export interface AccountBriefInput {
-  url: string;
-  linkedinPosts?: LinkedInPost[];
-  ownIntel?: string;
-  yourCompany?: YourCompany;
-}
+export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
+
+
+export const EmailTone = {
+  formal: 'formal',
+  direct: 'direct',
+  conversational: 'conversational',
+} as const;
 
 export interface BuyingCommitteeMember {
   title: string;
@@ -354,7 +319,7 @@ export type AccountBriefRecentTriggers = {
   sources?: BriefSource[];
 };
 
-export type AccountBriefColdEmail = {
+export type AccountBriefColdEmailProperty = {
   opener: string;
   fullEmail?: string;
   sources?: BriefSource[];
@@ -374,7 +339,56 @@ export interface AccountBrief {
   buyingCommittee: BuyingCommitteeMember[];
   theirWorld: AccountBriefTheirWorld;
   recentTriggers: AccountBriefRecentTriggers;
-  coldEmail: AccountBriefColdEmail;
+  coldEmail: AccountBriefColdEmailProperty;
   sourceSummary?: AccountBriefSourceSummary;
+}
+
+export interface BriefActionInput {
+  companyName: string;
+  brief: AccountBrief;
+  linkedinPosts?: LinkedInPost[];
+  ownIntel?: string;
+  yourCompany?: YourCompany;
+}
+
+export type ColdEmailRegenerateInput = BriefActionInput & {
+  emailTone: EmailTone;
+};
+
+export interface AccountBriefColdEmail {
+  opener: string;
+  fullEmail?: string;
+  sources?: BriefSource[];
+}
+
+export interface TalkTrack {
+  opening: string;
+  discoveryQuestions: string[];
+}
+
+export type TalkTrackInput = BriefActionInput;
+
+export interface MarketProspectInput {
+  description: string;
+  yourCompany?: YourCompany;
+}
+
+export interface ProspectCompany {
+  name: string;
+  domain: string;
+  reason: string;
+  estimatedSize?: string;
+}
+
+export interface MarketProspectResponse {
+  companies: ProspectCompany[];
+}
+
+export interface AccountBriefInput {
+  url: string;
+  linkedinPosts?: LinkedInPost[];
+  ownIntel?: string;
+  yourCompany?: YourCompany;
+  emailTone?: EmailTone;
 }
 

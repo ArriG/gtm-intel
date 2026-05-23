@@ -11,14 +11,22 @@ import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
   Aperture, Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
-  Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag
+  Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag,
+  Download, FileText, MessageCircle
 } from "lucide-react";
-import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost } from "@workspace/api-client-react";
-import { useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
+import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
+import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 import { loadYourCompany, type YourCompany } from "@/lib/your-company";
+import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
+
+const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
+  { value: EmailToneValues.formal, label: "Formal" },
+  { value: EmailToneValues.direct, label: "Direct" },
+  { value: EmailToneValues.conversational, label: "Conversational" },
+];
 
 // --- Source chip config ---
 const SOURCE_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -171,8 +179,8 @@ function SourceSummaryBar({ summary }: { summary?: AccountBrief["sourceSummary"]
 // --- Autocomplete ---
 interface CompanySuggestion { name: string; domain: string; logo: string; }
 
-function CompanySearchInput({ onSearch, loading, cooldownSeconds }: { onSearch: (url: string, label: string) => void; loading: boolean; cooldownSeconds: number; }) {
-  const [query, setQuery] = useState("");
+function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }: { onSearch: (url: string, label: string) => void; loading: boolean; cooldownSeconds: number; initialQuery?: string; }) {
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -352,6 +360,17 @@ function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
   return trimmed;
 }
 
+function briefActionBody(brief: AccountBrief, companyName: string, linkedinPosts: LinkedInPost[], ownIntel: string) {
+  const postsToSend = linkedinPosts.filter(p => p.content.trim());
+  return {
+    companyName,
+    brief,
+    linkedinPosts: postsToSend.length > 0 ? postsToSend : undefined,
+    ownIntel: ownIntel.trim() || undefined,
+    yourCompany: yourCompanyForRequest(loadYourCompany()),
+  };
+}
+
 function briefToIcpForm(brief: AccountBrief, companyName: string) {
   const goals = brief.recentTriggers.items.map(t => t.significance).filter(Boolean);
   return {
@@ -479,9 +498,14 @@ export default function AccountBriefPage() {
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([{ role: "CFO", content: "" }]);
   const [ownIntel, setOwnIntel] = useState("");
   const [showFullEmail, setShowFullEmail] = useState(false);
+  const [emailTone, setEmailTone] = useState<EmailTone>(EmailToneValues.direct);
+  const [emailRegenerating, setEmailRegenerating] = useState(false);
+  const [talkTrack, setTalkTrack] = useState<TalkTrack | null>(null);
+  const [talkTrackLoading, setTalkTrackLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
+  const queryParam = searchParams.get("q");
 
   useEffect(() => {
     if (cooldownSeconds <= 0) return;
@@ -497,7 +521,8 @@ export default function AccountBriefPage() {
 
   async function handleSearch(url: string, label: string) {
     setLoading(true); setError(null); setBrief(null); setLastLabel(label); setShowFullEmail(false);
-    if (historyParam) setSearchParams(new URLSearchParams());
+    setTalkTrack(null);
+    if (historyParam || queryParam) setSearchParams(new URLSearchParams());
     const postsToSend = linkedinPosts.filter(p => p.content.trim());
     const yourCompany = yourCompanyForRequest(loadYourCompany());
     try {
@@ -510,6 +535,7 @@ export default function AccountBriefPage() {
           linkedinPosts: postsToSend.length > 0 ? postsToSend : undefined,
           ownIntel: ownIntel.trim() || undefined,
           yourCompany,
+          emailTone,
         }),
       });
       if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error((body as { error?: string }).error || `Request failed (${res.status})`); }
@@ -522,14 +548,59 @@ export default function AccountBriefPage() {
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
-    setLastLabel(entry.label); setBrief(entry.brief); setError(null);
+    setLastLabel(entry.label); setBrief(entry.brief); setError(null); setTalkTrack(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const copyAll = () => {
-    if (!brief) return "";
-    return `GTM BRIEF: ${lastLabel}\n\nCOMPANY\n${brief.companySnapshot.size} | ${brief.companySnapshot.industry} | ${brief.companySnapshot.location} | ${brief.companySnapshot.fundingStage}\n\nICP FIT: ${brief.icpFitScore.score}/10\n${brief.icpFitScore.reason}\n\nTHEIR WORLD\n${brief.theirWorld.narrative}\n\nBUYING COMMITTEE\n${brief.buyingCommittee.map(p => `• ${p.title}: ${p.painPoint}`).join("\n")}\n\nRECENT TRIGGERS\n${brief.recentTriggers.items.map(t => `• ${t.event} (${t.recency})`).join("\n")}\n\nCOLD EMAIL\n${brief.coldEmail.fullEmail || brief.coldEmail.opener}`;
-  };
+  async function regenerateColdEmail(tone: EmailTone) {
+    if (!brief) return;
+    setEmailTone(tone);
+    setEmailRegenerating(true);
+    setError(null);
+    try {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${base}/api/account-brief/cold-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...briefActionBody(brief, lastLabel, linkedinPosts, ownIntel), emailTone: tone }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error || `Request failed (${res.status})`);
+      }
+      const coldEmail = await res.json();
+      setBrief({ ...brief, coldEmail });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to regenerate email.");
+    } finally {
+      setEmailRegenerating(false);
+    }
+  }
+
+  async function generateTalkTrack() {
+    if (!brief) return;
+    setTalkTrackLoading(true);
+    setError(null);
+    try {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${base}/api/account-brief/talk-track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(briefActionBody(brief, lastLabel, linkedinPosts, ownIntel)),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error || `Request failed (${res.status})`);
+      }
+      setTalkTrack(await res.json() as TalkTrack);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate talk track.");
+    } finally {
+      setTalkTrackLoading(false);
+    }
+  }
+
+  const exportText = () => brief ? formatBriefForExport(brief, lastLabel, talkTrack) : "";
 
   return (
     <div className="min-h-screen">
@@ -543,7 +614,7 @@ export default function AccountBriefPage() {
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-1">Search Companies</h1>
           <p className="text-muted-foreground mb-6 text-sm">Type a company name or URL — get a sourced GTM brief in 30 seconds.</p>
-          <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} />
+          <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
           <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
           {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
         </div>
@@ -559,9 +630,15 @@ export default function AccountBriefPage() {
             {/* Top bar */}
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground font-mono">Brief for <span className="font-semibold text-foreground">{lastLabel}</span></p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-7 px-2">
+                  <Download className="w-3 h-3" />Download
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-7 px-2">
+                  <FileText className="w-3 h-3" />PDF
+                </Button>
                 <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
-                <CopyButton getText={copyAll} />
+                <CopyButton getText={() => exportText()} />
               </div>
             </div>
 
@@ -692,11 +769,63 @@ export default function AccountBriefPage() {
                   <CopyButton getText={() => showFullEmail && brief.coldEmail.fullEmail ? brief.coldEmail.fullEmail : brief.coldEmail.opener} />
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground">Tone:</span>
+                  {TONE_OPTIONS.map(({ value, label }) => (
+                    <Button
+                      key={value}
+                      variant={emailTone === value ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs h-7 px-2.5"
+                      disabled={emailRegenerating}
+                      onClick={() => regenerateColdEmail(value)}
+                    >
+                      {emailRegenerating && emailTone === value ? <Loader2 className="w-3 h-3 animate-spin" /> : label}
+                    </Button>
+                  ))}
+                </div>
                 {showFullEmail && brief.coldEmail.fullEmail
                   ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{brief.coldEmail.fullEmail}</pre>
                   : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{brief.coldEmail.opener}"</blockquote>}
                 <SourceChips sources={brief.coldEmail.sources} sectionId="email" />
+              </CardContent>
+            </Card>
+
+            {/* Talk Track */}
+            <Card>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                  <MessageCircle className="w-4 h-4 text-teal-600" />Discovery Talk Track
+                </CardTitle>
+                {!talkTrack && (
+                  <Button variant="outline" size="sm" onClick={generateTalkTrack} disabled={talkTrackLoading} className="text-xs h-7 gap-1.5">
+                    {talkTrackLoading ? <><Loader2 className="w-3 h-3 animate-spin" />Generating...</> : "Generate questions"}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {!talkTrack && !talkTrackLoading && (
+                  <p className="text-sm text-muted-foreground">One click to get a call opener and discovery questions tailored to this brief and Your Company.</p>
+                )}
+                {talkTrackLoading && <Skeleton className="h-24 w-full" />}
+                {talkTrack && (
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-mono text-muted-foreground uppercase mb-1.5">Opening</p>
+                      <p className="text-sm leading-relaxed">{talkTrack.opening}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-mono text-muted-foreground uppercase mb-2">Discovery Questions</p>
+                      <ol className="space-y-2 list-decimal list-inside">
+                        {talkTrack.discoveryQuestions.map((q, i) => (
+                          <li key={i} className="text-sm text-foreground leading-relaxed">{q}</li>
+                        ))}
+                      </ol>
+                    </div>
+                    <CopyButton getText={() => `${talkTrack.opening}\n\n${talkTrack.discoveryQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 

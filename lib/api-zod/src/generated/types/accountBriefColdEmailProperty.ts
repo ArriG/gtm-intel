@@ -7,8 +7,8 @@
  */
 import type { BriefSource } from './briefSource';
 
-export interface AccountBriefColdEmail {
+export type AccountBriefColdEmailProperty = {
   opener: string;
   fullEmail?: string;
   sources?: BriefSource[];
-}
+};

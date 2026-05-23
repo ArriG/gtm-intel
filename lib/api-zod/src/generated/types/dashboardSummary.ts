@@ -11,7 +11,6 @@ import type { Signal } from './signal';
 export interface DashboardSummary {
   competitorCount: number;
   icpCount: number;
-  battlecardCount: number;
   signalCount: number;
   recentSignals: Signal[];
   topCompetitors: Competitor[];

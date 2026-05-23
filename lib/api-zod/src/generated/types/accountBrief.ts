@@ -5,7 +5,7 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
-import type { AccountBriefColdEmail } from './accountBriefColdEmail';
+import type { AccountBriefColdEmailProperty } from './accountBriefColdEmailProperty';
 import type { AccountBriefCompanySnapshot } from './accountBriefCompanySnapshot';
 import type { AccountBriefIcpFitScore } from './accountBriefIcpFitScore';
 import type { AccountBriefRecentTriggers } from './accountBriefRecentTriggers';
@@ -19,6 +19,6 @@ export interface AccountBrief {
   buyingCommittee: BuyingCommitteeMember[];
   theirWorld: AccountBriefTheirWorld;
   recentTriggers: AccountBriefRecentTriggers;
-  coldEmail: AccountBriefColdEmail;
+  coldEmail: AccountBriefColdEmailProperty;
   sourceSummary?: AccountBriefSourceSummary;
 }

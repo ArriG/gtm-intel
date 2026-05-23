@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Aperture, Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown } from "lucide-react";
+import { Aperture, Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHistory, clearHistory } from "@/lib/history";
 
@@ -13,6 +13,7 @@ import Dashboard from "./pages/dashboard";
 import Competitors from "./pages/competitors";
 import CompetitorDetail from "./pages/competitor-detail";
 import Signals from "./pages/signals";
+import MarketProspect from "./pages/market-prospect";
 import NotFound from "./pages/not-found";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const queryClient = new QueryClient();
 const NAV_ITEMS = [
   { href: "/your-company", label: "Your Company", icon: Building2 },
   { href: "/",             label: "Search",       icon: Sparkles },
+  { href: "/prospect",     label: "Prospect",     icon: Target },
   { href: "/icps",         label: "ICPs",         icon: Users },
   { href: "/dashboard",    label: "Dashboard",    icon: Newspaper },
   { href: "/competitors",  label: "Competitors",  icon: Flag },
@@ -108,6 +110,7 @@ export default function App() {
         <main className="flex-1 min-w-0">
           <Switch>
             <Route path="/" component={AccountBriefPage} />
+            <Route path="/prospect" component={MarketProspect} />
             <Route path="/your-company" component={YourCompany} />
             <Route path="/icps" component={ICPs} />
             <Route path="/icps/:id" component={ICPDetail} />

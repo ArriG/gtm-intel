@@ -5,8 +5,6 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
+import type { BriefActionInput } from './briefActionInput';
 
-export interface Objection {
-  objection: string;
-  response: string;
-}
+export type TalkTrackInput = BriefActionInput;

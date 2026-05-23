@@ -5,14 +5,14 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
-import type { EmailTone } from './emailTone';
+import type { AccountBrief } from './accountBrief';
 import type { LinkedInPost } from './linkedInPost';
 import type { YourCompany } from './yourCompany';
 
-export interface AccountBriefInput {
-  url: string;
+export interface BriefActionInput {
+  companyName: string;
+  brief: AccountBrief;
   linkedinPosts?: LinkedInPost[];
   ownIntel?: string;
   yourCompany?: YourCompany;
-  emailTone?: EmailTone;
 }

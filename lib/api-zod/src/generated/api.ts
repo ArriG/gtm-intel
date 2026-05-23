@@ -24,7 +24,8 @@ export const GenerateAccountBriefBody = zod.object({
   "whoYouSellTo": zod.string().optional(),
   "painPoints": zod.string().optional(),
   "customerOutcomes": zod.string().optional()
-}).optional()
+}).optional(),
+  "emailTone": zod.enum(['formal', 'direct', 'conversational']).optional()
 })
 
 export const GenerateAccountBriefResponse = zod.object({
@@ -113,6 +114,255 @@ export const GenerateAccountBriefResponse = zod.object({
 
 
 /**
+ * @summary Regenerate cold email with a different tone
+ */
+export const RegenerateColdEmailBody = zod.object({
+  "companyName": zod.string(),
+  "brief": zod.object({
+  "companySnapshot": zod.object({
+  "size": zod.string(),
+  "industry": zod.string(),
+  "location": zod.string(),
+  "fundingStage": zod.string(),
+  "abn": zod.string().optional(),
+  "techStack": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "icpFitScore": zod.object({
+  "score": zod.number(),
+  "reason": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "buyingCommittee": zod.array(zod.object({
+  "title": zod.string(),
+  "painPoint": zod.string(),
+  "linkedinSignal": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+})),
+  "theirWorld": zod.object({
+  "narrative": zod.string(),
+  "confidence": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "recentTriggers": zod.object({
+  "items": zod.array(zod.object({
+  "event": zod.string(),
+  "significance": zod.string(),
+  "recency": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "coldEmail": zod.object({
+  "opener": zod.string(),
+  "fullEmail": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "sourceSummary": zod.object({
+  "totalSources": zod.number(),
+  "sourceTypes": zod.array(zod.string()),
+  "australianSources": zod.number(),
+  "overallConfidence": zod.string(),
+  "confidenceReason": zod.string()
+}).optional()
+}),
+  "linkedinPosts": zod.array(zod.object({
+  "role": zod.string(),
+  "content": zod.string()
+})).optional(),
+  "ownIntel": zod.string().optional(),
+  "yourCompany": zod.object({
+  "companyName": zod.string().optional(),
+  "whatYouSell": zod.string().optional(),
+  "whoYouSellTo": zod.string().optional(),
+  "painPoints": zod.string().optional(),
+  "customerOutcomes": zod.string().optional()
+}).optional()
+}).and(zod.object({
+  "emailTone": zod.enum(['formal', 'direct', 'conversational'])
+}))
+
+export const RegenerateColdEmailResponse = zod.object({
+  "opener": zod.string(),
+  "fullEmail": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+})
+
+
+/**
+ * @summary Generate discovery call talk track from a brief
+ */
+export const GenerateTalkTrackBody = zod.object({
+  "companyName": zod.string(),
+  "brief": zod.object({
+  "companySnapshot": zod.object({
+  "size": zod.string(),
+  "industry": zod.string(),
+  "location": zod.string(),
+  "fundingStage": zod.string(),
+  "abn": zod.string().optional(),
+  "techStack": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "icpFitScore": zod.object({
+  "score": zod.number(),
+  "reason": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "buyingCommittee": zod.array(zod.object({
+  "title": zod.string(),
+  "painPoint": zod.string(),
+  "linkedinSignal": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+})),
+  "theirWorld": zod.object({
+  "narrative": zod.string(),
+  "confidence": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "recentTriggers": zod.object({
+  "items": zod.array(zod.object({
+  "event": zod.string(),
+  "significance": zod.string(),
+  "recency": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "coldEmail": zod.object({
+  "opener": zod.string(),
+  "fullEmail": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "sourceSummary": zod.object({
+  "totalSources": zod.number(),
+  "sourceTypes": zod.array(zod.string()),
+  "australianSources": zod.number(),
+  "overallConfidence": zod.string(),
+  "confidenceReason": zod.string()
+}).optional()
+}),
+  "linkedinPosts": zod.array(zod.object({
+  "role": zod.string(),
+  "content": zod.string()
+})).optional(),
+  "ownIntel": zod.string().optional(),
+  "yourCompany": zod.object({
+  "companyName": zod.string().optional(),
+  "whatYouSell": zod.string().optional(),
+  "whoYouSellTo": zod.string().optional(),
+  "painPoints": zod.string().optional(),
+  "customerOutcomes": zod.string().optional()
+}).optional()
+})
+
+export const GenerateTalkTrackResponse = zod.object({
+  "opening": zod.string(),
+  "discoveryQuestions": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Find matching companies for a target market description
+ */
+export const ProspectMarketBody = zod.object({
+  "description": zod.string(),
+  "yourCompany": zod.object({
+  "companyName": zod.string().optional(),
+  "whatYouSell": zod.string().optional(),
+  "whoYouSellTo": zod.string().optional(),
+  "painPoints": zod.string().optional(),
+  "customerOutcomes": zod.string().optional()
+}).optional()
+})
+
+export const ProspectMarketResponse = zod.object({
+  "companies": zod.array(zod.object({
+  "name": zod.string(),
+  "domain": zod.string(),
+  "reason": zod.string(),
+  "estimatedSize": zod.string().optional()
+}))
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -127,7 +377,6 @@ export const HealthCheckResponse = zod.object({
 export const GetDashboardResponse = zod.object({
   "competitorCount": zod.number(),
   "icpCount": zod.number(),
-  "battlecardCount": zod.number(),
   "signalCount": zod.number(),
   "recentSignals": zod.array(zod.object({
   "id": zod.number(),
@@ -346,108 +595,6 @@ export const UpdateIcpResponse = zod.object({
  * @summary Delete ICP
  */
 export const DeleteIcpParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-
-/**
- * @summary List all battlecards
- */
-export const ListBattlecardsResponseItem = zod.object({
-  "id": zod.number(),
-  "competitorId": zod.number(),
-  "competitorName": zod.string(),
-  "ourStrengths": zod.array(zod.string()),
-  "theirStrengths": zod.array(zod.string()),
-  "objections": zod.array(zod.object({
-  "objection": zod.string(),
-  "response": zod.string()
-})),
-  "winThemes": zod.array(zod.string()),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-export const ListBattlecardsResponse = zod.array(ListBattlecardsResponseItem)
-
-
-/**
- * @summary Create a battlecard
- */
-export const CreateBattlecardBody = zod.object({
-  "competitorId": zod.number(),
-  "competitorName": zod.string(),
-  "ourStrengths": zod.array(zod.string()),
-  "theirStrengths": zod.array(zod.string()),
-  "objections": zod.array(zod.object({
-  "objection": zod.string(),
-  "response": zod.string()
-})),
-  "winThemes": zod.array(zod.string()),
-  "notes": zod.string().optional()
-})
-
-
-/**
- * @summary Get battlecard by ID
- */
-export const GetBattlecardParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const GetBattlecardResponse = zod.object({
-  "id": zod.number(),
-  "competitorId": zod.number(),
-  "competitorName": zod.string(),
-  "ourStrengths": zod.array(zod.string()),
-  "theirStrengths": zod.array(zod.string()),
-  "objections": zod.array(zod.object({
-  "objection": zod.string(),
-  "response": zod.string()
-})),
-  "winThemes": zod.array(zod.string()),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Update battlecard
- */
-export const UpdateBattlecardParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateBattlecardBody = zod.object({
-  "ourStrengths": zod.array(zod.string()).optional(),
-  "theirStrengths": zod.array(zod.string()).optional(),
-  "objections": zod.array(zod.object({
-  "objection": zod.string(),
-  "response": zod.string()
-})).optional(),
-  "winThemes": zod.array(zod.string()).optional(),
-  "notes": zod.string().optional()
-})
-
-export const UpdateBattlecardResponse = zod.object({
-  "id": zod.number(),
-  "competitorId": zod.number(),
-  "competitorName": zod.string(),
-  "ourStrengths": zod.array(zod.string()),
-  "theirStrengths": zod.array(zod.string()),
-  "objections": zod.array(zod.object({
-  "objection": zod.string(),
-  "response": zod.string()
-})),
-  "winThemes": zod.array(zod.string()),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Delete battlecard
- */
-export const DeleteBattlecardParams = zod.object({
   "id": zod.coerce.number()
 })
 

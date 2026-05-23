@@ -14,8 +14,6 @@ tags:
     description: Competitor tracking
   - name: icps
     description: Ideal Customer Profiles
-  - name: battlecards
-    description: Competitive battlecards
   - name: signals
     description: Market signals and intel
   - name: dashboard
@@ -42,6 +40,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AccountBrief"
+
+  /account-brief/cold-email:
+    post:
+      operationId: regenerateColdEmail
+      tags: [account-brief]
+      summary: Regenerate cold email with a different tone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ColdEmailRegenerateInput"
+      responses:
+        "200":
+          description: Regenerated cold email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountBriefColdEmail"
+
+  /account-brief/talk-track:
+    post:
+      operationId: generateTalkTrack
+      tags: [account-brief]
+      summary: Generate discovery call talk track from a brief
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalkTrackInput"
+      responses:
+        "200":
+          description: Generated talk track
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalkTrack"
+
+  /market-prospect:
+    post:
+      operationId: prospectMarket
+      tags: [account-brief]
+      summary: Find matching companies for a target market description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarketProspectInput"
+      responses:
+        "200":
+          description: Matching prospect companies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketProspectResponse"
 
   /healthz:
     get:
@@ -248,95 +303,6 @@ paths:
         "204":
           description: Deleted
 
-  /battlecards:
-    get:
-      operationId: listBattlecards
-      tags: [battlecards]
-      summary: List all battlecards
-      responses:
-        "200":
-          description: List of battlecards
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Battlecard"
-    post:
-      operationId: createBattlecard
-      tags: [battlecards]
-      summary: Create a battlecard
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BattlecardInput"
-      responses:
-        "201":
-          description: Created battlecard
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Battlecard"
-
-  /battlecards/{id}:
-    get:
-      operationId: getBattlecard
-      tags: [battlecards]
-      summary: Get battlecard by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Battlecard
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Battlecard"
-        "404":
-          description: Not found
-    patch:
-      operationId: updateBattlecard
-      tags: [battlecards]
-      summary: Update battlecard
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BattlecardUpdate"
-      responses:
-        "200":
-          description: Updated battlecard
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Battlecard"
-    delete:
-      operationId: deleteBattlecard
-      tags: [battlecards]
-      summary: Delete battlecard
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-
   /signals:
     get:
       operationId: listSignals
@@ -422,7 +388,6 @@ components:
       required:
         - competitorCount
         - icpCount
-        - battlecardCount
         - signalCount
         - recentSignals
         - topCompetitors
@@ -430,8 +395,6 @@ components:
         competitorCount:
           type: integer
         icpCount:
-          type: integer
-        battlecardCount:
           type: integer
         signalCount:
           type: integer
@@ -649,111 +612,6 @@ components:
         notes:
           type: string
 
-    Battlecard:
-      type: object
-      required:
-        - id
-        - competitorId
-        - competitorName
-        - ourStrengths
-        - theirStrengths
-        - objections
-        - winThemes
-        - createdAt
-      properties:
-        id:
-          type: integer
-        competitorId:
-          type: integer
-        competitorName:
-          type: string
-        ourStrengths:
-          type: array
-          items:
-            type: string
-        theirStrengths:
-          type: array
-          items:
-            type: string
-        objections:
-          type: array
-          items:
-            $ref: "#/components/schemas/Objection"
-        winThemes:
-          type: array
-          items:
-            type: string
-        notes:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-
-    Objection:
-      type: object
-      required:
-        - objection
-        - response
-      properties:
-        objection:
-          type: string
-        response:
-          type: string
-
-    BattlecardInput:
-      type: object
-      required:
-        - competitorId
-        - competitorName
-        - ourStrengths
-        - theirStrengths
-        - objections
-        - winThemes
-      properties:
-        competitorId:
-          type: integer
-        competitorName:
-          type: string
-        ourStrengths:
-          type: array
-          items:
-            type: string
-        theirStrengths:
-          type: array
-          items:
-            type: string
-        objections:
-          type: array
-          items:
-            $ref: "#/components/schemas/Objection"
-        winThemes:
-          type: array
-          items:
-            type: string
-        notes:
-          type: string
-
-    BattlecardUpdate:
-      type: object
-      properties:
-        ourStrengths:
-          type: array
-          items:
-            type: string
-        theirStrengths:
-          type: array
-          items:
-            type: string
-        objections:
-          type: array
-          items:
-            $ref: "#/components/schemas/Objection"
-        winThemes:
-          type: array
-          items:
-            type: string
-        notes:
-          type: string
-
     Signal:
       type: object
       required:
@@ -903,6 +761,105 @@ components:
         customerOutcomes:
           type: string
 
+    EmailTone:
+      type: string
+      enum: [formal, direct, conversational]
+
+    BriefActionInput:
+      type: object
+      required:
+        - companyName
+        - brief
+      properties:
+        companyName:
+          type: string
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
+        linkedinPosts:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkedInPost"
+        ownIntel:
+          type: string
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    ColdEmailRegenerateInput:
+      allOf:
+        - $ref: "#/components/schemas/BriefActionInput"
+        - type: object
+          required:
+            - emailTone
+          properties:
+            emailTone:
+              $ref: "#/components/schemas/EmailTone"
+
+    AccountBriefColdEmail:
+      type: object
+      required:
+        - opener
+      properties:
+        opener:
+          type: string
+        fullEmail:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    TalkTrack:
+      type: object
+      required:
+        - opening
+        - discoveryQuestions
+      properties:
+        opening:
+          type: string
+        discoveryQuestions:
+          type: array
+          items:
+            type: string
+
+    TalkTrackInput:
+      $ref: "#/components/schemas/BriefActionInput"
+
+    MarketProspectInput:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    ProspectCompany:
+      type: object
+      required:
+        - name
+        - domain
+        - reason
+      properties:
+        name:
+          type: string
+        domain:
+          type: string
+        reason:
+          type: string
+        estimatedSize:
+          type: string
+
+    MarketProspectResponse:
+      type: object
+      required:
+        - companies
+      properties:
+        companies:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProspectCompany"
+
     AccountBriefInput:
       type: object
       required:
@@ -918,6 +875,8 @@ components:
           type: string
         yourCompany:
           $ref: "#/components/schemas/YourCompany"
+        emailTone:
+          $ref: "#/components/schemas/EmailTone"
 
     BuyingCommitteeMember:
       type: object

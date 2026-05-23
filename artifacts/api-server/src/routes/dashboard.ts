@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { desc } from "drizzle-orm";
-import { db, competitorsTable, icpsTable, battlecardsTable, signalsTable } from "@workspace/db";
+import { db, competitorsTable, icpsTable, signalsTable } from "@workspace/db";
 import { GetDashboardResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -22,17 +22,9 @@ function parseSignal(row: typeof signalsTable.$inferSelect) {
 }
 
 router.get("/dashboard", async (_req, res): Promise<void> => {
-  const [
-    competitors,
-    icps,
-    battlecards,
-    signals,
-    recentSignals,
-    topCompetitors,
-  ] = await Promise.all([
+  const [competitors, icps, signals, recentSignals, topCompetitors] = await Promise.all([
     db.select().from(competitorsTable),
     db.select().from(icpsTable),
-    db.select().from(battlecardsTable),
     db.select().from(signalsTable),
     db.select().from(signalsTable).orderBy(desc(signalsTable.createdAt)).limit(5),
     db.select().from(competitorsTable).orderBy(desc(competitorsTable.createdAt)).limit(5),
@@ -41,7 +33,6 @@ router.get("/dashboard", async (_req, res): Promise<void> => {
   const summary = {
     competitorCount: competitors.length,
     icpCount: icps.length,
-    battlecardCount: battlecards.length,
     signalCount: signals.length,
     recentSignals: recentSignals.map(parseSignal),
     topCompetitors: topCompetitors.map(parseCompetitor),
