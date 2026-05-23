@@ -2,9 +2,11 @@
 
 ## What this project is
 
-A full-stack AI-powered GTM research tool for AEs and SDRs. You type a company name, it searches 5 AU-specific sources and returns a structured brief in ~30 seconds: company snapshot, ICP fit score, buying committee with pain points, recent triggers, and a personalised cold email opener. Built as a portfolio piece by a Senior AE learning to code.
+A full-stack AI-powered GTM research tool for AEs and SDRs. You type a company name, it searches 5 AU-specific sources and returns a structured brief in ~30 seconds: company snapshot, ICP fit score, buying committee with pain points, recent triggers, cold email opener, talk track, and more. Built as a portfolio piece by a Senior AE learning to code.
 
-Primary dev environment: **Replit** (runs the live app). This local clone is synced to GitHub and used for Claude Code sessions.
+Primary dev environment: **Replit** (runs the live app). This local clone is synced to GitHub and used for Claude Code / Cursor sessions.
+
+**Architecture (DB, API routes, persistence decisions):** see [`docs/architecture.md`](docs/architecture.md)
 
 ## Folder map
 
@@ -12,13 +14,16 @@ Primary dev environment: **Replit** (runs the live app). This local clone is syn
 gtm-intel/
 ├── artifacts/
 │   ├── api-server/src/         ← Express 5 backend
-│   │   └── routes/             ← one file per resource (account-brief, competitors, icps, etc.)
+│   │   ├── routes/             ← one file per resource
+│   │   └── lib/brief-ai.ts     ← shared Claude helpers (ICP context, cite stripping)
 │   └── gtm-intel/src/          ← React + Vite frontend
 │       └── pages/              ← one file per page
+├── docs/
+│   └── architecture.md         ← ADR: schema, routing, what lives in DB vs localStorage
 ├── lib/
 │   ├── api-spec/openapi.yaml   ← SOURCE OF TRUTH for all API shapes
-│   ├── api-client-react/src/generated/  ← auto-generated TS types + React Query hooks (do not edit)
-│   └── api-zod/src/generated/  ← auto-generated Zod validators (do not edit)
+│   ├── api-client-react/src/generated/  ← auto-generated (do not edit)
+│   └── api-zod/src/generated/  ← auto-generated (do not edit)
 └── CLAUDE.md                   ← this file
 ```
 
@@ -26,19 +31,24 @@ gtm-intel/
 
 - **Frontend:** React + TypeScript + Tailwind + shadcn/ui, Vite, Wouter (routing), TanStack Query
 - **Backend:** Express 5, Anthropic SDK (web_search tool), Drizzle ORM
-- **DB:** PostgreSQL (on Replit)
+- **DB:** PostgreSQL (on Replit) — ICPs, competitors, signals only
 - **AI model:** `claude-haiku-4-5-20251001` — intentionally kept on Haiku while validating token usage; switch to Sonnet once stable
 - **Codegen:** Orval reads `lib/api-spec/openapi.yaml` → generates types in `lib/api-client-react` and `lib/api-zod`
 - **Package manager:** pnpm workspaces
 
-## Key architecture decisions
+## Key architecture decisions (summary)
 
-- `openapi.yaml` is the single source of truth. Never edit the generated files directly — update the spec and re-run codegen.
-- Codegen command (run from repo root): `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orval.mjs --config ./lib/api-spec/orval.config.ts`
-- Clearbit autocomplete is called directly from the browser (no backend proxy) — free public endpoint, no auth needed
-- Brief history is saved to localStorage (not DB) — intentional, keeps it client-side and private
-- ICP scoring is DB-backed: the backend loads your defined ICPs from Postgres and builds scoring context dynamically
-- LinkedIn posts and own intel are sent as part of the POST `/api/account-brief` body (`linkedinPosts`, `ownIntel`) and injected into the Claude prompt as highest-priority context
+Full detail in [`docs/architecture.md`](docs/architecture.md).
+
+- `openapi.yaml` is the single source of truth. Never edit generated files directly.
+- Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orval.mjs --config ./lib/api-spec/orval.config.ts`
+- **Postgres:** ICPs (drive brief scoring), competitors, signals. **Not** briefs, Your Company, or history.
+- **localStorage:** Your Company (`gtm_your_company_v1`), brief history, recent searches.
+- **Your Company** sent in POST body (`yourCompany`) → seller context in Claude prompt.
+- **LinkedIn posts + own intel** in POST body → highest-priority research context.
+- **Account brief AI routes:** `POST /account-brief` (web search), `/cold-email` and `/talk-track` (regenerate from brief JSON), `POST /market-prospect` (web search).
+- **Battlecards:** UI removed earlier; REST API + OpenAPI removed in `66cfe13`. DB table schema file remains — see architecture doc.
+- Clearbit autocomplete from browser (no backend proxy).
 
 ## AU-specific sources (in the backend prompt)
 
@@ -48,50 +58,36 @@ gtm-intel/
 4. LinkedIn C-suite posts
 5. AFR / SmartCompany / fintech.com.au
 
-## What was done in the last session (May 2026)
+## Shipped (through commit `af903c6`)
 
-- Updated `lib/api-spec/openapi.yaml` to match the real API response shape — the old spec described `topPainPoints`, `recentNews`, `suggestedOpeningLine` which no longer existed; replaced with `theirWorld`, `recentTriggers`, `coldEmail`, `sourceSummary`, `BriefSource`, `LinkedInPost`
-- Re-ran Orval codegen — all generated files updated
-- Removed ~55 lines of duplicate local type definitions from `artifacts/gtm-intel/src/pages/account-brief.tsx` — now imports from `@workspace/api-client-react` instead
-- Fixed `icp-detail.tsx` TypeScript error on `jobTitles` (optional field accessed without null check)
-- Installed Node 26 + pnpm locally via Homebrew (Node wasn't on this machine before)
-- Committed and pushed all of the above (commit `c5ed7d8`)
+- Sidebar layout, polish, collapsible recent searches, Your Company page
+- Your Company Phase B+C (localStorage → API → prompt)
+- Save as ICP from brief
+- ICP scoring prompt tuning (uses AE context + defined ICPs)
+- Cold email tone toggle (Formal / Direct / Conversational) + regenerate endpoint
+- Talk track generator
+- Market prospecting page (`/prospect`)
+- Export brief (download .txt, print PDF)
+- GitHub README
+- Battlecard API cleanup
+- Cite tag stripping in AI responses
+- Null-safe Save as ICP when brief omits optional sections
 
-## Current backlog (in priority order)
+## Backlog (next ideas)
 
-### Done so far (2026-05-22 → 2026-05-23)
-- [x] Fix "10 source types" hardcoded text → "5 source types" (commit `be2f6d2`)
-- [x] Wire `main.tsx` to render `pages/account-brief.tsx`; delete dead `App.tsx` (commit `be2f6d2`)
-- [x] 30-second cooldown on the Enrich button (commit `be2f6d2`)
-- [x] Sidebar layout + wouter routing for all pages; added missing `QueryClientProvider` (commit `d858753`)
-- [x] Remove Battlecards page + sidebar nav (commit `12e8e4a`). Backend hooks/routes for battlecards still exist in `@workspace/api-client-react` — cleaning those up is a separate task (touches `openapi.yaml` + codegen).
-- [x] Refresh sidebar icons (Users/Newspaper/Flag/Radio); softer brandmark colour (commit `12e8e4a`)
-- [x] Recent searches moved to sidebar; results layout widened to `max-w-5xl`; Company Snapshot + ICP Fit side-by-side at top (commit `4804b58`)
-- [x] Polish pass — teal `#0d9488` accent, page headings `text-4xl`, crafted empty states across pages (commit `68313d1`)
-- [x] Recent searches now collapsible (chevron, expands to show all up to 10)
-- [x] Brand mark refresh: Aperture icon (teal) replaces Sparkles in sidebar header + Search hero badge
-- [x] **Your Company** page (Phase A — UI + localStorage only). New sidebar item as first nav entry, banner + 5-field form. Backend wiring is still TODO (Phase B + C below).
-
-### Next: in this order — don't reorder without revisiting
-1. **Your Company Phase B + C** — wire it up end-to-end:
-   - Phase B: frontend reads `loadYourCompany()` and includes it in POST `/api/account-brief` body
-   - Phase C: backend reads body field and injects into Claude prompt at highest-priority level; update `lib/api-spec/openapi.yaml` accordingly and re-run Orval codegen
-2. **Save to ICP from brief** — "Save as ICP reference" button on the brief that pre-populates an ICP from the company snapshot.
-
-### Parked — revisit after Save-to-ICP ships
-- [ ] ICP scoring prompt tuning — score returns a real value when ICPs are defined, but prompt could better use LinkedIn/intel context
-- [ ] Cold email tone toggle — Formal / Direct / Conversational, regenerates with one click (gets better once Your Company is fully wired up)
-- [ ] Talk track generator — one button from brief → discovery call questions tailored to Your Company's pain points
-- [ ] Market prospecting ("dentist feature") — describe a target market in plain English, get 8–10 matching companies back, click any to run a full brief. Could be driven automatically by Your Company.
-- [ ] Clean up phantom battlecard endpoints from the backend / openapi spec
-- [ ] GitHub README — angle: "Built by a Senior AE with 15+ years SaaS experience and zero prior coding background." Include screenshot, live URL, stack.
-- [ ] Export brief — copy-all or PDF download
+- Normalize partial `AccountBrief` responses on backend before returning
+- Drop orphan `battlecards` Postgres table (migration)
+- Optional GitHub Actions typecheck CI
+- ICP scoring / brief quality tuning as you use it in the field
+- Consider Sonnet for full brief generation once Haiku token profile is stable
+- README screenshot + live Replit URL
 
 ## Gotchas
 
-- **pnpm preinstall hook** blocks pnpm commands locally. Packages are installed fine but `pnpm run X` will error. Work around it by calling node/orval directly (see codegen command above).
-- **Generated files are committed** — do not run `git clean` on `lib/api-client-react/src/generated/` or `lib/api-zod/src/generated/` unless you immediately re-run codegen.
-- **Replit is the live environment.** After pushing to GitHub, do `git pull` on Replit to sync. No install step needed if only TS files changed.
-- **Node 26 installed via Homebrew** at `/opt/homebrew/bin/node`. If `node` isn't found in PATH, use the full path.
-- **TypeScript compiler** lives at `node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc` — use `node /that/path/tsc` if `tsc` isn't in PATH.
-- **esbuild darwin-arm64** binary was manually placed at `node_modules/.pnpm/esbuild@0.27.3/node_modules/@esbuild/darwin-arm64` — needed for Orval to run on Apple Silicon.
+- **pnpm preinstall hook** blocks `pnpm run X` locally. Work around with direct `node` paths (see codegen above).
+- **Generated files are committed** — do not `git clean` generated dirs without re-running Orval.
+- **Replit is live.** After push to GitHub, `git pull` on Replit. No install if only TS changed.
+- **Node 26** locally at `/opt/homebrew/bin/node` if `node` not in PATH.
+- **TypeScript:** `node node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc`
+- **api-client-react composite project:** run `tsc -p lib/api-client-react` if frontend can't see new OpenAPI types.
+- **Haiku may return partial brief JSON** — frontend guards with optional chaining; see architecture doc.
