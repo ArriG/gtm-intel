@@ -44,6 +44,32 @@ DEFINED ICPs:
 ${descriptions}`;
 }
 
+type YourCompanyInput = {
+  companyName?: string;
+  whatYouSell?: string;
+  whoYouSellTo?: string;
+  painPoints?: string;
+  customerOutcomes?: string;
+};
+
+function buildYourCompanyContext(yourCompany?: YourCompanyInput): string {
+  if (!yourCompany) return "";
+
+  const lines = [
+    yourCompany.companyName?.trim() ? `Company name: ${yourCompany.companyName.trim()}` : null,
+    yourCompany.whatYouSell?.trim() ? `What we sell: ${yourCompany.whatYouSell.trim()}` : null,
+    yourCompany.whoYouSellTo?.trim() ? `Who we sell to: ${yourCompany.whoYouSellTo.trim()}` : null,
+    yourCompany.painPoints?.trim() ? `Problems we solve: ${yourCompany.painPoints.trim()}` : null,
+    yourCompany.customerOutcomes?.trim() ? `Customer outcomes we deliver: ${yourCompany.customerOutcomes.trim()}` : null,
+  ].filter(Boolean);
+
+  if (lines.length === 0) return "";
+
+  return `\n\nSELLER CONTEXT — THE AE'S COMPANY (highest priority for positioning and cold email):
+${lines.join("\n")}
+Use this to tailor the coldEmail value statement and fullEmail — reference what we sell and the outcomes we deliver, not generic SaaS language.`;
+}
+
 const BASE_SYSTEM_PROMPT = `You are a world-class GTM research analyst specialising in Australian and Asia-Pacific markets.
 
 When given a company URL, search across these 5 HIGH-PRIORITY sources only — do not spend time on other sources:
@@ -152,10 +178,11 @@ RULES:
 - Always include all 6 top-level keys even if some sections have limited data.`;
 
 router.post("/account-brief", async (req, res): Promise<void> => {
-  const { url, linkedinPosts, ownIntel } = req.body as {
+  const { url, linkedinPosts, ownIntel, yourCompany } = req.body as {
     url?: string;
     linkedinPosts?: Array<{ role: string; content: string }>;
     ownIntel?: string;
+    yourCompany?: YourCompanyInput;
   };
 
   if (!url || typeof url !== "string") {
@@ -191,10 +218,12 @@ router.post("/account-brief", async (req, res): Promise<void> => {
     ? `\n\nAE'S OWN INTEL (highest priority — ground truth from direct interactions):\n${ownIntel.trim()}\nIncorporate throughout the brief. Tag as type "own_intel", confidence "verified".`
     : "";
 
+  const yourCompanyContext = buildYourCompanyContext(yourCompany);
+
   const systemPrompt = `${BASE_SYSTEM_PROMPT}
 
 ICP SCORING INSTRUCTIONS:
-${icpContext}${linkedinContext}${ownIntelContext}`;
+${icpContext}${yourCompanyContext}${ownIntelContext}${linkedinContext}`;
 
   // 55-second timeout — returns clean error instead of hanging forever
   const timeoutPromise = new Promise<never>((_, reject) =>

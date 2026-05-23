@@ -299,10 +299,19 @@ export interface LinkedInPost {
   content: string;
 }
 
+export interface YourCompany {
+  companyName?: string;
+  whatYouSell?: string;
+  whoYouSellTo?: string;
+  painPoints?: string;
+  customerOutcomes?: string;
+}
+
 export interface AccountBriefInput {
   url: string;
   linkedinPosts?: LinkedInPost[];
   ownIntel?: string;
+  yourCompany?: YourCompany;
 }
 
 export interface BuyingCommitteeMember {

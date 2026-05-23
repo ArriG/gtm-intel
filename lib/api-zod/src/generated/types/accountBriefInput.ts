@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LinkedInPost } from './linkedInPost';
+import type { YourCompany } from './yourCompany';
 
 export interface AccountBriefInput {
   url: string;
   linkedinPosts?: LinkedInPost[];
   ownIntel?: string;
+  yourCompany?: YourCompany;
 }

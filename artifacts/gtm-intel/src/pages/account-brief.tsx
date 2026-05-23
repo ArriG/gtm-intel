@@ -4,15 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
   Aperture, Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
-  Briefcase, Brain, BookOpen, AlertCircle, ExternalLink
+  Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag
 } from "lucide-react";
 import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost } from "@workspace/api-client-react";
-import { useSearchParams } from "wouter";
+import { useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
+import { loadYourCompany, type YourCompany } from "@/lib/your-company";
 
 // --- Source chip config ---
 const SOURCE_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -334,6 +340,136 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
   );
 }
 
+function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
+  const trimmed: YourCompany = {
+    companyName: yc.companyName.trim(),
+    whatYouSell: yc.whatYouSell.trim(),
+    whoYouSellTo: yc.whoYouSellTo.trim(),
+    painPoints: yc.painPoints.trim(),
+    customerOutcomes: yc.customerOutcomes.trim(),
+  };
+  if (!Object.values(trimmed).some(Boolean)) return undefined;
+  return trimmed;
+}
+
+function briefToIcpForm(brief: AccountBrief, companyName: string) {
+  const goals = brief.recentTriggers.items.map(t => t.significance).filter(Boolean);
+  return {
+    name: companyName,
+    industry: brief.companySnapshot.industry,
+    companySize: brief.companySnapshot.size,
+    jobTitles: brief.buyingCommittee.map(p => p.title).join("\n"),
+    painPoints: brief.buyingCommittee.map(p => p.painPoint).join("\n"),
+    goals: goals.length > 0 ? goals.join("\n") : brief.theirWorld.narrative,
+    channels: "Email\nLinkedIn",
+    notes: `Saved from GTM brief.\n\nICP fit: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`,
+  };
+}
+
+type IcpFormState = ReturnType<typeof briefToIcpForm>;
+
+function SaveAsIcpDialog({ brief, companyName }: { brief: AccountBrief; companyName: string }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<IcpFormState>(() => briefToIcpForm(brief, companyName));
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const mutation = useCreateIcp();
+  const queryClient = useQueryClient();
+
+  function handleOpen(nextOpen: boolean) {
+    if (nextOpen) {
+      setForm(briefToIcpForm(brief, companyName));
+      setSavedId(null);
+    }
+    setOpen(nextOpen);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    mutation.mutate({
+      data: {
+        name: form.name,
+        industry: form.industry,
+        companySize: form.companySize,
+        jobTitles: form.jobTitles.split("\n").map(s => s.trim()).filter(Boolean),
+        painPoints: form.painPoints.split("\n").map(s => s.trim()).filter(Boolean),
+        goals: form.goals.split("\n").map(s => s.trim()).filter(Boolean),
+        channels: form.channels.split("\n").map(s => s.trim()).filter(Boolean),
+        notes: form.notes || undefined,
+      },
+    }, {
+      onSuccess: (icp) => {
+        queryClient.invalidateQueries({ queryKey: getListIcpsQueryKey() });
+        setSavedId(icp.id);
+      },
+    });
+  }
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => handleOpen(true)} className="gap-1.5 text-xs h-7 px-2">
+        <Flag className="w-3 h-3" />Save as ICP
+      </Button>
+      <Dialog open={open} onOpenChange={handleOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Save as ICP Reference</DialogTitle></DialogHeader>
+          {savedId ? (
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">ICP saved. Future briefs will be scored against it.</p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => handleOpen(false)}>Close</Button>
+                <Link href={`/icps/${savedId}`}>
+                  <Button>View ICP</Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+              <div className="space-y-1.5">
+                <Label>ICP Name *</Label>
+                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Industry *</Label>
+                  <Input value={form.industry} onChange={e => setForm(f => ({ ...f, industry: e.target.value }))} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Company Size *</Label>
+                  <Input value={form.companySize} onChange={e => setForm(f => ({ ...f, companySize: e.target.value }))} required />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Job Titles (one per line)</Label>
+                <Textarea value={form.jobTitles} onChange={e => setForm(f => ({ ...f, jobTitles: e.target.value }))} rows={2} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Pain Points (one per line) *</Label>
+                <Textarea value={form.painPoints} onChange={e => setForm(f => ({ ...f, painPoints: e.target.value }))} rows={3} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Goals (one per line) *</Label>
+                <Textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} rows={3} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Channels (one per line) *</Label>
+                <Textarea value={form.channels} onChange={e => setForm(f => ({ ...f, channels: e.target.value }))} rows={2} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Notes</Label>
+                <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => handleOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Saving..." : "Save ICP"}</Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 // --- Main page ---
 export default function AccountBriefPage() {
   const [loading, setLoading] = useState(false);
@@ -363,12 +499,18 @@ export default function AccountBriefPage() {
     setLoading(true); setError(null); setBrief(null); setLastLabel(label); setShowFullEmail(false);
     if (historyParam) setSearchParams(new URLSearchParams());
     const postsToSend = linkedinPosts.filter(p => p.content.trim());
+    const yourCompany = yourCompanyForRequest(loadYourCompany());
     try {
       const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       const res = await fetch(`${base}/api/account-brief`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, linkedinPosts: postsToSend.length > 0 ? postsToSend : undefined, ownIntel: ownIntel.trim() || undefined }),
+        body: JSON.stringify({
+          url,
+          linkedinPosts: postsToSend.length > 0 ? postsToSend : undefined,
+          ownIntel: ownIntel.trim() || undefined,
+          yourCompany,
+        }),
       });
       if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error((body as { error?: string }).error || `Request failed (${res.status})`); }
       const data = await res.json() as AccountBrief;
@@ -417,7 +559,10 @@ export default function AccountBriefPage() {
             {/* Top bar */}
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground font-mono">Brief for <span className="font-semibold text-foreground">{lastLabel}</span></p>
-              <CopyButton getText={copyAll} />
+              <div className="flex items-center gap-2">
+                <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
+                <CopyButton getText={copyAll} />
+              </div>
             </div>
 
             {/* Source summary */}

@@ -889,6 +889,20 @@ components:
         content:
           type: string
 
+    YourCompany:
+      type: object
+      properties:
+        companyName:
+          type: string
+        whatYouSell:
+          type: string
+        whoYouSellTo:
+          type: string
+        painPoints:
+          type: string
+        customerOutcomes:
+          type: string
+
     AccountBriefInput:
       type: object
       required:
@@ -902,6 +916,8 @@ components:
             $ref: "#/components/schemas/LinkedInPost"
         ownIntel:
           type: string
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
 
     BuyingCommitteeMember:
       type: object

@@ -44,3 +44,4 @@ export * from './signalType';
 export * from './signalUpdate';
 export * from './signalUpdateImportance';
 export * from './signalUpdateType';
+export * from './yourCompany';

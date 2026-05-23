@@ -17,7 +17,14 @@ export const GenerateAccountBriefBody = zod.object({
   "role": zod.string(),
   "content": zod.string()
 })).optional(),
-  "ownIntel": zod.string().optional()
+  "ownIntel": zod.string().optional(),
+  "yourCompany": zod.object({
+  "companyName": zod.string().optional(),
+  "whatYouSell": zod.string().optional(),
+  "whoYouSellTo": zod.string().optional(),
+  "painPoints": zod.string().optional(),
+  "customerOutcomes": zod.string().optional()
+}).optional()
 })
 
 export const GenerateAccountBriefResponse = zod.object({
