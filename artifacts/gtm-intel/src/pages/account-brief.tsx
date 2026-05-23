@@ -229,8 +229,8 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
           </div>
           <Input type="text" value={query} onChange={e => setQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
-            placeholder="Type a company name or paste a URL..."
-            className="flex-1 font-mono text-sm border-0 shadow-none focus-visible:ring-0 bg-transparent"
+            placeholder="Company name or URL"
+            className="flex-1 text-sm border-0 shadow-none focus-visible:ring-0 bg-transparent text-[#2D3748] placeholder:text-[#5A677C]"
             disabled={loading} autoComplete="off" />
           <Button type="submit" disabled={loading || cooldownSeconds > 0 || !query.trim()} className="gap-2 shrink-0 rounded-lg">
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Researching...</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
@@ -611,13 +611,9 @@ export default function AccountBriefPage() {
       {/* Hero */}
       <div className="border-b border-border bg-gradient-to-br from-background via-background to-primary/5 px-8 py-10">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center gap-2 mb-3">
-            <Badge variant="secondary" className="gap-1 text-xs font-mono">
-              <Aperture className="w-3 h-3 text-primary" />AI · 5 Source Types · AU-Aware
-            </Badge>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-1">Search Companies</h1>
-          <p className="text-muted-foreground mb-6 text-sm">Type a company name or URL — get a sourced GTM brief in 30 seconds.</p>
+          <Aperture className="w-6 h-6 text-primary mb-4" />
+          <h1 className="text-4xl font-bold tracking-tight leading-[1.15] text-[#2D3748] mb-2">Search Companies</h1>
+          <p className="text-[#5A677C] mb-6 text-base font-normal leading-relaxed">Sourced GTM brief with 5 source types - AU Aware</p>
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
           <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
           {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
