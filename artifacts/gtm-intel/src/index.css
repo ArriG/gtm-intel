@@ -84,15 +84,15 @@
   --sidebar: 30 10% 96%;
   --sidebar-foreground: 30 8% 28%;
   --sidebar-border: 30 12% 88%;
-  --sidebar-primary: 14 88% 62%;
+  --sidebar-primary: 12 88% 62%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 30 14% 92%;
   --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 14 88% 62%;
+  --sidebar-ring: 12 88% 62%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --popover-border: 30 12% 88%;
-  --primary: 14 88% 62%;
+  --primary: 12 88% 62%;
   --primary-foreground: 0 0% 100%;
   --secondary: 30 14% 92%;
   --secondary-foreground: 222 47% 11%;
@@ -103,7 +103,7 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
   --input: 30 12% 88%;
-  --ring: 14 88% 62%;
+  --ring: 12 88% 62%;
   
   --chart-1: 221 83% 53%;
   --chart-2: 160 84% 39%;
@@ -141,7 +141,7 @@
   --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
   --popover-border: 217 33% 17%;
-  --primary: 14 85% 56%;
+  --primary: 12 85% 56%;
   --primary-foreground: 0 0% 100%;
   --secondary: 30 10% 20%;
   --secondary-foreground: 30 12% 92%;
@@ -152,7 +152,7 @@
   --destructive: 0 62% 30%;
   --destructive-foreground: 210 40% 98%;
   --input: 217 33% 17%;
-  --ring: 14 85% 56%;
+  --ring: 12 85% 56%;
 }
 
 @layer base {

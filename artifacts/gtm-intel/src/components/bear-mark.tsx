@@ -8,7 +8,8 @@ interface BearMarkProps {
 }
 
 /**
- * Minimal essentialist bear face — dot eyes, overlapping ear ellipses, soft muzzle.
+ * Design D — forehead slit gaze: slit eyes high under ears, compact muzzle,
+ * maximum chin room so the bear reads as looking up.
  */
 export function BearMark({ size = 24, className, withCircle = true }: BearMarkProps) {
   return (
@@ -25,20 +26,20 @@ export function BearMark({ size = 24, className, withCircle = true }: BearMarkPr
         <circle cx="16" cy="16" r="15" className="fill-muted" />
       )}
 
-      {/* Ears — larger pads behind the face */}
-      <ellipse cx="9.6" cy="11.2" rx="4.3" ry="4.6" className="fill-primary" />
-      <ellipse cx="22.4" cy="11.2" rx="4.3" ry="4.6" className="fill-primary" />
+      {/* Ears */}
+      <ellipse cx="9.2" cy="11" rx="4" ry="4.3" className="fill-primary" />
+      <ellipse cx="22.8" cy="11" rx="4" ry="4.3" className="fill-primary" />
 
-      {/* Face */}
-      <ellipse cx="16" cy="17.5" rx="9.2" ry="9.8" className="fill-primary" />
+      {/* Face — tall oval, features clustered high */}
+      <ellipse cx="16" cy="18.8" rx="9" ry="10.2" className="fill-primary" />
 
-      {/* Dot eyes */}
-      <circle cx="12.4" cy="16.2" r="1.4" className="fill-muted" />
-      <circle cx="19.6" cy="16.2" r="1.4" className="fill-muted" />
+      {/* Slit eyes */}
+      <rect x="11.4" y="12.6" width="2.4" height="0.75" rx="0.38" className="fill-muted" />
+      <rect x="18.2" y="12.6" width="2.4" height="0.75" rx="0.38" className="fill-muted" />
 
       {/* Muzzle + nose */}
-      <ellipse cx="16" cy="21.4" rx="3.6" ry="2.7" className="fill-muted" />
-      <ellipse cx="16" cy="20.5" rx="1.1" ry="0.85" className="fill-primary" />
+      <ellipse cx="16" cy="15.6" rx="2.8" ry="2" className="fill-muted" />
+      <ellipse cx="16" cy="14.9" rx="0.95" ry="0.7" className="fill-primary" />
     </svg>
   );
 }
