@@ -11,6 +11,7 @@ import {
   callClaudeJson,
   callClaudeJsonWithSearch,
   parseJsonFromResponse,
+  textFromMessageContent,
   type EmailTone,
   type YourCompanyInput,
 } from "../lib/brief-ai";
@@ -218,17 +219,17 @@ Return ONLY the JSON object. No markdown, no explanation.`,
       timeoutPromise,
     ]) as Anthropic.Message;
 
-    const textBlock = message.content.find(b => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
+    const responseText = textFromMessageContent(message.content);
+    if (!responseText) {
       res.status(500).json({ error: "No response generated. Please try again." });
       return;
     }
 
     let brief: unknown;
     try {
-      brief = parseJsonFromResponse(textBlock.text);
-    } catch {
-      req.log.error({ raw: textBlock.text.slice(0, 500) }, "Failed to parse Claude response as JSON");
+      brief = parseJsonFromResponse(responseText);
+    } catch (err) {
+      req.log.error({ raw: responseText.slice(0, 500), err }, "Failed to parse Claude response as JSON");
       res.status(500).json({ error: "Failed to parse AI response. Please try again." });
       return;
     }

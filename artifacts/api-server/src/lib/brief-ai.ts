@@ -140,12 +140,53 @@ ${EMAIL_TONE_INSTRUCTIONS[emailTone]}
 Do not use HTML, XML, or cite tags. Plain text only in all JSON string values.`;
 }
 
+/** Collect all text blocks — web-search responses often lead with prose in an earlier block. */
+export function textFromMessageContent(content: Anthropic.Message["content"]): string {
+  return content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map(b => b.text)
+    .join("\n")
+    .trim();
+}
+
 export function parseJsonFromResponse(text: string): unknown {
   let jsonText = text.trim();
-  const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]+?)```/);
-  if (jsonMatch) jsonText = jsonMatch[1].trim();
+  const fenced = jsonText.match(/```(?:json)?\s*([\s\S]+?)```/);
+  if (fenced) {
+    jsonText = fenced[1].trim();
+  } else {
+    const objectStart = jsonText.indexOf("{");
+    const arrayStart = jsonText.indexOf("[");
+    const start =
+      objectStart >= 0 && (arrayStart < 0 || objectStart < arrayStart)
+        ? objectStart
+        : arrayStart;
+    if (start >= 0) {
+      jsonText = jsonText.slice(start);
+      const open = jsonText[0];
+      const close = open === "{" ? "}" : "]";
+      let depth = 0;
+      for (let i = 0; i < jsonText.length; i++) {
+        if (jsonText[i] === open) depth++;
+        else if (jsonText[i] === close) {
+          depth--;
+          if (depth === 0) {
+            jsonText = jsonText.slice(0, i + 1);
+            break;
+          }
+        }
+      }
+    }
+  }
   jsonText = jsonText.replace(/<\/?cite[^>]*>/gi, "");
-  return sanitizeAiStrings(JSON.parse(jsonText));
+  try {
+    return sanitizeAiStrings(JSON.parse(jsonText));
+  } catch (err) {
+    const preview = text.slice(0, 120).replace(/\s+/g, " ");
+    throw new Error(
+      `Failed to parse AI response as JSON (${err instanceof Error ? err.message : "invalid JSON"}). Preview: ${preview}`,
+    );
+  }
 }
 
 export async function callClaudeJson(
@@ -171,12 +212,12 @@ export async function callClaudeJson(
     timeoutPromise,
   ]) as Anthropic.Message;
 
-  const textBlock = message.content.find(b => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
+  const text = textFromMessageContent(message.content);
+  if (!text) {
     throw new Error("No response generated. Please try again.");
   }
 
-  return parseJsonFromResponse(textBlock.text);
+  return parseJsonFromResponse(text);
 }
 
 export async function callClaudeJsonWithSearch(
@@ -201,10 +242,10 @@ export async function callClaudeJsonWithSearch(
     timeoutPromise,
   ]) as Anthropic.Message;
 
-  const textBlock = message.content.find(b => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
+  const text = textFromMessageContent(message.content);
+  if (!text) {
     throw new Error("No response generated. Please try again.");
   }
 
-  return parseJsonFromResponse(textBlock.text);
+  return parseJsonFromResponse(text);
 }

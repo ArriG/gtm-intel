@@ -45,13 +45,14 @@ Rules:
 - Prefer companies with verifiable websites — no made-up names.
 - Include a mix of well-known and mid-market if possible.
 - If you cannot find 8, return as many real matches as you found (minimum 3).
-- Domains must be real — use web search to verify.${buildYourCompanyContext(yourCompany)}`;
+- Domains must be real — use web search to verify.
+- CRITICAL: Do not write any preamble, explanation, or markdown. Your entire response must be the raw JSON object only.${buildYourCompanyContext(yourCompany)}`;
 
   try {
     const result = await callClaudeJsonWithSearch(
       client,
       system,
-      `Find matching prospect companies for this target market:\n"${description.trim()}"\n\nSearch now and return ONLY the JSON object.`,
+      `Find matching prospect companies for this target market:\n"${description.trim()}"\n\nSearch the web, then respond with ONLY the JSON object — no other text.`,
       2500,
       50000,
     );
