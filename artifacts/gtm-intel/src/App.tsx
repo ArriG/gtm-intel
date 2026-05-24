@@ -103,8 +103,8 @@ function Sidebar() {
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-muted/30 flex flex-col">
       <div className="px-5 py-5 border-b border-border">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-[#2D3748]">
-          <BearMark size={22} />
+        <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight text-[#2D3748]">
+          <BearMark size={32} />
           <span>GTM Intel</span>
         </Link>
       </div>

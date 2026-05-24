@@ -680,7 +680,7 @@ export default function AccountBriefPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/[0.04] to-primary/10 pointer-events-none" aria-hidden />
         <div className="absolute top-0 right-0 w-[28rem] h-[28rem] bg-primary/[0.07] rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" aria-hidden />
         <div className="relative px-8 py-16 max-w-5xl mx-auto">
-          <BearMark size={36} className="mb-5" />
+          <BearMark size={52} className="mb-5" />
           <p className="text-sm font-semibold text-primary mb-2">GTM research</p>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] text-[#2D3748] max-w-2xl">
             Research any company in 30 seconds
