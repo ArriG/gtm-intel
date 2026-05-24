@@ -46,7 +46,7 @@ Prospecting opportunities discovered by `POST /signal-radar`. Columns include `c
 **Signal radar flow**
 
 1. User defines **Your Company** (industry / who you sell to) and optionally ICPs
-2. User clicks **Run Radar** → `POST /signal-radar` with `yourCompany` in body
+2. User clicks **Run Radar** → `POST /account-brief/signal-radar` with `yourCompany` in body
 3. Backend anchors web search to Your Company's target market; ICPs refine matches when present
 4. Results persisted to `signals` table; user can mark reviewed, dismiss, or jump to account brief via domain link
 

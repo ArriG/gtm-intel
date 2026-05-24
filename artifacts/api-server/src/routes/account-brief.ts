@@ -15,6 +15,7 @@ import {
   type EmailTone,
   type YourCompanyInput,
 } from "../lib/brief-ai";
+import { handleSignalRadar } from "../lib/signal-radar-handler";
 
 const router: IRouter = Router();
 
@@ -385,5 +386,7 @@ ${buildPrepMeetingInstruction(type)}`;
     res.status(500).json({ error: message });
   }
 });
+
+router.post("/account-brief/signal-radar", handleSignalRadar);
 
 export default router;

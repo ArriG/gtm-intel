@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListSignals, useUpdateSignal, useDeleteSignal, useRunSignalRadar, getListSignalsQueryKey, useListIcps } from "@workspace/api-client-react";
+import { useListSignals, useUpdateSignal, useDeleteSignal, getListSignalsQueryKey, useListIcps } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Check, Radio, Loader2, Radar, ExternalLink, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { loadYourCompany, useYourCompany, yourCompanyHasRadarContext, type YourCompany } from "@/lib/your-company";
+import { apiUrl } from "@/lib/api-url";
 
 const IMPORTANCE_COLORS: Record<string, string> = {
   high: "bg-red-100 text-red-800 border-red-200",
@@ -45,23 +46,31 @@ export default function Signals() {
   const updateSignal = useUpdateSignal();
   const deleteSignal = useDeleteSignal();
   const queryClient = useQueryClient();
-  const runSignalRadar = useRunSignalRadar();
   const [filterType, setFilterType] = useState("all");
   const [filterImportance, setFilterImportance] = useState("all");
+  const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
 
-  function handleScan() {
+  async function handleScan() {
     setScanError(null);
-    runSignalRadar.mutate(
-      { data: { yourCompany: yourCompanyForRequest(loadYourCompany()) } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
-          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-        },
-        onError: (err) => setScanError(err instanceof Error ? err.message : "Scan failed."),
-      },
-    );
+    setScanning(true);
+    try {
+      const res = await fetch(apiUrl("/api/account-brief/signal-radar"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ yourCompany: yourCompanyForRequest(loadYourCompany()) }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error || `Scan failed (${res.status})`);
+      }
+      await queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+    } catch (err) {
+      setScanError(err instanceof Error ? err.message : "Scan failed.");
+    } finally {
+      setScanning(false);
+    }
   }
 
   function handleToggleReviewed(id: number, reviewed: boolean) {
@@ -103,10 +112,10 @@ export default function Signals() {
         />
         <Button
           onClick={handleScan}
-          disabled={runSignalRadar.isPending || !canRunRadar}
+          disabled={scanning || !canRunRadar}
           className="gap-2 shrink-0"
         >
-          {runSignalRadar.isPending
+          {scanning
             ? <><Loader2 className="w-4 h-4 animate-spin" />Scanning web...</>
             : <><Radar className="w-4 h-4" />Run Radar</>}
         </Button>
