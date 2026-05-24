@@ -22,7 +22,6 @@ import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 import { loadYourCompany, type YourCompany } from "@/lib/your-company";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
-import { PageHeader } from "@/components/page-header";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
 import { getValidTriggers } from "@/lib/brief-triggers";
 import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
@@ -122,14 +121,30 @@ function SourceChips({ sources, sectionId }: { sources?: BriefSource[]; sectionI
   );
 }
 
-// --- Score dots ---
-function ScoreDots({ score }: { score: number }) {
+// --- ICP score display ---
+function icpScoreBand(score: number) {
+  if (score >= 8) return { label: "Strong fit", text: "text-green-600", badge: "bg-green-50 text-green-700 border-green-200", fill: "bg-green-500" };
+  if (score >= 5) return { label: "Moderate fit", text: "text-yellow-600", badge: "bg-yellow-50 text-yellow-700 border-yellow-200", fill: "bg-yellow-500" };
+  return { label: "Weak fit", text: "text-red-600", badge: "bg-red-50 text-red-700 border-red-200", fill: "bg-red-500" };
+}
+
+function IcpScoreDisplay({ score, reason }: { score: number; reason: string }) {
+  const band = icpScoreBand(score);
   return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} className={`w-2.5 h-2.5 rounded-full ${i < score ? score >= 8 ? "bg-green-500" : score >= 5 ? "bg-yellow-500" : "bg-red-500" : "bg-muted"}`} />
-      ))}
-      <span className="ml-2 font-bold text-lg tabular-nums">{score}<span className="text-muted-foreground font-normal text-sm">/10</span></span>
+    <div className="space-y-3">
+      <div className="flex items-end gap-1.5">
+        <span className={`text-5xl font-black tabular-nums leading-none ${band.text}`}>{score}</span>
+        <span className="text-lg text-[#5A677C] font-normal pb-1">/10</span>
+      </div>
+      <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${band.badge}`}>
+        {band.label}
+      </span>
+      <div className="flex items-center gap-1 pt-1">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className={`w-2 h-2 rounded-full ${i < score ? band.fill : "bg-[#E2E8F0]"}`} />
+        ))}
+      </div>
+      <p className="text-sm text-[#5A677C] leading-snug">{reason}</p>
     </div>
   );
 }
@@ -556,6 +571,7 @@ export default function AccountBriefPage() {
   const [talkTrack, setTalkTrack] = useState<TalkTrack | null>(null);
   const [talkTrackLoading, setTalkTrackLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [showOptionalContext, setShowOptionalContext] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -659,19 +675,42 @@ export default function AccountBriefPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <div className="border-b border-border bg-gradient-to-br from-background via-background to-primary/5 px-8 py-10">
-        <div className="max-w-5xl mx-auto">
-          <Aperture className="w-6 h-6 text-primary mb-4" />
-          <PageHeader
-            title="Search Companies"
-            subtitle="Sourced GTM brief with 5 source types - AU Aware"
-            subtitleClassName="mb-6"
-          />
+      <div className="relative border-b border-border overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/[0.04] to-primary/10 pointer-events-none" aria-hidden />
+        <div className="absolute top-0 right-0 w-[28rem] h-[28rem] bg-primary/[0.07] rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" aria-hidden />
+        <div className="relative px-8 py-16 max-w-5xl mx-auto">
+          <Aperture className="w-7 h-7 text-primary mb-5" />
+          <p className="text-sm font-semibold text-primary mb-2">GTM research</p>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] text-[#2D3748] max-w-2xl">
+            Research any company in 30 seconds
+          </h1>
+          <p className="mt-3 text-lg text-[#5A677C] leading-relaxed max-w-xl mb-8">
+            AU-specific intel from ASIC, Seek, LinkedIn and press — brief ready to send.
+          </p>
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
-          {!brief && (
-            <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+          {!brief && !showOptionalContext && (
+            <button
+              type="button"
+              onClick={() => setShowOptionalContext(true)}
+              className="mt-4 text-sm text-[#5A677C] hover:text-primary transition-colors flex items-center gap-1.5"
+            >
+              <span className="text-primary font-medium">+</span>
+              Add LinkedIn signals or your intel <span className="text-[#5A677C]/70">(optional)</span>
+            </button>
           )}
-          {loading && <p className="text-xs text-muted-foreground mt-3 font-mono flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Searching across 5 source types including ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
+          {!brief && showOptionalContext && (
+            <div className="mt-5 space-y-3">
+              <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+              <button
+                type="button"
+                onClick={() => setShowOptionalContext(false)}
+                className="text-xs text-[#5A677C] hover:text-[#2D3748] transition-colors"
+              >
+                Hide optional context
+              </button>
+            </div>
+          )}
+          {loading && <p className="text-xs text-[#5A677C] mt-4 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin text-primary" />Searching ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
         </div>
       </div>
 
@@ -762,8 +801,7 @@ export default function AccountBriefPage() {
                   <CopyButton getText={() => `ICP Score: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`} />
                 </BriefCardHeader>
                 <BriefCardContent className="space-y-2">
-                  <ScoreDots score={brief.icpFitScore.score} />
-                  <p className={briefCardBodyClass}>{brief.icpFitScore.reason}</p>
+                  <IcpScoreDisplay score={brief.icpFitScore.score} reason={brief.icpFitScore.reason} />
                   <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
                 </BriefCardContent>
               </BriefCard>
@@ -813,7 +851,7 @@ export default function AccountBriefPage() {
               </BriefCardContent>
             </BriefCard>
 
-            <BriefCard className="border-primary/20">
+            <BriefCard className="bg-primary/[0.04] border-primary/30">
               <BriefCardHeader>
                 <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Cold Email</BriefCardTitle>
                 <div className="flex items-center gap-2">

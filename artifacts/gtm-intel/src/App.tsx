@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Aperture, Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown, Target } from "lucide-react";
+import { Aperture, Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHistory, clearHistory } from "@/lib/history";
 
@@ -18,14 +18,17 @@ import NotFound from "./pages/not-found";
 
 const queryClient = new QueryClient();
 
-const NAV_ITEMS = [
+const NAV_PRIMARY = [
+  { href: "/", label: "Search", icon: Sparkles },
+  { href: "/prospect", label: "Prospect", icon: Target },
+];
+
+const NAV_WORKSPACE = [
   { href: "/your-company", label: "Your Company", icon: Building2 },
-  { href: "/",             label: "Search",       icon: Sparkles },
-  { href: "/prospect",     label: "Prospect",     icon: Target },
-  { href: "/icps",         label: "ICPs",         icon: Users },
-  { href: "/dashboard",    label: "Dashboard",    icon: Newspaper },
-  { href: "/competitors",  label: "Competitors",  icon: Flag },
-  { href: "/signals",      label: "Signals",      icon: Radio },
+  { href: "/icps", label: "ICPs", icon: Users },
+  { href: "/dashboard", label: "Dashboard", icon: Newspaper },
+  { href: "/competitors", label: "Competitors", icon: Flag },
+  { href: "/signals", label: "Signals", icon: Radio },
 ];
 
 function RecentSearches() {
@@ -33,7 +36,7 @@ function RecentSearches() {
   const [open, setOpen] = useState(false);
   if (history.length === 0) return null;
   return (
-    <div className="ml-6">
+    <div className="ml-3 mt-0.5">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -67,6 +70,31 @@ function RecentSearches() {
   );
 }
 
+function NavSectionLabel({ children }: { children: string }) {
+  return (
+    <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#5A677C]/80">
+      {children}
+    </p>
+  );
+}
+
+function SidebarNavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-2.5 pl-2.5 pr-3 py-2 rounded-r-md text-sm transition-colors border-l-2",
+        active
+          ? "border-primary bg-primary/[0.08] text-[#2D3748] font-semibold"
+          : "border-transparent text-[#5A677C] font-normal hover:bg-background/60 hover:text-[#2D3748]",
+      )}
+    >
+      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-primary" : "text-[#5A677C]")} />
+      {label}
+    </Link>
+  );
+}
+
 function Sidebar() {
   const [location] = useLocation();
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
@@ -79,24 +107,25 @@ function Sidebar() {
           <span>GTM Intel</span>
         </Link>
       </div>
-      <nav className="flex-1 p-2 space-y-0.5">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-          <div key={href}>
-            <Link
-              href={href}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-normal transition-colors",
-                isActive(href)
-                  ? "bg-background text-[#2D3748] font-semibold shadow-sm"
-                  : "text-[#5A677C] hover:bg-background/60 hover:text-[#2D3748]",
-              )}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </Link>
-            {href === "/" && <RecentSearches />}
-          </div>
-        ))}
+      <nav className="flex-1 p-2">
+        <NavSectionLabel>Research</NavSectionLabel>
+        <div className="space-y-0.5">
+          {NAV_PRIMARY.map(({ href, label, icon }) => (
+            <div key={href}>
+              <SidebarNavLink href={href} label={label} icon={icon} active={isActive(href)} />
+              {href === "/" && <RecentSearches />}
+            </div>
+          ))}
+        </div>
+
+        <div className="my-3 mx-3 border-t border-border" />
+
+        <NavSectionLabel>Workspace</NavSectionLabel>
+        <div className="space-y-0.5">
+          {NAV_WORKSPACE.map(({ href, label, icon }) => (
+            <SidebarNavLink key={href} href={href} label={label} icon={icon} active={isActive(href)} />
+          ))}
+        </div>
       </nav>
     </aside>
   );
