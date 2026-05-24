@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
-  Aperture, Copy, Check, Globe, Zap, Search,
+  Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
   Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag,
   Download, FileText, MessageCircle
@@ -25,6 +25,7 @@ import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
 import { getValidTriggers } from "@/lib/brief-triggers";
 import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
+import { BearMark } from "@/components/bear-mark";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
   { value: EmailToneValues.formal, label: "Formal" },
@@ -679,12 +680,12 @@ export default function AccountBriefPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/[0.04] to-primary/10 pointer-events-none" aria-hidden />
         <div className="absolute top-0 right-0 w-[28rem] h-[28rem] bg-primary/[0.07] rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" aria-hidden />
         <div className="relative px-8 py-16 max-w-5xl mx-auto">
-          <Aperture className="w-7 h-7 text-primary mb-5" />
+          <BearMark size={36} className="mb-5" />
           <p className="text-sm font-semibold text-primary mb-2">GTM research</p>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] text-[#2D3748] max-w-2xl">
             Research any company in 30 seconds
           </h1>
-          <p className="mt-3 text-lg text-[#5A677C] leading-relaxed max-w-xl mb-8">
+          <p className="mt-3 text-lg text-muted-foreground/90 leading-relaxed max-w-xl mb-8">
             AU-specific intel from ASIC, Seek, LinkedIn and press — brief ready to send.
           </p>
           <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />

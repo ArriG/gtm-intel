@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Aperture, Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BearMark } from "@/components/bear-mark";
 import { useHistory, clearHistory } from "@/lib/history";
 
 import AccountBriefPage from "./pages/account-brief";
@@ -103,7 +104,7 @@ function Sidebar() {
     <aside className="w-56 shrink-0 border-r border-border bg-muted/30 flex flex-col">
       <div className="px-5 py-5 border-b border-border">
         <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-[#2D3748]">
-          <Aperture className="w-5 h-5 text-primary" />
+          <BearMark size={22} />
           <span>GTM Intel</span>
         </Link>
       </div>
