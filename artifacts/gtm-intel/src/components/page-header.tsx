@@ -10,9 +10,9 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, className, subtitleClassName }: PageHeaderProps) {
   return (
     <div className={className}>
-      <h1 className="text-4xl font-bold tracking-tight leading-[1.15] text-[#2D3748]">{title}</h1>
+      <h1 className="text-4xl font-extrabold tracking-tight leading-[1.1] text-foreground">{title}</h1>
       {subtitle && (
-        <p className={cn("mt-2 text-base font-normal leading-relaxed text-muted-foreground/90", subtitleClassName)}>
+        <p className={cn("mt-2 text-base font-medium leading-relaxed text-muted-foreground", subtitleClassName)}>
           {subtitle}
         </p>
       )}

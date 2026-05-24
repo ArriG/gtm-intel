@@ -135,17 +135,17 @@ function IcpScoreDisplay({ score, reason }: { score: number; reason: string }) {
     <div className="space-y-3">
       <div className="flex items-end gap-1.5">
         <span className={`text-5xl font-black tabular-nums leading-none ${band.text}`}>{score}</span>
-        <span className="text-lg text-[#5A677C] font-normal pb-1">/10</span>
+        <span className="text-lg text-muted-foreground font-normal pb-1">/10</span>
       </div>
       <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${band.badge}`}>
         {band.label}
       </span>
       <div className="flex items-center gap-1 pt-1">
         {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className={`w-2 h-2 rounded-full ${i < score ? band.fill : "bg-[#E2E8F0]"}`} />
+          <div key={i} className={`w-2 h-2 rounded-full ${i < score ? band.fill : "bg-border"}`} />
         ))}
       </div>
-      <p className="text-sm text-[#5A677C] leading-snug">{reason}</p>
+      <p className="text-sm text-muted-foreground leading-snug">{reason}</p>
     </div>
   );
 }
@@ -173,8 +173,8 @@ function SourceSummaryBar({ summary, triggersFound }: { summary?: AccountBrief["
   const auTypes = ["asic", "abn", "mfaa", "asx_filing"];
   const hasAU = summary.sourceTypes.some(t => auTypes.includes(t));
   return (
-    <div className="flex items-center gap-3 flex-wrap px-5 py-3.5 bg-[#F7FAFC] rounded-2xl border border-[#E2E8F0] text-xs text-[#5A677C]">
-      <div className="flex items-center gap-1.5 font-medium text-[#2D3748]">
+    <div className="flex items-center gap-3 flex-wrap px-5 py-3.5 bg-secondary rounded-2xl border border-border text-xs text-muted-foreground">
+      <div className="flex items-center gap-1.5 font-medium text-foreground">
         <BookOpen className="w-3.5 h-3.5 text-primary" />
         {summary.totalSources} sources searched
       </div>
@@ -191,7 +191,7 @@ function SourceSummaryBar({ summary, triggersFound }: { summary?: AccountBrief["
         </div>
       )}
       {triggersFound === false && (
-        <div className="flex items-center gap-1 text-[10px] font-medium text-[#5A677C] bg-white px-2 py-0.5 rounded-full border border-[#E2E8F0]">
+        <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-white px-2 py-0.5 rounded-full border border-border">
           No recent triggers found in AU sources
         </div>
       )}
@@ -248,16 +248,20 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
   return (
     <div ref={wrapperRef} className="relative">
       <form onSubmit={handleManualSubmit}>
-        <div className="flex gap-2 bg-background border border-border rounded-xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+        <div className="flex gap-2 bg-card border-2 border-foreground/10 rounded-2xl p-2 focus-within:border-foreground/25 transition-all">
           <div className="flex items-center pl-2 text-muted-foreground">
             {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           </div>
           <Input type="text" value={query} onChange={e => setQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
             placeholder="Company name or URL"
-            className="flex-1 text-sm border-0 shadow-none focus-visible:ring-0 bg-transparent text-[#2D3748] placeholder:text-[#5A677C]"
+            className="flex-1 text-sm font-medium border-0 shadow-none focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground"
             disabled={loading} autoComplete="off" />
-          <Button type="submit" disabled={loading || cooldownSeconds > 0 || !query.trim()} className="gap-2 shrink-0 rounded-lg">
+          <Button
+            type="submit"
+            disabled={loading || cooldownSeconds > 0 || !query.trim()}
+            className="gap-2 shrink-0 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-bold border-0 min-h-10 px-5"
+          >
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Researching...</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
           </Button>
         </div>
@@ -308,19 +312,19 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
       {/* LinkedIn accordion */}
       <BriefCard className="overflow-hidden">
         <button type="button" onClick={() => setLiOpen(!liOpen)}
-          className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7FAFC] transition-colors">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#2D3748]">
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-secondary transition-colors">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <span className="text-base text-primary font-bold">in</span>
             LinkedIn signals
-            <span className="text-xs font-normal text-[#5A677C]">— paste posts from their leadership</span>
+            <span className="text-xs font-normal text-muted-foreground">— paste posts from their leadership</span>
           </div>
           <div className="flex items-center gap-2">
             {liCount > 0 && <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">{liCount} added</Badge>}
-            <ChevronDown className={`w-4 h-4 text-[#5A677C] transition-transform ${liOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${liOpen ? "rotate-180" : ""}`} />
           </div>
         </button>
         {liOpen && (
-          <div className="px-6 pb-5 border-t border-[#E2E8F0] space-y-3">
+          <div className="px-6 pb-5 border-t border-border space-y-3">
             {linkedinPosts.map((post, i) => (
               <div key={i} className="flex gap-3 items-start">
                 <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0 mt-1">
@@ -328,19 +332,19 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
                 </div>
                 <div className="flex-1 space-y-2">
                   <select value={post.role} onChange={e => updatePost(i, "role", e.target.value)}
-                    className="text-xs px-3 py-2 rounded-xl border border-[#E2E8F0] bg-white text-[#2D3748] w-full">
+                    className="text-xs px-3 py-2 rounded-xl border border-border bg-white text-foreground w-full">
                     {ROLE_OPTIONS.map(r => <option key={r}>{r}</option>)}
                   </select>
                   <textarea value={post.content} onChange={e => updatePost(i, "content", e.target.value)}
                     placeholder="Paste their LinkedIn post here..."
-                    className="w-full text-sm px-3 py-2.5 rounded-xl border border-[#E2E8F0] bg-white text-[#2D3748] placeholder:text-[#5A677C] resize-none h-20 leading-relaxed" />
+                    className="w-full text-sm px-3 py-2.5 rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground resize-none h-20 leading-relaxed" />
                 </div>
-                <button type="button" onClick={() => removePost(i)} className="text-[#5A677C] hover:text-destructive mt-1 flex-shrink-0">
+                <button type="button" onClick={() => removePost(i)} className="text-muted-foreground hover:text-destructive mt-1 flex-shrink-0">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
-            <button type="button" onClick={addPost} className="text-xs text-[#5A677C] hover:text-[#2D3748] flex items-center gap-1.5 transition-colors">
+            <button type="button" onClick={addPost} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors">
               <span className="text-base leading-none">+</span>Add another post
             </button>
           </div>
@@ -350,23 +354,23 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
       {/* Own intel accordion */}
       <BriefCard className="overflow-hidden">
         <button type="button" onClick={() => setOwnOpen(!ownOpen)}
-          className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7FAFC] transition-colors">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#2D3748]">
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-secondary transition-colors">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Brain className="w-4 h-4 text-primary" />
             Your intel
-            <span className="text-xs font-normal text-[#5A677C]">— discovery notes, previous interactions, what you know</span>
+            <span className="text-xs font-normal text-muted-foreground">— discovery notes, previous interactions, what you know</span>
           </div>
           <div className="flex items-center gap-2">
             {hasOwn && <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">Added</Badge>}
-            <ChevronDown className={`w-4 h-4 text-[#5A677C] transition-transform ${ownOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${ownOpen ? "rotate-180" : ""}`} />
           </div>
         </button>
         {ownOpen && (
-          <div className="px-6 pb-5 border-t border-[#E2E8F0]">
+          <div className="px-6 pb-5 border-t border-border">
             <textarea value={ownIntel} onChange={e => setOwnIntel(e.target.value)}
               placeholder="Add anything you already know — discovery call notes, previous interactions, what they mentioned, who the champion is, budget cycle, failed solutions they've tried..."
-              className="w-full text-sm px-3 py-2.5 rounded-xl border border-[#E2E8F0] bg-white text-[#2D3748] placeholder:text-[#5A677C] resize-none h-28 leading-relaxed" />
-            <p className="text-xs text-[#5A677C] mt-2">Private — this context is only used to improve your brief and is never stored or shared.</p>
+              className="w-full text-sm px-3 py-2.5 rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground resize-none h-28 leading-relaxed" />
+            <p className="text-xs text-muted-foreground mt-2">Private — this context is only used to improve your brief and is never stored or shared.</p>
           </div>
         )}
       </BriefCard>
@@ -391,9 +395,9 @@ function RecentTriggersCard({ items, sources }: { items: NonNullable<AccountBrie
             <div key={i} className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-[#2D3748]">{item.event}</p>
+                <p className="text-sm font-medium text-foreground">{item.event}</p>
                 <p className={`${briefCardBodyClass} mt-0.5`}>{item.significance}</p>
-                <p className="text-xs text-[#5A677C]/70 mt-1">{item.recency}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">{item.recency}</p>
               </div>
             </div>
           ))}
@@ -675,43 +679,58 @@ export default function AccountBriefPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <div className="relative border-b border-border overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/[0.04] to-primary/10 pointer-events-none" aria-hidden />
-        <div className="absolute top-0 right-0 w-[28rem] h-[28rem] bg-primary/[0.07] rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" aria-hidden />
-        <div className="relative px-8 py-16 max-w-5xl mx-auto">
-          <BearMark size={52} className="mb-5" />
-          <p className="text-sm font-semibold text-primary mb-2">GTM research</p>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] text-[#2D3748] max-w-2xl">
-            Research any company in 30 seconds
-          </h1>
-          <p className="mt-3 text-lg text-muted-foreground/90 leading-relaxed max-w-xl mb-8">
-            AU-specific intel from ASIC, Seek, LinkedIn and press — brief ready to send.
-          </p>
-          <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
-          {!brief && !showOptionalContext && (
-            <button
-              type="button"
-              onClick={() => setShowOptionalContext(true)}
-              className="mt-4 text-sm text-[#5A677C] hover:text-primary transition-colors flex items-center gap-1.5"
-            >
-              <span className="text-primary font-medium">+</span>
-              Add LinkedIn signals or your intel <span className="text-[#5A677C]/70">(optional)</span>
-            </button>
-          )}
-          {!brief && showOptionalContext && (
-            <div className="mt-5 space-y-3">
-              <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+      {/* Hero — WTTJ split: yellow top, cream bottom */}
+      <div className="relative overflow-hidden">
+        {/* Top half — yellow */}
+        <div className="bg-primary text-foreground px-8 py-14 sm:py-16 lg:py-20">
+          <div className="max-w-5xl mx-auto">
+            <BearMark size={52} className="mb-6" />
+            <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">GTM research</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.05] max-w-3xl">
+              Research any company in 30 seconds
+            </h1>
+            <p className="mt-4 text-lg sm:text-xl font-medium text-foreground/85 leading-snug max-w-2xl">
+              AU-specific intel from ASIC, Seek, LinkedIn and press — brief ready to send.
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom half — cream */}
+        <div className="bg-secondary px-8 py-10 sm:py-12 border-b border-border">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-2xl mb-8">
+              Finally, GTM research that works for you.
+            </h2>
+            <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
+            {!brief && !showOptionalContext && (
               <button
                 type="button"
-                onClick={() => setShowOptionalContext(false)}
-                className="text-xs text-[#5A677C] hover:text-[#2D3748] transition-colors"
+                onClick={() => setShowOptionalContext(true)}
+                className="mt-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
               >
-                Hide optional context
+                <span className="text-foreground font-bold">+</span>
+                Add LinkedIn signals or your intel <span className="text-muted-foreground/70">(optional)</span>
               </button>
-            </div>
-          )}
-          {loading && <p className="text-xs text-[#5A677C] mt-4 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin text-primary" />Searching ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...</p>}
+            )}
+            {!brief && showOptionalContext && (
+              <div className="mt-5 space-y-3">
+                <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+                <button
+                  type="button"
+                  onClick={() => setShowOptionalContext(false)}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Hide optional context
+                </button>
+              </div>
+            )}
+            {loading && (
+              <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin text-foreground" />
+                Searching ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -734,25 +753,25 @@ export default function AccountBriefPage() {
                   <img
                     src={companyLogo}
                     alt=""
-                    className="w-14 h-14 rounded-2xl border border-[#E2E8F0] object-contain bg-white p-1.5 shrink-0"
+                    className="w-14 h-14 rounded-2xl border border-border object-contain bg-white p-1.5 shrink-0"
                     onError={() => setLogoFailed(true)}
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-2xl border border-[#E2E8F0] bg-[#F7FAFC] flex items-center justify-center shrink-0">
+                  <div className="w-14 h-14 rounded-2xl border border-border bg-secondary flex items-center justify-center shrink-0">
                     <Building2 className="w-6 h-6 text-primary" />
                   </div>
                 )}
                 <div>
                   <p className="text-sm font-medium text-primary">Brief for</p>
-                  <h2 className="text-3xl font-bold tracking-tight leading-[1.15] text-[#2D3748]">{lastLabel}</h2>
-                  <p className="text-base text-[#5A677C] mt-1">{brief.companySnapshot.industry} · {brief.companySnapshot.location}</p>
+                  <h2 className="text-3xl font-bold tracking-tight leading-[1.15] text-foreground">{lastLabel}</h2>
+                  <p className="text-base text-muted-foreground mt-1">{brief.companySnapshot.industry} · {brief.companySnapshot.location}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-                <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-[#E2E8F0]">
+                <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
                   <Download className="w-3 h-3" />Download
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-[#E2E8F0]">
+                <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
                   <FileText className="w-3 h-3" />PDF
                 </Button>
                 <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
@@ -776,19 +795,19 @@ export default function AccountBriefPage() {
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     {[{ label: "Size", value: brief.companySnapshot.size }, { label: "Industry", value: brief.companySnapshot.industry }, { label: "Location", value: brief.companySnapshot.location }, { label: "Stage", value: brief.companySnapshot.fundingStage }]
                       .map(({ label, value }) => (
-                        <div key={label} className="px-4 py-3 rounded-xl bg-[#F7FAFC] border border-[#E2E8F0]">
+                        <div key={label} className="px-4 py-3 rounded-xl bg-secondary border border-border">
                           <p className={`${briefCardLabelClass} mb-1`}>{label}</p>
-                          <p className="font-semibold text-sm text-[#2D3748]">{value}</p>
+                          <p className="font-semibold text-sm text-foreground">{value}</p>
                         </div>
                       ))}
                   </div>
                   {(brief.companySnapshot.abn || brief.companySnapshot.techStack) && (
                     <div className="flex gap-4 flex-wrap mb-1">
                       {brief.companySnapshot.abn && brief.companySnapshot.abn !== "Not found" && (
-                        <div className="flex items-center gap-1.5 text-xs text-[#5A677C]"><MapPin className="w-3 h-3 text-primary" /><span>ABN:</span><span className="font-medium text-[#2D3748]">{brief.companySnapshot.abn}</span></div>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="w-3 h-3 text-primary" /><span>ABN:</span><span className="font-medium text-foreground">{brief.companySnapshot.abn}</span></div>
                       )}
                       {brief.companySnapshot.techStack && brief.companySnapshot.techStack !== "Not detected" && (
-                        <div className="flex items-center gap-1.5 text-xs text-[#5A677C]"><Briefcase className="w-3 h-3 text-primary" /><span>Tech:</span><span className="font-medium text-[#2D3748]">{brief.companySnapshot.techStack}</span></div>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Briefcase className="w-3 h-3 text-primary" /><span>Tech:</span><span className="font-medium text-foreground">{brief.companySnapshot.techStack}</span></div>
                       )}
                     </div>
                   )}
@@ -821,7 +840,7 @@ export default function AccountBriefPage() {
                 <CopyButton getText={() => brief.theirWorld.narrative} />
               </BriefCardHeader>
               <BriefCardContent>
-                <p className="text-sm text-[#2D3748] leading-relaxed">{stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
+                <p className="text-sm text-foreground leading-relaxed">{stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
                 <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
               </BriefCardContent>
             </BriefCard>
@@ -834,10 +853,10 @@ export default function AccountBriefPage() {
               <BriefCardContent>
                 <div className="space-y-3">
                   {(brief.buyingCommittee ?? []).map((person, i) => (
-                    <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#F7FAFC] border border-[#E2E8F0]">
+                    <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-secondary border border-border">
                       <ContactAvatar title={person.title} />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-[#2D3748]">{person.title}</p>
+                        <p className="font-semibold text-sm text-foreground">{person.title}</p>
                         <p className={`${briefCardBodyClass} mt-0.5`}>{person.painPoint}</p>
                         {person.linkedinSignal && (
                           <p className="text-xs text-primary mt-1.5 flex items-start gap-1.5 italic">
@@ -856,7 +875,7 @@ export default function AccountBriefPage() {
               <BriefCardHeader>
                 <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Cold Email</BriefCardTitle>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-[#5A677C]">
+                  <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-muted-foreground">
                     {showFullEmail ? "Show opener" : "Show full email"}
                   </Button>
                   <CopyButton getText={() => showFullEmail && brief.coldEmail.fullEmail ? brief.coldEmail.fullEmail : brief.coldEmail.opener} />
@@ -879,8 +898,8 @@ export default function AccountBriefPage() {
                   ))}
                 </div>
                 {showFullEmail && brief.coldEmail.fullEmail
-                  ? <pre className="text-sm text-[#2D3748] leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
-                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-[#2D3748] leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
+                  ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
+                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
                 <SourceChips sources={brief.coldEmail.sources} sectionId="email" />
               </BriefCardContent>
             </BriefCard>
@@ -889,7 +908,7 @@ export default function AccountBriefPage() {
               <BriefCardHeader>
                 <BriefCardTitle><MessageCircle className="w-4 h-4 text-primary" />Discovery Talk Track</BriefCardTitle>
                 {!talkTrack && (
-                  <Button variant="outline" size="sm" onClick={generateTalkTrack} disabled={talkTrackLoading} className="text-xs h-7 gap-1.5 rounded-xl border-[#E2E8F0]">
+                  <Button variant="outline" size="sm" onClick={generateTalkTrack} disabled={talkTrackLoading} className="text-xs h-7 gap-1.5 rounded-xl border-border">
                     {talkTrackLoading ? <><Loader2 className="w-3 h-3 animate-spin" />Generating...</> : "Generate questions"}
                   </Button>
                 )}
@@ -903,13 +922,13 @@ export default function AccountBriefPage() {
                   <div className="space-y-4">
                     <div>
                       <p className={`${briefCardLabelClass} mb-1.5`}>Opening</p>
-                      <p className="text-sm text-[#2D3748] leading-relaxed">{talkTrack.opening}</p>
+                      <p className="text-sm text-foreground leading-relaxed">{talkTrack.opening}</p>
                     </div>
                     <div>
                       <p className={`${briefCardLabelClass} mb-2`}>Discovery Questions</p>
                       <ol className="space-y-2 list-decimal list-inside">
                         {talkTrack.discoveryQuestions.map((q, i) => (
-                          <li key={i} className="text-sm text-[#2D3748] leading-relaxed">{q}</li>
+                          <li key={i} className="text-sm text-foreground leading-relaxed">{q}</li>
                         ))}
                       </ol>
                     </div>

@@ -1,10 +1,10 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-export const briefCardClass = "rounded-2xl border border-[#E2E8F0] bg-white shadow-none";
-export const briefCardTitleClass = "text-base font-semibold text-[#2D3748]";
-export const briefCardBodyClass = "text-sm text-[#5A677C] leading-relaxed";
-export const briefCardLabelClass = "text-xs text-[#5A677C] font-normal";
+export const briefCardClass = "rounded-2xl border border-border bg-card shadow-none";
+export const briefCardTitleClass = "text-base font-semibold text-foreground";
+export const briefCardBodyClass = "text-sm text-muted-foreground leading-relaxed";
+export const briefCardLabelClass = "text-xs text-muted-foreground font-medium";
 
 export function BriefCard({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn(briefCardClass, className)} {...props} />;

@@ -23,23 +23,16 @@ export function BearMark({ size = 24, className, withCircle = true }: BearMarkPr
       aria-hidden
     >
       {withCircle && (
-        <circle cx="16" cy="16" r="15" className="fill-muted" />
+        <circle cx="16" cy="16" r="15" className="fill-bear-muted" />
       )}
 
-      {/* Ears */}
-      <ellipse cx="9.2" cy="11" rx="4" ry="4.3" className="fill-primary" />
-      <ellipse cx="22.8" cy="11" rx="4" ry="4.3" className="fill-primary" />
-
-      {/* Face — tall oval, features clustered high */}
-      <ellipse cx="16" cy="18.8" rx="9" ry="10.2" className="fill-primary" />
-
-      {/* Slit eyes */}
-      <rect x="11.4" y="12.6" width="2.4" height="0.75" rx="0.38" className="fill-muted" />
-      <rect x="18.2" y="12.6" width="2.4" height="0.75" rx="0.38" className="fill-muted" />
-
-      {/* Muzzle + nose */}
-      <ellipse cx="16" cy="15.6" rx="2.8" ry="2" className="fill-muted" />
-      <ellipse cx="16" cy="14.9" rx="0.95" ry="0.7" className="fill-primary" />
+      <ellipse cx="9.2" cy="11" rx="4" ry="4.3" className="fill-bear" />
+      <ellipse cx="22.8" cy="11" rx="4" ry="4.3" className="fill-bear" />
+      <ellipse cx="16" cy="18.8" rx="9" ry="10.2" className="fill-bear" />
+      <rect x="11.4" y="12.6" width="2.4" height="0.75" rx="0.38" className="fill-bear-muted" />
+      <rect x="18.2" y="12.6" width="2.4" height="0.75" rx="0.38" className="fill-bear-muted" />
+      <ellipse cx="16" cy="15.6" rx="2.8" ry="2" className="fill-bear-muted" />
+      <ellipse cx="16" cy="14.9" rx="0.95" ry="0.7" className="fill-bear" />
     </svg>
   );
 }
