@@ -67,7 +67,7 @@ Brief history is saved locally and persists between sessions. Dashboard shows re
 
 - **Always update `openapi.yaml` first** when changing API shapes, then run codegen. Never edit the generated files.
 - **Codegen on Replit:** `pnpm --filter @workspace/api-spec run codegen`
-- **After pushing to GitHub:** run `git pull` on Replit to sync. No install step needed for TS-only changes.
+- **After pushing to GitHub:** run `git pull` on Replit to sync. API server changes require a rebuild — post-merge runs `pnpm --filter @workspace/api-server run build`, or restart the API service manually.
 - **502 on Replit** usually means the API server crashed — check the Replit console for the error, often a syntax error or missing env var.
 - **`DATABASE_URL` and `ANTHROPIC_API_KEY`** must be set in Replit Secrets or the server won't start.
 

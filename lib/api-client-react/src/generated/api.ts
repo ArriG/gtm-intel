@@ -1007,20 +1007,20 @@ export function useListSignals<TData = Awaited<ReturnType<typeof listSignals>>, 
 
 
 
-export const getScanSignalsUrl = () => {
+export const getRunSignalRadarUrl = () => {
 
 
 
 
-  return `/api/signals/scan`
+  return `/api/signal-radar`
 }
 
 /**
  * @summary Scan the web for ICP-matching buying signals
  */
-export const scanSignals = async (signalScanInput?: SignalScanInput, options?: RequestInit): Promise<SignalScanResponse> => {
+export const runSignalRadar = async (signalScanInput?: SignalScanInput, options?: RequestInit): Promise<SignalScanResponse> => {
 
-  return customFetch<SignalScanResponse>(getScanSignalsUrl(),
+  return customFetch<SignalScanResponse>(getRunSignalRadarUrl(),
   {
     ...options,
     method: 'POST',
@@ -1033,11 +1033,11 @@ export const scanSignals = async (signalScanInput?: SignalScanInput, options?: R
 
 
 
-export const getScanSignalsMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scanSignals>>, TError,{data?: BodyType<SignalScanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof scanSignals>>, TError,{data?: BodyType<SignalScanInput>}, TContext> => {
+export const getRunSignalRadarMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runSignalRadar>>, TError,{data?: BodyType<SignalScanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runSignalRadar>>, TError,{data?: BodyType<SignalScanInput>}, TContext> => {
 
-const mutationKey = ['scanSignals'];
+const mutationKey = ['runSignalRadar'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1047,10 +1047,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scanSignals>>, {data?: BodyType<SignalScanInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runSignalRadar>>, {data?: BodyType<SignalScanInput>}> = (props) => {
           const {data} = props ?? {};
 
-          return  scanSignals(data,requestOptions)
+          return  runSignalRadar(data,requestOptions)
         }
 
 
@@ -1060,22 +1060,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ScanSignalsMutationResult = NonNullable<Awaited<ReturnType<typeof scanSignals>>>
-    export type ScanSignalsMutationBody = BodyType<SignalScanInput> | undefined
-    export type ScanSignalsMutationError = ErrorType<void>
+    export type RunSignalRadarMutationResult = NonNullable<Awaited<ReturnType<typeof runSignalRadar>>>
+    export type RunSignalRadarMutationBody = BodyType<SignalScanInput> | undefined
+    export type RunSignalRadarMutationError = ErrorType<void>
 
     /**
  * @summary Scan the web for ICP-matching buying signals
  */
-export const useScanSignals = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scanSignals>>, TError,{data?: BodyType<SignalScanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useRunSignalRadar = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runSignalRadar>>, TError,{data?: BodyType<SignalScanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof scanSignals>>,
+        Awaited<ReturnType<typeof runSignalRadar>>,
         TError,
         {data?: BodyType<SignalScanInput>},
         TContext
       > => {
-      return useMutation(getScanSignalsMutationOptions(options));
+      return useMutation(getRunSignalRadarMutationOptions(options));
     }
 
 export const getUpdateSignalUrl = (id: number,) => {

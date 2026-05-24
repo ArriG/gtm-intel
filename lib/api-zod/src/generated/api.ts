@@ -626,7 +626,7 @@ export const ListSignalsResponse = zod.array(ListSignalsResponseItem)
 /**
  * @summary Scan the web for ICP-matching buying signals
  */
-export const ScanSignalsBody = zod.object({
+export const RunSignalRadarBody = zod.object({
   "yourCompany": zod.object({
   "companyName": zod.string().optional(),
   "whatYouSell": zod.string().optional(),
@@ -636,7 +636,7 @@ export const ScanSignalsBody = zod.object({
 }).optional()
 })
 
-export const ScanSignalsResponse = zod.object({
+export const RunSignalRadarResponse = zod.object({
   "signals": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),

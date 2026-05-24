@@ -246,9 +246,9 @@ paths:
                 items:
                   $ref: "#/components/schemas/Signal"
 
-  /signals/scan:
+  /signal-radar:
     post:
-      operationId: scanSignals
+      operationId: runSignalRadar
       tags: [signals]
       summary: Scan the web for ICP-matching buying signals
       requestBody:

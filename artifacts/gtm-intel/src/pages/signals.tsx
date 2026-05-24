@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListSignals, useUpdateSignal, useDeleteSignal, useScanSignals, getListSignalsQueryKey, useListIcps } from "@workspace/api-client-react";
+import { useListSignals, useUpdateSignal, useDeleteSignal, useRunSignalRadar, getListSignalsQueryKey, useListIcps } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,14 +45,14 @@ export default function Signals() {
   const updateSignal = useUpdateSignal();
   const deleteSignal = useDeleteSignal();
   const queryClient = useQueryClient();
-  const scanSignals = useScanSignals();
+  const runSignalRadar = useRunSignalRadar();
   const [filterType, setFilterType] = useState("all");
   const [filterImportance, setFilterImportance] = useState("all");
   const [scanError, setScanError] = useState<string | null>(null);
 
   function handleScan() {
     setScanError(null);
-    scanSignals.mutate(
+    runSignalRadar.mutate(
       { data: { yourCompany: yourCompanyForRequest(loadYourCompany()) } },
       {
         onSuccess: () => {
@@ -103,10 +103,10 @@ export default function Signals() {
         />
         <Button
           onClick={handleScan}
-          disabled={scanSignals.isPending || !canRunRadar}
+          disabled={runSignalRadar.isPending || !canRunRadar}
           className="gap-2 shrink-0"
         >
-          {scanSignals.isPending
+          {runSignalRadar.isPending
             ? <><Loader2 className="w-4 h-4 animate-spin" />Scanning web...</>
             : <><Radar className="w-4 h-4" />Run Radar</>}
         </Button>

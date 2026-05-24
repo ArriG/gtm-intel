@@ -41,12 +41,12 @@ Location: `lib/db/src/schema/`
 
 #### `signals`
 
-Prospecting opportunities discovered by `POST /signals/scan`. Columns include `company_name`, `company_domain`, `icp_name`, `icp_id` linking each signal to a matched ICP. `reviewed` boolean for inbox-style workflow.
+Prospecting opportunities discovered by `POST /signal-radar`. Columns include `company_name`, `company_domain`, `icp_name`, `icp_id` linking each signal to a matched ICP. `reviewed` boolean for inbox-style workflow.
 
 **Signal radar flow**
 
 1. User defines **Your Company** (industry / who you sell to) and optionally ICPs
-2. User clicks **Run Radar** → `POST /signals/scan` with `yourCompany` in body
+2. User clicks **Run Radar** → `POST /signal-radar` with `yourCompany` in body
 3. Backend anchors web search to Your Company's target market; ICPs refine matches when present
 4. Results persisted to `signals` table; user can mark reviewed, dismiss, or jump to account brief via domain link
 
@@ -81,7 +81,7 @@ GET|POST        /icps
 GET|PATCH|DELETE /icps/{id}
 
 GET             /signals
-POST            /signals/scan
+POST            /signal-radar
 PATCH|DELETE    /signals/{id}
 
 POST /account-brief
