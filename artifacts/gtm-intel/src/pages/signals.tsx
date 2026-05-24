@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Check, Radio, Loader2, Radar, ExternalLink, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { loadYourCompany, useYourCompany, yourCompanyHasRadarContext, type YourCompany } from "@/lib/your-company";
-import { apiUrl } from "@/lib/api-url";
+import { runSignalRadarScan } from "@/lib/run-signal-radar";
 
 const IMPORTANCE_COLORS: Record<string, string> = {
   high: "bg-red-100 text-red-800 border-red-200",
@@ -39,6 +39,10 @@ function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
   return trimmed;
 }
 
+function signalCompanyName(signal: { companyName?: string | null; competitorName?: string | null; title: string }): string | null {
+  return signal.companyName?.trim() || signal.competitorName?.trim() || null;
+}
+
 export default function Signals() {
   const { data: signals, isLoading } = useListSignals();
   const { data: icps } = useListIcps();
@@ -55,15 +59,10 @@ export default function Signals() {
     setScanError(null);
     setScanning(true);
     try {
-      const res = await fetch(apiUrl("/api/account-brief/signal-radar"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ yourCompany: yourCompanyForRequest(loadYourCompany()) }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: string }).error || `Scan failed (${res.status})`);
-      }
+      await runSignalRadarScan(
+        yourCompanyForRequest(loadYourCompany()),
+        icps,
+      );
       await queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
       await queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
     } catch (err) {
@@ -203,8 +202,8 @@ export default function Signals() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div className="min-w-0">
-                        {signal.companyName && (
-                          <p className="text-xs font-medium text-primary mb-0.5">{signal.companyName}</p>
+                        {signalCompanyName(signal) && (
+                          <p className="text-xs font-medium text-primary mb-0.5">{signalCompanyName(signal)}</p>
                         )}
                         <p className={`font-semibold ${signal.reviewed ? "line-through text-muted-foreground" : ""}`}>
                           {signal.title}
