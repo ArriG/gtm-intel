@@ -7,8 +7,7 @@
  */
 import type { Signal } from './signal';
 
-export interface DashboardSummary {
-  icpCount: number;
-  unreadSignalCount: number;
-  recentSignals: Signal[];
+export interface SignalScanResponse {
+  signals: Signal[];
+  added: number;
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Building2, Sparkles, Users, Newspaper, Flag, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Users, Newspaper, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { useHistory, clearHistory } from "@/lib/history";
@@ -11,8 +11,6 @@ import YourCompany from "./pages/your-company";
 import ICPs from "./pages/icps";
 import ICPDetail from "./pages/icp-detail";
 import Dashboard from "./pages/dashboard";
-import Competitors from "./pages/competitors";
-import CompetitorDetail from "./pages/competitor-detail";
 import Signals from "./pages/signals";
 import MarketProspect from "./pages/market-prospect";
 import CallPrepPage from "./pages/call-prep";
@@ -28,9 +26,8 @@ const NAV_PRIMARY = [
 const NAV_WORKSPACE = [
   { href: "/your-company", label: "Your Company", icon: Building2 },
   { href: "/icps", label: "ICPs", icon: Users },
-  { href: "/dashboard", label: "Dashboard", icon: Newspaper },
-  { href: "/competitors", label: "Competitors", icon: Flag },
   { href: "/signals", label: "Signals", icon: Radio },
+  { href: "/dashboard", label: "Dashboard", icon: Newspaper },
 ];
 
 function RecentSearches() {
@@ -147,8 +144,6 @@ export default function App() {
             <Route path="/icps" component={ICPs} />
             <Route path="/icps/:id" component={ICPDetail} />
             <Route path="/dashboard" component={Dashboard} />
-            <Route path="/competitors" component={Competitors} />
-            <Route path="/competitors/:id" component={CompetitorDetail} />
             <Route path="/signals" component={Signals} />
             <Route component={NotFound} />
           </Switch>

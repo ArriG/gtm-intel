@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { useListSignals, useCreateSignal, useUpdateSignal, useDeleteSignal, getListSignalsQueryKey } from "@workspace/api-client-react";
+import { Link } from "wouter";
+import { useListSignals, useUpdateSignal, useDeleteSignal, useScanSignals, getListSignalsQueryKey, useListIcps } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Check, Activity, Radio } from "lucide-react";
+import { Trash2, Check, Radio, Loader2, Radar, ExternalLink, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { loadYourCompany, useYourCompany, yourCompanyHasRadarContext, type YourCompany } from "@/lib/your-company";
 
 const IMPORTANCE_COLORS: Record<string, string> = {
   high: "bg-red-100 text-red-800 border-red-200",
@@ -28,110 +26,60 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-function CreateSignalDialog({ onCreated }: { onCreated: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    title: "", description: "", type: "other", source: "",
-    importance: "medium", competitorName: "",
-  });
-  const mutation = useCreateSignal();
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    mutation.mutate({
-      data: {
-        title: form.title,
-        description: form.description || undefined,
-        type: form.type as "pricing_change" | "product_launch" | "funding" | "hiring" | "partnership" | "other",
-        source: form.source,
-        importance: form.importance as "high" | "medium" | "low",
-        competitorName: form.competitorName || undefined,
-      }
-    }, {
-      onSuccess: () => {
-        setOpen(false);
-        setForm({ title: "", description: "", type: "other", source: "", importance: "medium", competitorName: "" });
-        onCreated();
-      }
-    });
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2"><Plus className="w-4 h-4" /> Log Signal</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-xl">
-        <DialogHeader><DialogTitle>Log Market Signal</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          <div className="space-y-1.5">
-            <Label>Signal Title *</Label>
-            <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required placeholder="Acme launched enterprise tier" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Type *</Label>
-              <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TYPE_LABELS).map(([val, label]) => <SelectItem key={val} value={val}>{label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Importance</Label>
-              <Select value={form.importance} onValueChange={v => setForm(f => ({ ...f, importance: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Source *</Label>
-              <Input value={form.source} onChange={e => setForm(f => ({ ...f, source: e.target.value }))} required placeholder="LinkedIn, G2, News..." />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Competitor (optional)</Label>
-              <Input value={form.competitorName} onChange={e => setForm(f => ({ ...f, competitorName: e.target.value }))} placeholder="Acme Corp" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Description</Label>
-            <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Logging..." : "Log Signal"}</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
+  const trimmed: YourCompany = {
+    companyName: yc.companyName.trim(),
+    whatYouSell: yc.whatYouSell.trim(),
+    whoYouSellTo: yc.whoYouSellTo.trim(),
+    painPoints: yc.painPoints.trim(),
+    customerOutcomes: yc.customerOutcomes.trim(),
+  };
+  if (!Object.values(trimmed).some(Boolean)) return undefined;
+  return trimmed;
 }
 
 export default function Signals() {
   const { data: signals, isLoading } = useListSignals();
+  const { data: icps } = useListIcps();
+  const yourCompany = useYourCompany();
   const updateSignal = useUpdateSignal();
   const deleteSignal = useDeleteSignal();
   const queryClient = useQueryClient();
+  const scanSignals = useScanSignals();
   const [filterType, setFilterType] = useState("all");
   const [filterImportance, setFilterImportance] = useState("all");
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  function handleScan() {
+    setScanError(null);
+    scanSignals.mutate(
+      { data: { yourCompany: yourCompanyForRequest(loadYourCompany()) } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+        },
+        onError: (err) => setScanError(err instanceof Error ? err.message : "Scan failed."),
+      },
+    );
+  }
 
   function handleToggleReviewed(id: number, reviewed: boolean) {
     updateSignal.mutate({ id, data: { reviewed: !reviewed } }, {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() })
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      },
     });
   }
 
   function handleDelete(id: number) {
-    if (!confirm("Delete this signal?")) return;
+    if (!confirm("Dismiss this signal?")) return;
     deleteSignal.mutate({ id }, {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() })
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      },
     });
   }
 
@@ -141,14 +89,62 @@ export default function Signals() {
     return true;
   });
 
+  const hasIcps = (icps?.length ?? 0) > 0;
+  const hasSellerContext = yourCompanyHasRadarContext(yourCompany);
+  const canRunRadar = hasIcps || hasSellerContext;
+  const unreviewed = signals?.filter(s => !s.reviewed).length ?? 0;
+
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-end justify-between">
-        <PageHeader title="Signals Feed" subtitle="Market intelligence" />
-        <CreateSignalDialog onCreated={() => queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() })} />
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <PageHeader
+          title="Signal Radar"
+          subtitle="Your Company defines the industry to watch. ICPs refine who within it. The web tells you what's happening."
+        />
+        <Button
+          onClick={handleScan}
+          disabled={scanSignals.isPending || !canRunRadar}
+          className="gap-2 shrink-0"
+        >
+          {scanSignals.isPending
+            ? <><Loader2 className="w-4 h-4 animate-spin" />Scanning web...</>
+            : <><Radar className="w-4 h-4" />Run Radar</>}
+        </Button>
       </div>
 
-      <div className="flex gap-3">
+      {!canRunRadar && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-amber-900">Set up Your Company first</p>
+              <p className="text-amber-800/80 mt-0.5">
+                The radar searches for buying signals in your target industry.{" "}
+                <Link href="/your-company" className="underline font-medium">Fill in who you sell to</Link>{" "}
+                or <Link href="/icps" className="underline font-medium">define an ICP</Link>.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {canRunRadar && !hasSellerContext && (
+        <Card className="border-border bg-muted/30">
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            Running on ICPs only.{" "}
+            <Link href="/your-company" className="underline text-foreground">Add Your Company</Link>{" "}
+            to anchor scans to your industry.
+          </CardContent>
+        </Card>
+      )}
+
+      {scanError && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="p-4 text-sm text-destructive">{scanError}</CardContent>
+        </Card>
+      )}
+
+      <div className="flex gap-3 flex-wrap items-center">
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-44"><SelectValue placeholder="Filter by type" /></SelectTrigger>
           <SelectContent>
@@ -165,15 +161,20 @@ export default function Signals() {
             <SelectItem value="low">Low</SelectItem>
           </SelectContent>
         </Select>
+        {unreviewed > 0 && (
+          <Badge variant="secondary" className="ml-auto">{unreviewed} new</Badge>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
+        <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
       ) : filtered?.length === 0 ? (
         <Card className="p-12 text-center bg-muted/30 border-dashed">
           <Radio className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
           <h2 className="text-lg font-semibold mb-1">No signals yet</h2>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">Log market triggers — funding rounds, exec hires, layoffs, expansions. They'll feed your daily Dashboard.</p>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Set up <Link href="/your-company" className="underline">Your Company</Link> to define your industry, then hit Run Radar to scan Seek, AFR, LinkedIn, and company news for buying triggers.
+          </p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -186,23 +187,44 @@ export default function Signals() {
                     size="icon"
                     className={`shrink-0 mt-0.5 ${signal.reviewed ? "text-green-600" : "text-muted-foreground"}`}
                     onClick={() => handleToggleReviewed(signal.id, signal.reviewed)}
+                    title={signal.reviewed ? "Mark as new" : "Mark as reviewed"}
                   >
                     <Check className="w-4 h-4" />
                   </Button>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <p className={`font-semibold ${signal.reviewed ? "line-through text-muted-foreground" : ""}`}>{signal.title}</p>
-                      <div className="flex gap-2 shrink-0">
+                      <div className="min-w-0">
+                        {signal.companyName && (
+                          <p className="text-xs font-medium text-primary mb-0.5">{signal.companyName}</p>
+                        )}
+                        <p className={`font-semibold ${signal.reviewed ? "line-through text-muted-foreground" : ""}`}>
+                          {signal.title}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 shrink-0 flex-wrap">
+                        {signal.icpName && (
+                          <Badge variant="secondary" className="text-xs">{signal.icpName}</Badge>
+                        )}
                         <Badge variant="outline" className="text-xs font-mono">{TYPE_LABELS[signal.type] || signal.type}</Badge>
                         <Badge className={`text-xs border ${IMPORTANCE_COLORS[signal.importance] || ""}`}>{signal.importance}</Badge>
                       </div>
                     </div>
-                    {signal.description && <p className="text-sm text-muted-foreground mt-1">{signal.description}</p>}
-                    <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                    {signal.description && <p className="text-sm text-muted-foreground mt-1.5">{signal.description}</p>}
+                    <div className="flex gap-3 mt-2 text-xs text-muted-foreground flex-wrap items-center">
                       <span>via {signal.source}</span>
-                      {signal.competitorName && <><span>•</span><span className="font-medium">{signal.competitorName}</span></>}
                       <span>•</span>
                       <span>{new Date(signal.createdAt).toLocaleDateString()}</span>
+                      {signal.companyDomain && (
+                        <>
+                          <span>•</span>
+                          <Link
+                            href={`/?q=${encodeURIComponent(signal.companyDomain)}`}
+                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                          >
+                            Research brief <ExternalLink className="w-3 h-3" />
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0" onClick={() => handleDelete(signal.id)}>

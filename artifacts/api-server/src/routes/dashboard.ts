@@ -1,18 +1,9 @@
 import { Router, type IRouter } from "express";
-import { desc } from "drizzle-orm";
-import { db, competitorsTable, icpsTable, signalsTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
+import { db, icpsTable, signalsTable } from "@workspace/db";
 import { GetDashboardResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-
-function parseCompetitor(row: typeof competitorsTable.$inferSelect) {
-  return {
-    ...row,
-    strengths: JSON.parse(row.strengths || "[]"),
-    weaknesses: JSON.parse(row.weaknesses || "[]"),
-    createdAt: row.createdAt.toISOString(),
-  };
-}
 
 function parseSignal(row: typeof signalsTable.$inferSelect) {
   return {
@@ -22,20 +13,16 @@ function parseSignal(row: typeof signalsTable.$inferSelect) {
 }
 
 router.get("/dashboard", async (_req, res): Promise<void> => {
-  const [competitors, icps, signals, recentSignals, topCompetitors] = await Promise.all([
-    db.select().from(competitorsTable),
+  const [icps, recentSignals, unreadSignals] = await Promise.all([
     db.select().from(icpsTable),
-    db.select().from(signalsTable),
     db.select().from(signalsTable).orderBy(desc(signalsTable.createdAt)).limit(5),
-    db.select().from(competitorsTable).orderBy(desc(competitorsTable.createdAt)).limit(5),
+    db.select().from(signalsTable).where(eq(signalsTable.reviewed, false)),
   ]);
 
   const summary = {
-    competitorCount: competitors.length,
     icpCount: icps.length,
-    signalCount: signals.length,
+    unreadSignalCount: unreadSignals.length,
     recentSignals: recentSignals.map(parseSignal),
-    topCompetitors: topCompetitors.map(parseCompetitor),
   };
 
   res.json(GetDashboardResponse.parse(summary));

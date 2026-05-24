@@ -53,7 +53,7 @@ Users (AEs, SDRs) search a company by name or URL. The tool searches 5 AU-specif
 
 Users can optionally paste LinkedIn posts from C-suite and add their own discovery notes before enriching — these become highest-priority context for the AI.
 
-Brief history is saved locally and persists between sessions. Dashboard shows recent briefs, signals feed, ICP and competitor management.
+Brief history is saved locally and persists between sessions. Dashboard shows recent radar signals and ICP count.
 
 ## User preferences
 

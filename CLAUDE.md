@@ -31,7 +31,7 @@ gtm-intel/
 
 - **Frontend:** React + TypeScript + Tailwind + shadcn/ui, Vite, Wouter (routing), TanStack Query
 - **Backend:** Express 5, Anthropic SDK (web_search tool), Drizzle ORM
-- **DB:** PostgreSQL (on Replit) — ICPs, competitors, signals only
+- **DB:** PostgreSQL (on Replit) — ICPs, signals only
 - **AI model:** `claude-haiku-4-5-20251001` — intentionally kept on Haiku while validating token usage; switch to Sonnet once stable
 - **Codegen:** Orval reads `lib/api-spec/openapi.yaml` → generates types in `lib/api-client-react` and `lib/api-zod`
 - **Package manager:** pnpm workspaces
@@ -42,7 +42,7 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 
 - `openapi.yaml` is the single source of truth. Never edit generated files directly.
 - Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orval.mjs --config ./lib/api-spec/orval.config.ts`
-- **Postgres:** ICPs (drive brief scoring), competitors, signals. **Not** briefs, Your Company, or history.
+- **Postgres:** ICPs (drive brief scoring + signal radar), signals. **Not** briefs, Your Company, or history.
 - **localStorage:** Your Company (`gtm_your_company_v1`), brief history, recent searches.
 - **Your Company** sent in POST body (`yourCompany`) → seller context in Claude prompt.
 - **LinkedIn posts + own intel** in POST body → highest-priority research context.

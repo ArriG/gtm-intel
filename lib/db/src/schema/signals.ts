@@ -9,8 +9,10 @@ export const signalsTable = pgTable("signals", {
   type: text("type").notNull(),
   source: text("source").notNull(),
   importance: text("importance").notNull().default("medium"),
-  competitorId: integer("competitor_id"),
-  competitorName: text("competitor_name"),
+  companyName: text("company_name"),
+  companyDomain: text("company_domain"),
+  icpName: text("icp_name"),
+  icpId: integer("icp_id"),
   reviewed: boolean("reviewed").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

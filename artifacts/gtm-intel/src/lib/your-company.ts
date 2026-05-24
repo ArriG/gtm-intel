@@ -37,6 +37,11 @@ export function saveYourCompany(data: YourCompany) {
   }
 }
 
+/** Minimum Your Company info needed to anchor a radar scan on industry/target market. */
+export function yourCompanyHasRadarContext(yc: YourCompany): boolean {
+  return Boolean(yc.whoYouSellTo.trim() || yc.whatYouSell.trim());
+}
+
 export function useYourCompany(): YourCompany {
   const [data, setData] = useState<YourCompany>(() => loadYourCompany());
   useEffect(() => {

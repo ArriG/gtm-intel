@@ -17,9 +17,13 @@ export interface Signal {
   source: string;
   importance: SignalImportance;
   /** @nullable */
-  competitorId?: number | null;
+  companyName?: string | null;
   /** @nullable */
-  competitorName?: string | null;
+  companyDomain?: string | null;
+  /** @nullable */
+  icpName?: string | null;
+  /** @nullable */
+  icpId?: number | null;
   reviewed: boolean;
   createdAt: string;
 }

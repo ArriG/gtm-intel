@@ -100,6 +100,65 @@ DEFINED ICPs:
 ${descriptions}`;
 }
 
+export function buildIcpRadarContext(icps: typeof icpsTable.$inferSelect[]): string {
+  if (!icps || icps.length === 0) {
+    return "";
+  }
+
+  const descriptions = icps.map((icp, i) => {
+    const safeparse = (val: string, fallback: string[] = []) => {
+      try { return JSON.parse(val) as string[]; } catch { return fallback; }
+    };
+    const jobTitles = safeparse(icp.jobTitles);
+    const painPoints = safeparse(icp.painPoints);
+    const goals = safeparse(icp.goals);
+    const channels = safeparse(icp.channels);
+
+    return [
+      `ICP ${i + 1} (id: ${icp.id}): "${icp.name}"`,
+      `  Industry: ${icp.industry}`,
+      `  Company size: ${icp.companySize}`,
+      jobTitles.length ? `  Key roles: ${jobTitles.join(", ")}` : null,
+      painPoints.length ? `  Pain points: ${painPoints.join("; ")}` : null,
+      goals.length ? `  Goals: ${goals.join("; ")}` : null,
+      channels.length ? `  Preferred channels: ${channels.join(", ")}` : null,
+      icp.notes ? `  Notes: ${icp.notes}` : null,
+    ].filter(Boolean).join("\n");
+  }).join("\n\n");
+
+  return `DEFINED ICPs — find companies and events that match these profiles:
+${descriptions}
+
+For each signal, set icpName to the matching ICP name and icpId to its id.`;
+}
+
+export function yourCompanyHasRadarContext(yourCompany?: YourCompanyInput): boolean {
+  return Boolean(yourCompany?.whoYouSellTo?.trim() || yourCompany?.whatYouSell?.trim());
+}
+
+export function buildYourCompanyRadarContext(yourCompany?: YourCompanyInput): string {
+  if (!yourCompanyHasRadarContext(yourCompany)) return "";
+
+  const lines = [
+    yourCompany!.whoYouSellTo?.trim()
+      ? `Target market / industry (PRIMARY search lens — only surface companies in this space):\n  ${yourCompany!.whoYouSellTo.trim()}`
+      : null,
+    yourCompany!.whatYouSell?.trim()
+      ? `What we sell: ${yourCompany!.whatYouSell.trim()}`
+      : null,
+    yourCompany!.painPoints?.trim()
+      ? `Pain points we solve (judge signal relevance against these):\n  ${yourCompany!.painPoints.trim()}`
+      : null,
+    yourCompany!.companyName?.trim()
+      ? `Seller: ${yourCompany!.companyName.trim()}`
+      : null,
+  ].filter(Boolean);
+
+  return `SELLER PROFILE — anchor all web searches to this industry and buyer:
+${lines.join("\n")}
+Only return signals from companies that fit the target market above.`;
+}
+
 export function buildYourCompanyContext(yourCompany?: YourCompanyInput): string {
   if (!yourCompany) return "";
 

@@ -490,9 +490,8 @@ export const HealthCheckResponse = zod.object({
  * @summary Get dashboard summary
  */
 export const GetDashboardResponse = zod.object({
-  "competitorCount": zod.number(),
   "icpCount": zod.number(),
-  "signalCount": zod.number(),
+  "unreadSignalCount": zod.number(),
   "recentSignals": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),
@@ -500,123 +499,13 @@ export const GetDashboardResponse = zod.object({
   "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
   "source": zod.string(),
   "importance": zod.enum(['high', 'medium', 'low']),
-  "competitorId": zod.number().nullish(),
-  "competitorName": zod.string().nullish(),
+  "companyName": zod.string().nullish(),
+  "companyDomain": zod.string().nullish(),
+  "icpName": zod.string().nullish(),
+  "icpId": zod.number().nullish(),
   "reviewed": zod.boolean(),
   "createdAt": zod.string()
-})),
-  "topCompetitors": zod.array(zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "website": zod.string(),
-  "tier": zod.enum(['primary', 'secondary', 'emerging']),
-  "tagline": zod.string().nullish(),
-  "strengths": zod.array(zod.string()),
-  "weaknesses": zod.array(zod.string()),
-  "targetSegment": zod.string(),
-  "pricing": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
 }))
-})
-
-
-/**
- * @summary List all competitors
- */
-export const ListCompetitorsResponseItem = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "website": zod.string(),
-  "tier": zod.enum(['primary', 'secondary', 'emerging']),
-  "tagline": zod.string().nullish(),
-  "strengths": zod.array(zod.string()),
-  "weaknesses": zod.array(zod.string()),
-  "targetSegment": zod.string(),
-  "pricing": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-export const ListCompetitorsResponse = zod.array(ListCompetitorsResponseItem)
-
-
-/**
- * @summary Create a competitor
- */
-export const CreateCompetitorBody = zod.object({
-  "name": zod.string(),
-  "website": zod.string(),
-  "tier": zod.enum(['primary', 'secondary', 'emerging']),
-  "tagline": zod.string().optional(),
-  "strengths": zod.array(zod.string()),
-  "weaknesses": zod.array(zod.string()),
-  "targetSegment": zod.string(),
-  "pricing": zod.string().optional(),
-  "notes": zod.string().optional()
-})
-
-
-/**
- * @summary Get competitor by ID
- */
-export const GetCompetitorParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const GetCompetitorResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "website": zod.string(),
-  "tier": zod.enum(['primary', 'secondary', 'emerging']),
-  "tagline": zod.string().nullish(),
-  "strengths": zod.array(zod.string()),
-  "weaknesses": zod.array(zod.string()),
-  "targetSegment": zod.string(),
-  "pricing": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Update competitor
- */
-export const UpdateCompetitorParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateCompetitorBody = zod.object({
-  "name": zod.string().optional(),
-  "website": zod.string().optional(),
-  "tier": zod.enum(['primary', 'secondary', 'emerging']).optional(),
-  "tagline": zod.string().optional(),
-  "strengths": zod.array(zod.string()).optional(),
-  "weaknesses": zod.array(zod.string()).optional(),
-  "targetSegment": zod.string().optional(),
-  "pricing": zod.string().optional(),
-  "notes": zod.string().optional()
-})
-
-export const UpdateCompetitorResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "website": zod.string(),
-  "tier": zod.enum(['primary', 'secondary', 'emerging']),
-  "tagline": zod.string().nullish(),
-  "strengths": zod.array(zod.string()),
-  "weaknesses": zod.array(zod.string()),
-  "targetSegment": zod.string(),
-  "pricing": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Delete competitor
- */
-export const DeleteCompetitorParams = zod.object({
-  "id": zod.coerce.number()
 })
 
 
@@ -715,7 +604,7 @@ export const DeleteIcpParams = zod.object({
 
 
 /**
- * @summary List market signals
+ * @summary List radar signals
  */
 export const ListSignalsResponseItem = zod.object({
   "id": zod.number(),
@@ -724,8 +613,10 @@ export const ListSignalsResponseItem = zod.object({
   "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
   "source": zod.string(),
   "importance": zod.enum(['high', 'medium', 'low']),
-  "competitorId": zod.number().nullish(),
-  "competitorName": zod.string().nullish(),
+  "companyName": zod.string().nullish(),
+  "companyDomain": zod.string().nullish(),
+  "icpName": zod.string().nullish(),
+  "icpId": zod.number().nullish(),
   "reviewed": zod.boolean(),
   "createdAt": zod.string()
 })
@@ -733,16 +624,34 @@ export const ListSignalsResponse = zod.array(ListSignalsResponseItem)
 
 
 /**
- * @summary Create a market signal
+ * @summary Scan the web for ICP-matching buying signals
  */
-export const CreateSignalBody = zod.object({
+export const ScanSignalsBody = zod.object({
+  "yourCompany": zod.object({
+  "companyName": zod.string().optional(),
+  "whatYouSell": zod.string().optional(),
+  "whoYouSellTo": zod.string().optional(),
+  "painPoints": zod.string().optional(),
+  "customerOutcomes": zod.string().optional()
+}).optional()
+})
+
+export const ScanSignalsResponse = zod.object({
+  "signals": zod.array(zod.object({
+  "id": zod.number(),
   "title": zod.string(),
-  "description": zod.string().optional(),
+  "description": zod.string().nullish(),
   "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
   "source": zod.string(),
   "importance": zod.enum(['high', 'medium', 'low']),
-  "competitorId": zod.number().optional(),
-  "competitorName": zod.string().optional()
+  "companyName": zod.string().nullish(),
+  "companyDomain": zod.string().nullish(),
+  "icpName": zod.string().nullish(),
+  "icpId": zod.number().nullish(),
+  "reviewed": zod.boolean(),
+  "createdAt": zod.string()
+})),
+  "added": zod.number()
 })
 
 
@@ -759,8 +668,10 @@ export const UpdateSignalBody = zod.object({
   "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']).optional(),
   "source": zod.string().optional(),
   "importance": zod.enum(['high', 'medium', 'low']).optional(),
-  "competitorId": zod.number().optional(),
-  "competitorName": zod.string().optional(),
+  "companyName": zod.string().optional(),
+  "companyDomain": zod.string().optional(),
+  "icpName": zod.string().optional(),
+  "icpId": zod.number().optional(),
   "reviewed": zod.boolean().optional()
 })
 
@@ -771,8 +682,10 @@ export const UpdateSignalResponse = zod.object({
   "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
   "source": zod.string(),
   "importance": zod.enum(['high', 'medium', 'low']),
-  "competitorId": zod.number().nullish(),
-  "competitorName": zod.string().nullish(),
+  "companyName": zod.string().nullish(),
+  "companyDomain": zod.string().nullish(),
+  "icpName": zod.string().nullish(),
+  "icpId": zod.number().nullish(),
   "reviewed": zod.boolean(),
   "createdAt": zod.string()
 })

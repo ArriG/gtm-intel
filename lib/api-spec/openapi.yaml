@@ -10,12 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
-  - name: competitors
-    description: Competitor tracking
   - name: icps
     description: Ideal Customer Profiles
   - name: signals
-    description: Market signals and intel
+    description: Automated ICP signal radar
   - name: dashboard
     description: Dashboard summaries
   - name: account-brief
@@ -144,95 +142,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
 
-  /competitors:
-    get:
-      operationId: listCompetitors
-      tags: [competitors]
-      summary: List all competitors
-      responses:
-        "200":
-          description: List of competitors
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Competitor"
-    post:
-      operationId: createCompetitor
-      tags: [competitors]
-      summary: Create a competitor
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CompetitorInput"
-      responses:
-        "201":
-          description: Created competitor
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Competitor"
-
-  /competitors/{id}:
-    get:
-      operationId: getCompetitor
-      tags: [competitors]
-      summary: Get competitor by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Competitor
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Competitor"
-        "404":
-          description: Not found
-    patch:
-      operationId: updateCompetitor
-      tags: [competitors]
-      summary: Update competitor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CompetitorUpdate"
-      responses:
-        "200":
-          description: Updated competitor
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Competitor"
-    delete:
-      operationId: deleteCompetitor
-      tags: [competitors]
-      summary: Delete competitor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-
   /icps:
     get:
       operationId: listIcps
@@ -326,7 +235,7 @@ paths:
     get:
       operationId: listSignals
       tags: [signals]
-      summary: List market signals
+      summary: List radar signals
       responses:
         "200":
           description: List of signals
@@ -336,23 +245,26 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Signal"
+
+  /signals/scan:
     post:
-      operationId: createSignal
+      operationId: scanSignals
       tags: [signals]
-      summary: Create a market signal
+      summary: Scan the web for ICP-matching buying signals
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignalInput"
+              $ref: "#/components/schemas/SignalScanInput"
       responses:
-        "201":
-          description: Created signal
+        "200":
+          description: Newly discovered signals
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Signal"
+                $ref: "#/components/schemas/SignalScanResponse"
+        "400":
+          description: No ICPs defined or invalid request
 
   /signals/{id}:
     patch:
@@ -405,127 +317,18 @@ components:
     DashboardSummary:
       type: object
       required:
-        - competitorCount
         - icpCount
-        - signalCount
+        - unreadSignalCount
         - recentSignals
-        - topCompetitors
       properties:
-        competitorCount:
-          type: integer
         icpCount:
           type: integer
-        signalCount:
+        unreadSignalCount:
           type: integer
         recentSignals:
           type: array
           items:
             $ref: "#/components/schemas/Signal"
-        topCompetitors:
-          type: array
-          items:
-            $ref: "#/components/schemas/Competitor"
-
-    Competitor:
-      type: object
-      required:
-        - id
-        - name
-        - website
-        - tier
-        - strengths
-        - weaknesses
-        - targetSegment
-        - createdAt
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        website:
-          type: string
-        tier:
-          type: string
-          enum: [primary, secondary, emerging]
-        tagline:
-          type: ["string", "null"]
-        strengths:
-          type: array
-          items:
-            type: string
-        weaknesses:
-          type: array
-          items:
-            type: string
-        targetSegment:
-          type: string
-        pricing:
-          type: ["string", "null"]
-        notes:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-
-    CompetitorInput:
-      type: object
-      required:
-        - name
-        - website
-        - tier
-        - strengths
-        - weaknesses
-        - targetSegment
-      properties:
-        name:
-          type: string
-        website:
-          type: string
-        tier:
-          type: string
-          enum: [primary, secondary, emerging]
-        tagline:
-          type: string
-        strengths:
-          type: array
-          items:
-            type: string
-        weaknesses:
-          type: array
-          items:
-            type: string
-        targetSegment:
-          type: string
-        pricing:
-          type: string
-        notes:
-          type: string
-
-    CompetitorUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        website:
-          type: string
-        tier:
-          type: string
-          enum: [primary, secondary, emerging]
-        tagline:
-          type: string
-        strengths:
-          type: array
-          items:
-            type: string
-        weaknesses:
-          type: array
-          items:
-            type: string
-        targetSegment:
-          type: string
-        pricing:
-          type: string
-        notes:
-          type: string
 
     Icp:
       type: object
@@ -656,39 +459,37 @@ components:
         importance:
           type: string
           enum: [high, medium, low]
-        competitorId:
-          type: ["integer", "null"]
-        competitorName:
+        companyName:
           type: ["string", "null"]
+        companyDomain:
+          type: ["string", "null"]
+        icpName:
+          type: ["string", "null"]
+        icpId:
+          type: ["integer", "null"]
         reviewed:
           type: boolean
         createdAt:
           type: string
 
-    SignalInput:
+    SignalScanInput:
+      type: object
+      properties:
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    SignalScanResponse:
       type: object
       required:
-        - title
-        - type
-        - source
-        - importance
+        - signals
+        - added
       properties:
-        title:
-          type: string
-        description:
-          type: string
-        type:
-          type: string
-          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
-        source:
-          type: string
-        importance:
-          type: string
-          enum: [high, medium, low]
-        competitorId:
+        signals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Signal"
+        added:
           type: integer
-        competitorName:
-          type: string
 
     SignalUpdate:
       type: object
@@ -705,10 +506,14 @@ components:
         importance:
           type: string
           enum: [high, medium, low]
-        competitorId:
-          type: integer
-        competitorName:
+        companyName:
           type: string
+        companyDomain:
+          type: string
+        icpName:
+          type: string
+        icpId:
+          type: integer
         reviewed:
           type: boolean
 

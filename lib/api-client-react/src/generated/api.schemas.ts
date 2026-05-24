@@ -39,87 +39,21 @@ export interface Signal {
   source: string;
   importance: SignalImportance;
   /** @nullable */
-  competitorId?: number | null;
+  companyName?: string | null;
   /** @nullable */
-  competitorName?: string | null;
+  companyDomain?: string | null;
+  /** @nullable */
+  icpName?: string | null;
+  /** @nullable */
+  icpId?: number | null;
   reviewed: boolean;
   createdAt: string;
 }
 
-export type CompetitorTier = typeof CompetitorTier[keyof typeof CompetitorTier];
-
-
-export const CompetitorTier = {
-  primary: 'primary',
-  secondary: 'secondary',
-  emerging: 'emerging',
-} as const;
-
-export interface Competitor {
-  id: number;
-  name: string;
-  website: string;
-  tier: CompetitorTier;
-  /** @nullable */
-  tagline?: string | null;
-  strengths: string[];
-  weaknesses: string[];
-  targetSegment: string;
-  /** @nullable */
-  pricing?: string | null;
-  /** @nullable */
-  notes?: string | null;
-  createdAt: string;
-}
-
 export interface DashboardSummary {
-  competitorCount: number;
   icpCount: number;
-  signalCount: number;
+  unreadSignalCount: number;
   recentSignals: Signal[];
-  topCompetitors: Competitor[];
-}
-
-export type CompetitorInputTier = typeof CompetitorInputTier[keyof typeof CompetitorInputTier];
-
-
-export const CompetitorInputTier = {
-  primary: 'primary',
-  secondary: 'secondary',
-  emerging: 'emerging',
-} as const;
-
-export interface CompetitorInput {
-  name: string;
-  website: string;
-  tier: CompetitorInputTier;
-  tagline?: string;
-  strengths: string[];
-  weaknesses: string[];
-  targetSegment: string;
-  pricing?: string;
-  notes?: string;
-}
-
-export type CompetitorUpdateTier = typeof CompetitorUpdateTier[keyof typeof CompetitorUpdateTier];
-
-
-export const CompetitorUpdateTier = {
-  primary: 'primary',
-  secondary: 'secondary',
-  emerging: 'emerging',
-} as const;
-
-export interface CompetitorUpdate {
-  name?: string;
-  website?: string;
-  tier?: CompetitorUpdateTier;
-  tagline?: string;
-  strengths?: string[];
-  weaknesses?: string[];
-  targetSegment?: string;
-  pricing?: string;
-  notes?: string;
 }
 
 export interface Icp {
@@ -158,35 +92,21 @@ export interface IcpUpdate {
   notes?: string;
 }
 
-export type SignalInputType = typeof SignalInputType[keyof typeof SignalInputType];
+export interface YourCompany {
+  companyName?: string;
+  whatYouSell?: string;
+  whoYouSellTo?: string;
+  painPoints?: string;
+  customerOutcomes?: string;
+}
 
+export interface SignalScanInput {
+  yourCompany?: YourCompany;
+}
 
-export const SignalInputType = {
-  pricing_change: 'pricing_change',
-  product_launch: 'product_launch',
-  funding: 'funding',
-  hiring: 'hiring',
-  partnership: 'partnership',
-  other: 'other',
-} as const;
-
-export type SignalInputImportance = typeof SignalInputImportance[keyof typeof SignalInputImportance];
-
-
-export const SignalInputImportance = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-} as const;
-
-export interface SignalInput {
-  title: string;
-  description?: string;
-  type: SignalInputType;
-  source: string;
-  importance: SignalInputImportance;
-  competitorId?: number;
-  competitorName?: string;
+export interface SignalScanResponse {
+  signals: Signal[];
+  added: number;
 }
 
 export type SignalUpdateType = typeof SignalUpdateType[keyof typeof SignalUpdateType];
@@ -216,8 +136,10 @@ export interface SignalUpdate {
   type?: SignalUpdateType;
   source?: string;
   importance?: SignalUpdateImportance;
-  competitorId?: number;
-  competitorName?: string;
+  companyName?: string;
+  companyDomain?: string;
+  icpName?: string;
+  icpId?: number;
   reviewed?: boolean;
 }
 
@@ -260,14 +182,6 @@ export interface BriefSource {
 export interface LinkedInPost {
   role: string;
   content: string;
-}
-
-export interface YourCompany {
-  companyName?: string;
-  whatYouSell?: string;
-  whoYouSellTo?: string;
-  painPoints?: string;
-  customerOutcomes?: string;
 }
 
 export type EmailTone = typeof EmailTone[keyof typeof EmailTone];

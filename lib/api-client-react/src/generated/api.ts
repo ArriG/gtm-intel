@@ -27,9 +27,6 @@ import type {
   CallPrep,
   CallPrepInput,
   ColdEmailRegenerateInput,
-  Competitor,
-  CompetitorInput,
-  CompetitorUpdate,
   DashboardSummary,
   HealthStatus,
   Icp,
@@ -38,7 +35,8 @@ import type {
   MarketProspectInput,
   MarketProspectResponse,
   Signal,
-  SignalInput,
+  SignalScanInput,
+  SignalScanResponse,
   SignalUpdate,
   TalkTrack
 } from './api.schemas';
@@ -565,373 +563,6 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
 
 
 
-export const getListCompetitorsUrl = () => {
-
-
-
-
-  return `/api/competitors`
-}
-
-/**
- * @summary List all competitors
- */
-export const listCompetitors = async ( options?: RequestInit): Promise<Competitor[]> => {
-
-  return customFetch<Competitor[]>(getListCompetitorsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListCompetitorsQueryKey = () => {
-    return [
-    `/api/competitors`
-    ] as const;
-    }
-
-
-export const getListCompetitorsQueryOptions = <TData = Awaited<ReturnType<typeof listCompetitors>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompetitors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListCompetitorsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCompetitors>>> = ({ signal }) => listCompetitors({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCompetitors>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ListCompetitorsQueryResult = NonNullable<Awaited<ReturnType<typeof listCompetitors>>>
-export type ListCompetitorsQueryError = ErrorType<unknown>
-
-
-/**
- * @summary List all competitors
- */
-
-export function useListCompetitors<TData = Awaited<ReturnType<typeof listCompetitors>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompetitors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getListCompetitorsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-
-export const getCreateCompetitorUrl = () => {
-
-
-
-
-  return `/api/competitors`
-}
-
-/**
- * @summary Create a competitor
- */
-export const createCompetitor = async (competitorInput: CompetitorInput, options?: RequestInit): Promise<Competitor> => {
-
-  return customFetch<Competitor>(getCreateCompetitorUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      competitorInput,)
-  }
-);}
-
-
-
-
-export const getCreateCompetitorMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCompetitor>>, TError,{data: BodyType<CompetitorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createCompetitor>>, TError,{data: BodyType<CompetitorInput>}, TContext> => {
-
-const mutationKey = ['createCompetitor'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCompetitor>>, {data: BodyType<CompetitorInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  createCompetitor(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateCompetitorMutationResult = NonNullable<Awaited<ReturnType<typeof createCompetitor>>>
-    export type CreateCompetitorMutationBody = BodyType<CompetitorInput>
-    export type CreateCompetitorMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a competitor
- */
-export const useCreateCompetitor = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCompetitor>>, TError,{data: BodyType<CompetitorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof createCompetitor>>,
-        TError,
-        {data: BodyType<CompetitorInput>},
-        TContext
-      > => {
-      return useMutation(getCreateCompetitorMutationOptions(options));
-    }
-
-export const getGetCompetitorUrl = (id: number,) => {
-
-
-
-
-  return `/api/competitors/${id}`
-}
-
-/**
- * @summary Get competitor by ID
- */
-export const getCompetitor = async (id: number, options?: RequestInit): Promise<Competitor> => {
-
-  return customFetch<Competitor>(getGetCompetitorUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetCompetitorQueryKey = (id: number,) => {
-    return [
-    `/api/competitors/${id}`
-    ] as const;
-    }
-
-
-export const getGetCompetitorQueryOptions = <TData = Awaited<ReturnType<typeof getCompetitor>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompetitor>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetCompetitorQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompetitor>>> = ({ signal }) => getCompetitor(id, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompetitor>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetCompetitorQueryResult = NonNullable<Awaited<ReturnType<typeof getCompetitor>>>
-export type GetCompetitorQueryError = ErrorType<void>
-
-
-/**
- * @summary Get competitor by ID
- */
-
-export function useGetCompetitor<TData = Awaited<ReturnType<typeof getCompetitor>>, TError = ErrorType<void>>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompetitor>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetCompetitorQueryOptions(id,options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-
-export const getUpdateCompetitorUrl = (id: number,) => {
-
-
-
-
-  return `/api/competitors/${id}`
-}
-
-/**
- * @summary Update competitor
- */
-export const updateCompetitor = async (id: number,
-    competitorUpdate: CompetitorUpdate, options?: RequestInit): Promise<Competitor> => {
-
-  return customFetch<Competitor>(getUpdateCompetitorUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      competitorUpdate,)
-  }
-);}
-
-
-
-
-export const getUpdateCompetitorMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCompetitor>>, TError,{id: number;data: BodyType<CompetitorUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateCompetitor>>, TError,{id: number;data: BodyType<CompetitorUpdate>}, TContext> => {
-
-const mutationKey = ['updateCompetitor'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCompetitor>>, {id: number;data: BodyType<CompetitorUpdate>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  updateCompetitor(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateCompetitorMutationResult = NonNullable<Awaited<ReturnType<typeof updateCompetitor>>>
-    export type UpdateCompetitorMutationBody = BodyType<CompetitorUpdate>
-    export type UpdateCompetitorMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update competitor
- */
-export const useUpdateCompetitor = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCompetitor>>, TError,{id: number;data: BodyType<CompetitorUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateCompetitor>>,
-        TError,
-        {id: number;data: BodyType<CompetitorUpdate>},
-        TContext
-      > => {
-      return useMutation(getUpdateCompetitorMutationOptions(options));
-    }
-
-export const getDeleteCompetitorUrl = (id: number,) => {
-
-
-
-
-  return `/api/competitors/${id}`
-}
-
-/**
- * @summary Delete competitor
- */
-export const deleteCompetitor = async (id: number, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getDeleteCompetitorUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getDeleteCompetitorMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCompetitor>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteCompetitor>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteCompetitor'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCompetitor>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteCompetitor(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteCompetitorMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCompetitor>>>
-
-    export type DeleteCompetitorMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete competitor
- */
-export const useDeleteCompetitor = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCompetitor>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteCompetitor>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteCompetitorMutationOptions(options));
-    }
-
 export const getListIcpsUrl = () => {
 
 
@@ -1308,7 +939,7 @@ export const getListSignalsUrl = () => {
 }
 
 /**
- * @summary List market signals
+ * @summary List radar signals
  */
 export const listSignals = async ( options?: RequestInit): Promise<Signal[]> => {
 
@@ -1355,7 +986,7 @@ export type ListSignalsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List market signals
+ * @summary List radar signals
  */
 
 export function useListSignals<TData = Awaited<ReturnType<typeof listSignals>>, TError = ErrorType<unknown>>(
@@ -1376,37 +1007,37 @@ export function useListSignals<TData = Awaited<ReturnType<typeof listSignals>>, 
 
 
 
-export const getCreateSignalUrl = () => {
+export const getScanSignalsUrl = () => {
 
 
 
 
-  return `/api/signals`
+  return `/api/signals/scan`
 }
 
 /**
- * @summary Create a market signal
+ * @summary Scan the web for ICP-matching buying signals
  */
-export const createSignal = async (signalInput: SignalInput, options?: RequestInit): Promise<Signal> => {
+export const scanSignals = async (signalScanInput?: SignalScanInput, options?: RequestInit): Promise<SignalScanResponse> => {
 
-  return customFetch<Signal>(getCreateSignalUrl(),
+  return customFetch<SignalScanResponse>(getScanSignalsUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      signalInput,)
+      signalScanInput,)
   }
 );}
 
 
 
 
-export const getCreateSignalMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSignal>>, TError,{data: BodyType<SignalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createSignal>>, TError,{data: BodyType<SignalInput>}, TContext> => {
+export const getScanSignalsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scanSignals>>, TError,{data?: BodyType<SignalScanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof scanSignals>>, TError,{data?: BodyType<SignalScanInput>}, TContext> => {
 
-const mutationKey = ['createSignal'];
+const mutationKey = ['scanSignals'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1416,10 +1047,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSignal>>, {data: BodyType<SignalInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scanSignals>>, {data?: BodyType<SignalScanInput>}> = (props) => {
           const {data} = props ?? {};
 
-          return  createSignal(data,requestOptions)
+          return  scanSignals(data,requestOptions)
         }
 
 
@@ -1429,22 +1060,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateSignalMutationResult = NonNullable<Awaited<ReturnType<typeof createSignal>>>
-    export type CreateSignalMutationBody = BodyType<SignalInput>
-    export type CreateSignalMutationError = ErrorType<unknown>
+    export type ScanSignalsMutationResult = NonNullable<Awaited<ReturnType<typeof scanSignals>>>
+    export type ScanSignalsMutationBody = BodyType<SignalScanInput> | undefined
+    export type ScanSignalsMutationError = ErrorType<void>
 
     /**
- * @summary Create a market signal
+ * @summary Scan the web for ICP-matching buying signals
  */
-export const useCreateSignal = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSignal>>, TError,{data: BodyType<SignalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useScanSignals = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scanSignals>>, TError,{data?: BodyType<SignalScanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof createSignal>>,
+        Awaited<ReturnType<typeof scanSignals>>,
         TError,
-        {data: BodyType<SignalInput>},
+        {data?: BodyType<SignalScanInput>},
         TContext
       > => {
-      return useMutation(getCreateSignalMutationOptions(options));
+      return useMutation(getScanSignalsMutationOptions(options));
     }
 
 export const getUpdateSignalUrl = (id: number,) => {

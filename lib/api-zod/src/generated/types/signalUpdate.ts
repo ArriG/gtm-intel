@@ -14,7 +14,9 @@ export interface SignalUpdate {
   type?: SignalUpdateType;
   source?: string;
   importance?: SignalUpdateImportance;
-  competitorId?: number;
-  competitorName?: string;
+  companyName?: string;
+  companyDomain?: string;
+  icpName?: string;
+  icpId?: number;
   reviewed?: boolean;
 }

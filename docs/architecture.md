@@ -5,7 +5,7 @@ Durable record of database, API, and routing decisions. Update this when changin
 ## Principles
 
 1. **OpenAPI first** — `lib/api-spec/openapi.yaml` is the contract. Edit spec → run Orval → commit spec + generated files.
-2. **Postgres for user-owned GTM config** — ICPs, competitors, signals. Not for ephemeral AI output or private AE notes.
+2. **Postgres for user-owned GTM config** — ICPs, signals. Not for ephemeral AI output or private AE notes.
 3. **localStorage for private / session data** — Your Company profile, brief history, pasted context stays client-side unless explicitly POSTed for one request.
 4. **One route file per resource** — `artifacts/api-server/src/routes/<resource>.ts`, mounted under `/api`.
 5. **Haiku + web search for research** — Full briefs and market prospecting use `web_search`; cold email and talk track regenerate from existing brief JSON only (faster, cheaper).
@@ -20,9 +20,8 @@ Location: `lib/db/src/schema/`
 
 | Table | Route | Purpose |
 |-------|-------|---------|
-| `icps` | `/icps` | Ideal Customer Profiles. **Loaded on every account brief** to score fit. |
-| `competitors` | `/competitors` | Tracked competitors; surfaced on dashboard. |
-| `signals` | `/signals` | Manual market intel; dashboard recent feed. |
+| `icps` | `/icps` | Ideal Customer Profiles. **Loaded on every account brief** to score fit; **drive signal radar** scans. |
+| `signals` | `/signals` | Automated ICP radar results; dashboard recent feed. |
 
 #### `icps`
 
@@ -40,13 +39,16 @@ Location: `lib/db/src/schema/`
 2. User runs brief → `account-brief.ts` → `db.select().from(icpsTable)` → scoring block in Claude system prompt
 3. User clicks **Save as ICP** on a brief → frontend pre-fills form → same `POST /api/icps`
 
-#### `competitors`
-
-Scalar fields + `strengths` / `weaknesses` as JSON strings. `tier`: `primary` \| `secondary` \| `emerging`.
-
 #### `signals`
 
-Optional `competitor_id` / `competitor_name`. `reviewed` boolean for inbox-style workflow.
+Prospecting opportunities discovered by `POST /signals/scan`. Columns include `company_name`, `company_domain`, `icp_name`, `icp_id` linking each signal to a matched ICP. `reviewed` boolean for inbox-style workflow.
+
+**Signal radar flow**
+
+1. User defines **Your Company** (industry / who you sell to) and optionally ICPs
+2. User clicks **Run Radar** → `POST /signals/scan` with `yourCompany` in body
+3. Backend anchors web search to Your Company's target market; ICPs refine matches when present
+4. Results persisted to `signals` table; user can mark reviewed, dismiss, or jump to account brief via domain link
 
 ### Orphan table (no API)
 
@@ -75,14 +77,12 @@ Registry: `artifacts/api-server/src/routes/index.ts`
 GET  /healthz
 GET  /dashboard
 
-GET|POST        /competitors
-GET|PATCH|DELETE /competitors/{id}
-
 GET|POST        /icps
 GET|PATCH|DELETE /icps/{id}
 
-GET|POST        /signals
-GET|PATCH|DELETE /signals/{id}
+GET             /signals
+POST            /signals/scan
+PATCH|DELETE    /signals/{id}
 
 POST /account-brief
 POST /account-brief/cold-email
@@ -171,9 +171,8 @@ Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orva
 | `/` | Company search + brief |
 | `/prospect` | Market prospecting |
 | `/icps`, `/icps/:id` | ICP list + detail |
+| `/signals` | ICP signal radar |
 | `/dashboard` | Command center |
-| `/competitors`, `/competitors/:id` | Competitor tracking |
-| `/signals` | Market signals |
 
 Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy).
 
