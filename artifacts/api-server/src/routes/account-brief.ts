@@ -318,4 +318,71 @@ Questions must reference specific findings — job postings, triggers, or commit
   }
 });
 
+type MeetingType = "discovery" | "demo" | "renewal";
+
+function buildPrepMeetingInstruction(meetingType: MeetingType): string {
+  switch (meetingType) {
+    case "discovery":
+      return `MEETING TYPE: Discovery call (first or early conversation).
+Focus on qualifying fit, understanding pains, and building rapport. Key questions should be open-ended discovery — reference specific signals from the brief (job postings, triggers, LinkedIn). The ask should be a clear next step (e.g. schedule a demo, introduce a technical stakeholder, share a use case).`;
+    case "demo":
+      return `MEETING TYPE: Product demo.
+Focus on mapping our solution to their specific pains. Key questions should validate success criteria, decision process, and timeline. The ask should advance the deal (e.g. trial, POC scoping, proposal timeline, bring in economic buyer).`;
+    case "renewal":
+      return `MEETING TYPE: Renewal or expansion conversation.
+Focus on value delivered, satisfaction gaps, and growth opportunities. Key questions should surface expansion potential and risk. The ask should be concrete (renewal terms, upsell scope, executive reference, multi-year commitment).`;
+  }
+}
+
+router.post("/account-brief/prep", async (req, res): Promise<void> => {
+  const { companyName, brief, meetingType, linkedinPosts, ownIntel, yourCompany } = req.body as {
+    companyName?: string;
+    brief?: Record<string, unknown>;
+    meetingType?: MeetingType;
+    linkedinPosts?: Array<{ role: string; content: string }>;
+    ownIntel?: string;
+    yourCompany?: YourCompanyInput;
+  };
+
+  if (!companyName || !brief) {
+    res.status(400).json({ error: "companyName and brief are required" });
+    return;
+  }
+
+  const type: MeetingType = meetingType === "demo" || meetingType === "renewal" ? meetingType : "discovery";
+
+  const system = `You are a senior B2B AE preparing for a call in 10 minutes. Distil a full research brief into a tight 1-page prep card an AE can scan before dialing.
+
+Return ONLY valid JSON with this exact shape:
+{
+  "meetingType": "${type}",
+  "whoYouAreMeeting": "2-3 sentences: likely persona(s), title(s), and why they care about this conversation — reference buying committee and signals from the brief",
+  "whatTheyCareAbout": ["3-4 short bullet priorities — specific pains, pressures, or goals from the research, not generic"],
+  "yourAngle": "2-3 sentences: why us, why now — connect our solution to their world using specific findings",
+  "keyQuestions": ["4-6 questions tailored to this meeting type — each must reference something specific from the brief"],
+  "askForThisCall": "One clear sentence: the explicit outcome to ask for before hanging up",
+  "openingLine": "The first 1-2 sentences to say when they pick up — reference a specific trigger or pain"
+}
+
+Write like a peer AE briefing another AE — direct, specific, no fluff. Every bullet must trace to research in the brief.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}
+
+${buildPrepMeetingInstruction(type)}`;
+
+  const researchBrief = briefWithoutColdEmail(brief);
+
+  try {
+    const result = await callClaudeJson(
+      client,
+      system,
+      `Generate a ${type} call prep card for ${companyName}.\nBrief:\n${JSON.stringify(researchBrief, null, 2)}\n\nReturn ONLY the JSON object.`,
+      2500,
+    );
+    res.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "AI request failed";
+    req.log.error({ err }, message);
+    res.status(500).json({ error: message });
+  }
+});
+
 export default router;

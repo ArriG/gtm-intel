@@ -368,6 +368,29 @@ export interface TalkTrack {
 
 export type TalkTrackInput = BriefActionInput;
 
+export type MeetingType = typeof MeetingType[keyof typeof MeetingType];
+
+
+export const MeetingType = {
+  discovery: 'discovery',
+  demo: 'demo',
+  renewal: 'renewal',
+} as const;
+
+export interface CallPrep {
+  meetingType: MeetingType;
+  whoYouAreMeeting: string;
+  whatTheyCareAbout: string[];
+  yourAngle: string;
+  keyQuestions: string[];
+  askForThisCall: string;
+  openingLine: string;
+}
+
+export type CallPrepInput = BriefActionInput & {
+  meetingType: MeetingType;
+};
+
 export interface MarketProspectInput {
   description: string;
   yourCompany?: YourCompany;

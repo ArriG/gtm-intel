@@ -339,6 +339,121 @@ export const GenerateTalkTrackResponse = zod.object({
 
 
 /**
+ * @summary Generate a 1-page pre-call briefing card from an existing brief
+ */
+export const GenerateCallPrepBody = zod.object({
+  "companyName": zod.string(),
+  "brief": zod.object({
+  "companySnapshot": zod.object({
+  "size": zod.string(),
+  "industry": zod.string(),
+  "location": zod.string(),
+  "fundingStage": zod.string(),
+  "abn": zod.string().optional(),
+  "techStack": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "icpFitScore": zod.object({
+  "score": zod.number(),
+  "reason": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "buyingCommittee": zod.array(zod.object({
+  "title": zod.string(),
+  "painPoint": zod.string(),
+  "linkedinSignal": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+})),
+  "theirWorld": zod.object({
+  "narrative": zod.string(),
+  "confidence": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "recentTriggers": zod.object({
+  "items": zod.array(zod.object({
+  "event": zod.string(),
+  "significance": zod.string(),
+  "recency": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "coldEmail": zod.object({
+  "opener": zod.string(),
+  "fullEmail": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "sourceSummary": zod.object({
+  "totalSources": zod.number(),
+  "sourceTypes": zod.array(zod.string()),
+  "australianSources": zod.number(),
+  "overallConfidence": zod.string(),
+  "confidenceReason": zod.string()
+}).optional()
+}),
+  "linkedinPosts": zod.array(zod.object({
+  "role": zod.string(),
+  "content": zod.string()
+})).optional(),
+  "ownIntel": zod.string().optional(),
+  "yourCompany": zod.object({
+  "companyName": zod.string().optional(),
+  "whatYouSell": zod.string().optional(),
+  "whoYouSellTo": zod.string().optional(),
+  "painPoints": zod.string().optional(),
+  "customerOutcomes": zod.string().optional()
+}).optional()
+}).and(zod.object({
+  "meetingType": zod.enum(['discovery', 'demo', 'renewal'])
+}))
+
+export const GenerateCallPrepResponse = zod.object({
+  "meetingType": zod.enum(['discovery', 'demo', 'renewal']),
+  "whoYouAreMeeting": zod.string(),
+  "whatTheyCareAbout": zod.array(zod.string()),
+  "yourAngle": zod.string(),
+  "keyQuestions": zod.array(zod.string()),
+  "askForThisCall": zod.string(),
+  "openingLine": zod.string()
+})
+
+
+/**
  * @summary Find matching companies for a target market description
  */
 export const ProspectMarketBody = zod.object({

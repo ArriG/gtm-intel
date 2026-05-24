@@ -79,6 +79,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/TalkTrack"
 
+  /account-brief/prep:
+    post:
+      operationId: generateCallPrep
+      tags: [account-brief]
+      summary: Generate a 1-page pre-call briefing card from an existing brief
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CallPrepInput"
+      responses:
+        "200":
+          description: Generated call prep card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallPrep"
+
   /market-prospect:
     post:
       operationId: prospectMarket
@@ -823,6 +842,50 @@ components:
 
     TalkTrackInput:
       $ref: "#/components/schemas/BriefActionInput"
+
+    MeetingType:
+      type: string
+      enum: [discovery, demo, renewal]
+
+    CallPrep:
+      type: object
+      required:
+        - meetingType
+        - whoYouAreMeeting
+        - whatTheyCareAbout
+        - yourAngle
+        - keyQuestions
+        - askForThisCall
+        - openingLine
+      properties:
+        meetingType:
+          $ref: "#/components/schemas/MeetingType"
+        whoYouAreMeeting:
+          type: string
+        whatTheyCareAbout:
+          type: array
+          items:
+            type: string
+        yourAngle:
+          type: string
+        keyQuestions:
+          type: array
+          items:
+            type: string
+        askForThisCall:
+          type: string
+        openingLine:
+          type: string
+
+    CallPrepInput:
+      allOf:
+        - $ref: "#/components/schemas/BriefActionInput"
+        - type: object
+          required:
+            - meetingType
+          properties:
+            meetingType:
+              $ref: "#/components/schemas/MeetingType"
 
     MarketProspectInput:
       type: object

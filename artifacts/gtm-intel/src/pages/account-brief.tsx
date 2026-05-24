@@ -12,7 +12,7 @@ import {
   Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
   Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag,
-  Download, FileText, MessageCircle
+  Download, FileText, MessageCircle, ClipboardList
 } from "lucide-react";
 import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
 import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
@@ -26,6 +26,7 @@ import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCard
 import { getValidTriggers } from "@/lib/brief-triggers";
 import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
 import { BearMark } from "@/components/bear-mark";
+import { savePrepContext } from "@/lib/call-prep-context";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
   { value: EmailToneValues.formal, label: "Formal" },
@@ -577,6 +578,7 @@ export default function AccountBriefPage() {
   const [talkTrackLoading, setTalkTrackLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [showOptionalContext, setShowOptionalContext] = useState(false);
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -615,7 +617,9 @@ export default function AccountBriefPage() {
       if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error((body as { error?: string }).error || `Request failed (${res.status})`); }
       const data = await res.json() as AccountBrief;
       setBrief(data);
-      saveToHistory({ id: Date.now().toString(), label, url, icpScore: data.icpFitScore?.score ?? 0, savedAt: new Date().toISOString(), brief: data });
+      const id = Date.now().toString();
+      saveToHistory({ id, label, url, icpScore: data.icpFitScore?.score ?? 0, savedAt: new Date().toISOString(), brief: data });
+      setCurrentHistoryId(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally { setLoading(false); setCooldownSeconds(30); }
@@ -623,6 +627,7 @@ export default function AccountBriefPage() {
 
   function handleHistorySelect(entry: HistoryEntry) {
     setLastLabel(entry.label); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
+    setCurrentHistoryId(entry.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -768,6 +773,16 @@ export default function AccountBriefPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                {currentHistoryId && (
+                  <Link
+                    href={`/prep?h=${currentHistoryId}`}
+                    onClick={() => savePrepContext(currentHistoryId, linkedinPosts, ownIntel)}
+                  >
+                    <Button size="sm" className="gap-1.5 text-xs h-8 px-3 rounded-xl font-bold">
+                      <ClipboardList className="w-3 h-3" />Prep for call
+                    </Button>
+                  </Link>
+                )}
                 <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
                   <Download className="w-3 h-3" />Download
                 </Button>

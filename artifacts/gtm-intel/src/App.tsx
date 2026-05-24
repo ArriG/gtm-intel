@@ -15,6 +15,7 @@ import Competitors from "./pages/competitors";
 import CompetitorDetail from "./pages/competitor-detail";
 import Signals from "./pages/signals";
 import MarketProspect from "./pages/market-prospect";
+import CallPrepPage from "./pages/call-prep";
 import NotFound from "./pages/not-found";
 
 const queryClient = new QueryClient();
@@ -140,6 +141,7 @@ export default function App() {
         <main className="flex-1 min-w-0">
           <Switch>
             <Route path="/" component={AccountBriefPage} />
+            <Route path="/prep" component={CallPrepPage} />
             <Route path="/prospect" component={MarketProspect} />
             <Route path="/your-company" component={YourCompany} />
             <Route path="/icps" component={ICPs} />

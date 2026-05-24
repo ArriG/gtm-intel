@@ -24,6 +24,8 @@ import type {
   AccountBriefColdEmail,
   AccountBriefInput,
   BriefActionInput,
+  CallPrep,
+  CallPrepInput,
   ColdEmailRegenerateInput,
   Competitor,
   CompetitorInput,
@@ -264,6 +266,77 @@ export const useGenerateTalkTrack = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGenerateTalkTrackMutationOptions(options));
+    }
+
+export const getGenerateCallPrepUrl = () => {
+
+
+
+
+  return `/api/account-brief/prep`
+}
+
+/**
+ * @summary Generate a 1-page pre-call briefing card from an existing brief
+ */
+export const generateCallPrep = async (callPrepInput: CallPrepInput, options?: RequestInit): Promise<CallPrep> => {
+
+  return customFetch<CallPrep>(getGenerateCallPrepUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      callPrepInput,)
+  }
+);}
+
+
+
+
+export const getGenerateCallPrepMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateCallPrep>>, TError,{data: BodyType<CallPrepInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateCallPrep>>, TError,{data: BodyType<CallPrepInput>}, TContext> => {
+
+const mutationKey = ['generateCallPrep'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateCallPrep>>, {data: BodyType<CallPrepInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateCallPrep(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateCallPrepMutationResult = NonNullable<Awaited<ReturnType<typeof generateCallPrep>>>
+    export type GenerateCallPrepMutationBody = BodyType<CallPrepInput>
+    export type GenerateCallPrepMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate a 1-page pre-call briefing card from an existing brief
+ */
+export const useGenerateCallPrep = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateCallPrep>>, TError,{data: BodyType<CallPrepInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateCallPrep>>,
+        TError,
+        {data: BodyType<CallPrepInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateCallPrepMutationOptions(options));
     }
 
 export const getProspectMarketUrl = () => {
