@@ -246,7 +246,7 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
   }
 
   return (
-    <div ref={wrapperRef} className="relative">
+    <div ref={wrapperRef} className="relative z-50">
       <form onSubmit={handleManualSubmit}>
         <div className="flex gap-2 bg-card border-2 border-foreground/10 rounded-2xl p-2 focus-within:border-foreground/25 transition-all">
           <div className="flex items-center pl-2 text-muted-foreground">
@@ -267,7 +267,7 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
         </div>
       </form>
       {showDropdown && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50">
           {suggestions.map((s, i) => (
             <button key={i} type="button" onClick={() => handleSelect(s)}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/60 transition-colors text-left border-b border-border last:border-0">
@@ -680,7 +680,7 @@ export default function AccountBriefPage() {
   return (
     <div className="min-h-screen">
       {/* Hero — WTTJ split: yellow top, cream bottom */}
-      <div className="relative overflow-hidden">
+      <div className="relative z-10">
         {/* Top half — yellow */}
         <div className="bg-primary text-foreground px-8 py-14 sm:py-16 lg:py-20">
           <div className="max-w-5xl mx-auto">
@@ -696,7 +696,7 @@ export default function AccountBriefPage() {
         </div>
 
         {/* Bottom half — cream */}
-        <div className="bg-secondary px-8 py-10 sm:py-12 border-b border-border">
+        <div className="relative bg-secondary px-8 py-10 sm:py-12 border-b border-border">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-2xl mb-8">
               Finally, GTM research that works for you.
