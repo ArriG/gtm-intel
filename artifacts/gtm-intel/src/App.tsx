@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Building2, Sparkles, Users, Newspaper, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { useHistory, clearHistory } from "@/lib/history";
+import { useIsYourCompanyConfigured } from "@/lib/your-company";
 
 import AccountBriefPage from "./pages/account-brief";
 import YourCompany from "./pages/your-company";
@@ -18,13 +19,16 @@ import NotFound from "./pages/not-found";
 
 const queryClient = new QueryClient();
 
-const NAV_PRIMARY = [
+const NAV_SETUP = [
+  { href: "/your-company", label: "Your Company", icon: Building2 },
+];
+
+const NAV_RESEARCH = [
   { href: "/", label: "Search", icon: Sparkles },
   { href: "/prospect", label: "Prospect", icon: Target },
 ];
 
 const NAV_WORKSPACE = [
-  { href: "/your-company", label: "Your Company", icon: Building2 },
   { href: "/icps", label: "ICPs", icon: Users },
   { href: "/signals", label: "Signals", icon: Radio },
   { href: "/dashboard", label: "Dashboard", icon: Newspaper },
@@ -101,15 +105,24 @@ function Sidebar() {
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-sidebar flex flex-col">
       <div className="px-5 py-5 border-b border-border bg-sidebar">
-        <Link href="/" className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground">
+        <Link href="/your-company" className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground">
           <BearMark size={32} />
           <span>GTM Intel</span>
         </Link>
       </div>
       <nav className="flex-1 p-2">
+        <NavSectionLabel>Setup</NavSectionLabel>
+        <div className="space-y-0.5">
+          {NAV_SETUP.map(({ href, label, icon }) => (
+            <SidebarNavLink key={href} href={href} label={label} icon={icon} active={isActive(href)} />
+          ))}
+        </div>
+
+        <div className="my-3 mx-3 border-t border-border" />
+
         <NavSectionLabel>Research</NavSectionLabel>
         <div className="space-y-0.5">
-          {NAV_PRIMARY.map(({ href, label, icon }) => (
+          {NAV_RESEARCH.map(({ href, label, icon }) => (
             <div key={href}>
               <SidebarNavLink href={href} label={label} icon={icon} active={isActive(href)} />
               {href === "/" && <RecentSearches />}
@@ -130,9 +143,24 @@ function Sidebar() {
   );
 }
 
+/** Send first-time users to Your Company before Search. */
+function FirstRunRedirect() {
+  const [location, setLocation] = useLocation();
+  const configured = useIsYourCompanyConfigured();
+
+  useEffect(() => {
+    if (!configured && location === "/") {
+      setLocation("/your-company");
+    }
+  }, [configured, location, setLocation]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <FirstRunRedirect />
       <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 min-w-0">

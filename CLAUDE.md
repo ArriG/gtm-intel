@@ -43,7 +43,7 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 - `openapi.yaml` is the single source of truth. Never edit generated files directly.
 - Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orval.mjs --config ./lib/api-spec/orval.config.ts`
 - **Postgres:** ICPs (drive brief scoring + signal radar), signals. **Not** briefs, Your Company, or history.
-- **localStorage:** Your Company (`gtm_your_company_v1`), brief history, recent searches.
+- **localStorage:** Your Company (`gtm_your_company_v2`), brief history, recent searches.
 - **Your Company** sent in POST body (`yourCompany`) → seller context in Claude prompt.
 - **LinkedIn posts + own intel** in POST body → highest-priority research context.
 - **Account brief AI routes:** `POST /account-brief` (web search), `/cold-email` and `/talk-track` (regenerate from brief JSON), `POST /market-prospect` (web search).
@@ -72,6 +72,20 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 - Battlecard API cleanup
 - Cite tag stripping in AI responses
 - Null-safe Save as ICP when brief omits optional sections
+
+## Milestone 1 — Your Company as product spine (shipped locally; commit hash TBD after merge)
+
+- **Your Company** is the first sidebar item (Setup section above Research)
+- First-run redirect: unconfigured users land on `/your-company`, not Search
+- Brief generation gated until Your Company is complete (empty state + CTA)
+- Expanded `YourCompany` schema: `companyName`, `oneLineDescription`, `industryServed`, `geographies`, `dealSize`, `buyerTitles`, `painPointsSolved` (+ optional `customerOutcomes`; legacy prompt fields derived on save)
+- localStorage bumped to `gtm_your_company_v2` — no migration from v1
+- Hero treatment on Your Company setup page
+
+## Next milestones (not built yet)
+
+- **Milestone 2:** Source-planning Claude call — reads Your Company, returns recommended research sources with reasoning; user reviews and saves source set
+- **Milestone 3:** Flexible Brief schema — enterprise buying committee vs SMB single decision-maker based on `dealSize`
 
 ## Backlog (next ideas)
 

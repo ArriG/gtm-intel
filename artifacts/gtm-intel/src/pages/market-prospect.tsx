@@ -8,19 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Search, Zap, AlertCircle, ChevronRight, Target } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import type { MarketProspectResponse } from "@workspace/api-client-react";
-import { loadYourCompany, type YourCompany } from "@/lib/your-company";
-
-function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
-  const trimmed: YourCompany = {
-    companyName: yc.companyName.trim(),
-    whatYouSell: yc.whatYouSell.trim(),
-    whoYouSellTo: yc.whoYouSellTo.trim(),
-    painPoints: yc.painPoints.trim(),
-    customerOutcomes: yc.customerOutcomes.trim(),
-  };
-  if (!Object.values(trimmed).some(Boolean)) return undefined;
-  return trimmed;
-}
+import { loadYourCompany, yourCompanyForRequest } from "@/lib/your-company";
 
 export default function MarketProspectPage() {
   const [description, setDescription] = useState("");

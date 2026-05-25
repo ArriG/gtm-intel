@@ -9,7 +9,7 @@ import {
 import type { CallPrep, MeetingType } from "@workspace/api-client-react";
 import { MeetingType as MeetingTypeValues } from "@workspace/api-client-react";
 import { loadHistory } from "@/lib/history";
-import { loadYourCompany, type YourCompany } from "@/lib/your-company";
+import { loadYourCompany, yourCompanyForRequest } from "@/lib/your-company";
 import { loadPrepContext } from "@/lib/call-prep-context";
 import { formatCallPrepForExport, printCallPrep } from "@/lib/call-prep-export";
 import { cn } from "@/lib/utils";
@@ -19,18 +19,6 @@ const MEETING_OPTIONS: { value: MeetingType; label: string; description: string 
   { value: MeetingTypeValues.demo, label: "Demo", description: "Show the product — map to their specific needs" },
   { value: MeetingTypeValues.renewal, label: "Renewal", description: "Expand or renew — value delivered and growth" },
 ];
-
-function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
-  const trimmed: YourCompany = {
-    companyName: yc.companyName.trim(),
-    whatYouSell: yc.whatYouSell.trim(),
-    whoYouSellTo: yc.whoYouSellTo.trim(),
-    painPoints: yc.painPoints.trim(),
-    customerOutcomes: yc.customerOutcomes.trim(),
-  };
-  if (!Object.values(trimmed).some(Boolean)) return undefined;
-  return trimmed;
-}
 
 function CopyAllButton({ getText }: { getText: () => string }) {
   const [copied, setCopied] = useState(false);

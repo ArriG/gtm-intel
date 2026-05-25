@@ -12,14 +12,14 @@ import {
   Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
   Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag,
-  Download, FileText, MessageCircle, ClipboardList
+  Download, FileText, MessageCircle, ClipboardList, ArrowRight
 } from "lucide-react";
 import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
 import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
-import { loadYourCompany, type YourCompany } from "@/lib/your-company";
+import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured } from "@/lib/your-company";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
@@ -418,16 +418,36 @@ function RecentTriggersCard({ items, sources }: { items: NonNullable<AccountBrie
   );
 }
 
-function yourCompanyForRequest(yc: YourCompany): YourCompany | undefined {
-  const trimmed: YourCompany = {
-    companyName: yc.companyName.trim(),
-    whatYouSell: yc.whatYouSell.trim(),
-    whoYouSellTo: yc.whoYouSellTo.trim(),
-    painPoints: yc.painPoints.trim(),
-    customerOutcomes: yc.customerOutcomes.trim(),
-  };
-  if (!Object.values(trimmed).some(Boolean)) return undefined;
-  return trimmed;
+function BriefSetupRequired() {
+  return (
+    <div className="min-h-screen">
+      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
+        <div className="max-w-3xl mx-auto">
+          <BearMark size={52} className="mb-6" />
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05]">
+            Set up Your Company first
+          </h1>
+          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
+            Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play.
+            That context shapes every brief, email, and fit score.
+          </p>
+        </div>
+      </div>
+      <div className="bg-secondary px-8 py-10 sm:py-12">
+        <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-4">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            It takes about two minutes. Once saved, you can search any company and get a brief tailored to your motion.
+          </p>
+          <Link href="/your-company">
+            <Button className="gap-1.5">
+              Set up Your Company
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function briefActionBody(brief: AccountBrief, companyName: string, linkedinPosts: LinkedInPost[], ownIntel: string) {
@@ -563,6 +583,7 @@ function SaveAsIcpDialog({ brief, companyName }: { brief: AccountBrief; companyN
 
 // --- Main page ---
 export default function AccountBriefPage() {
+  const configured = useIsYourCompanyConfigured();
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -681,6 +702,10 @@ export default function AccountBriefPage() {
   }
 
   const exportText = () => brief ? formatBriefForExport(brief, lastLabel, talkTrack) : "";
+
+  if (!configured) {
+    return <BriefSetupRequired />;
+  }
 
   return (
     <div className="min-h-screen">

@@ -60,7 +60,7 @@ Prospecting opportunities discovered by `POST /signal-radar`. Columns include `c
 
 | Data | Storage | Rationale |
 |------|---------|-----------|
-| Your Company profile | `localStorage` key `gtm_your_company_v1` | Private AE config; sent per-request in POST body |
+| Your Company profile | `localStorage` key `gtm_your_company_v2` | Private AE config; sent per-request in POST body. v1 key ignored — users re-fill on upgrade (Milestone 1). |
 | Brief history / recent searches | `localStorage` | Client-side, private |
 | Generated account briefs | None (ephemeral) | Returned in HTTP response only |
 | LinkedIn paste / own intel | Request body only | Not persisted server-side |
@@ -167,8 +167,8 @@ Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orva
 
 | Path | Page |
 |------|------|
-| `/your-company` | Seller profile (localStorage) |
-| `/` | Company search + brief |
+| `/your-company` | Seller profile (localStorage) — **first nav item; first-run landing** |
+| `/` | Company search + brief — **gated until Your Company configured** |
 | `/prospect` | Market prospecting |
 | `/icps`, `/icps/:id` | ICP list + detail |
 | `/signals` | ICP signal radar |
