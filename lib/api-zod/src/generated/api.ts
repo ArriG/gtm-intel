@@ -19,12 +19,18 @@ export const GenerateAccountBriefBody = zod.object({
 })).optional(),
   "ownIntel": zod.string().optional(),
   "yourCompany": zod.object({
-  "companyName": zod.string().optional(),
-  "whatYouSell": zod.string().optional(),
-  "whoYouSellTo": zod.string().optional(),
-  "painPoints": zod.string().optional(),
-  "customerOutcomes": zod.string().optional()
-}).optional(),
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+}).optional().describe('Seller profile stored client-side; sent per request for prompt context'),
   "emailTone": zod.enum(['formal', 'direct', 'conversational']).optional()
 })
 
@@ -207,12 +213,18 @@ export const RegenerateColdEmailBody = zod.object({
 })).optional(),
   "ownIntel": zod.string().optional(),
   "yourCompany": zod.object({
-  "companyName": zod.string().optional(),
-  "whatYouSell": zod.string().optional(),
-  "whoYouSellTo": zod.string().optional(),
-  "painPoints": zod.string().optional(),
-  "customerOutcomes": zod.string().optional()
-}).optional()
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+}).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 }).and(zod.object({
   "emailTone": zod.enum(['formal', 'direct', 'conversational'])
 }))
@@ -324,12 +336,18 @@ export const GenerateTalkTrackBody = zod.object({
 })).optional(),
   "ownIntel": zod.string().optional(),
   "yourCompany": zod.object({
-  "companyName": zod.string().optional(),
-  "whatYouSell": zod.string().optional(),
-  "whoYouSellTo": zod.string().optional(),
-  "painPoints": zod.string().optional(),
-  "customerOutcomes": zod.string().optional()
-}).optional()
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+}).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 
 export const GenerateTalkTrackResponse = zod.object({
@@ -432,12 +450,18 @@ export const GenerateCallPrepBody = zod.object({
 })).optional(),
   "ownIntel": zod.string().optional(),
   "yourCompany": zod.object({
-  "companyName": zod.string().optional(),
-  "whatYouSell": zod.string().optional(),
-  "whoYouSellTo": zod.string().optional(),
-  "painPoints": zod.string().optional(),
-  "customerOutcomes": zod.string().optional()
-}).optional()
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+}).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 }).and(zod.object({
   "meetingType": zod.enum(['discovery', 'demo', 'renewal'])
 }))
@@ -459,12 +483,18 @@ export const GenerateCallPrepResponse = zod.object({
 export const ProspectMarketBody = zod.object({
   "description": zod.string(),
   "yourCompany": zod.object({
-  "companyName": zod.string().optional(),
-  "whatYouSell": zod.string().optional(),
-  "whoYouSellTo": zod.string().optional(),
-  "painPoints": zod.string().optional(),
-  "customerOutcomes": zod.string().optional()
-}).optional()
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+}).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 
 export const ProspectMarketResponse = zod.object({
@@ -628,12 +658,18 @@ export const ListSignalsResponse = zod.array(ListSignalsResponseItem)
  */
 export const RunSignalRadarBody = zod.object({
   "yourCompany": zod.object({
-  "companyName": zod.string().optional(),
-  "whatYouSell": zod.string().optional(),
-  "whoYouSellTo": zod.string().optional(),
-  "painPoints": zod.string().optional(),
-  "customerOutcomes": zod.string().optional()
-}).optional()
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+}).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 
 export const RunSignalRadarResponse = zod.object({

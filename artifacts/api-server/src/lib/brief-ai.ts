@@ -3,6 +3,13 @@ import type { icpsTable } from "@workspace/db/schema";
 
 export type YourCompanyInput = {
   companyName?: string;
+  oneLineDescription?: string;
+  industryServed?: string;
+  geographies?: string[];
+  dealSize?: "smb" | "mid-market" | "enterprise";
+  buyerTitles?: string[];
+  painPointsSolved?: string[];
+  /** Legacy fields — still accepted from older clients */
   whatYouSell?: string;
   whoYouSellTo?: string;
   painPoints?: string;
@@ -133,22 +140,55 @@ For each signal, set icpName to the matching ICP name and icpId to its id.`;
 }
 
 export function yourCompanyHasRadarContext(yourCompany?: YourCompanyInput): boolean {
-  return Boolean(yourCompany?.whoYouSellTo?.trim() || yourCompany?.whatYouSell?.trim());
+  return yourCompanyHasContext(yourCompany);
+}
+
+export function yourCompanyHasContext(yourCompany?: YourCompanyInput): boolean {
+  if (!yourCompany) return false;
+
+  const hasProduct = Boolean(
+    yourCompany.oneLineDescription?.trim() || yourCompany.whatYouSell?.trim(),
+  );
+  const hasMarket = Boolean(
+    yourCompany.industryServed?.trim() || yourCompany.whoYouSellTo?.trim(),
+  );
+
+  return Boolean(yourCompany.companyName?.trim() && hasProduct && hasMarket);
+}
+
+function describeYourCompany(yourCompany: YourCompanyInput) {
+  const product = yourCompany.oneLineDescription?.trim() || yourCompany.whatYouSell?.trim();
+  const industry = yourCompany.industryServed?.trim() || yourCompany.whoYouSellTo?.trim();
+  const geographies = yourCompany.geographies?.map(g => g.trim()).filter(Boolean);
+  const buyerTitles = yourCompany.buyerTitles?.map(t => t.trim()).filter(Boolean);
+  const painPoints = yourCompany.painPointsSolved?.length
+    ? yourCompany.painPointsSolved.map(p => p.trim()).filter(Boolean).join("; ")
+    : yourCompany.painPoints?.trim();
+  const dealSize = yourCompany.dealSize?.replace("-", " ");
+
+  return {
+    product,
+    industry,
+    geographies,
+    buyerTitles,
+    painPoints,
+    dealSize,
+  };
 }
 
 export function buildYourCompanyRadarContext(yourCompany?: YourCompanyInput): string {
   if (!yourCompanyHasRadarContext(yourCompany)) return "";
 
+  const { product, industry, geographies, buyerTitles, painPoints } = describeYourCompany(yourCompany!);
+
   const lines = [
-    yourCompany!.whoYouSellTo?.trim()
-      ? `Target market / industry (PRIMARY search lens — only surface companies in this space):\n  ${yourCompany!.whoYouSellTo.trim()}`
+    industry
+      ? `Target market / industry (PRIMARY search lens — only surface companies in this space):\n  ${industry}`
       : null,
-    yourCompany!.whatYouSell?.trim()
-      ? `What we sell: ${yourCompany!.whatYouSell.trim()}`
-      : null,
-    yourCompany!.painPoints?.trim()
-      ? `Pain points we solve (judge signal relevance against these):\n  ${yourCompany!.painPoints.trim()}`
-      : null,
+    geographies?.length ? `Geographies: ${geographies.join(", ")}` : null,
+    product ? `What we sell: ${product}` : null,
+    buyerTitles?.length ? `Typical buyers: ${buyerTitles.join(", ")}` : null,
+    painPoints ? `Pain points we solve (judge signal relevance against these):\n  ${painPoints}` : null,
     yourCompany!.companyName?.trim()
       ? `Seller: ${yourCompany!.companyName.trim()}`
       : null,
@@ -162,11 +202,16 @@ Only return signals from companies that fit the target market above.`;
 export function buildYourCompanyContext(yourCompany?: YourCompanyInput): string {
   if (!yourCompany) return "";
 
+  const { product, industry, geographies, buyerTitles, painPoints, dealSize } = describeYourCompany(yourCompany);
+
   const lines = [
     yourCompany.companyName?.trim() ? `Company name: ${yourCompany.companyName.trim()}` : null,
-    yourCompany.whatYouSell?.trim() ? `What we sell: ${yourCompany.whatYouSell.trim()}` : null,
-    yourCompany.whoYouSellTo?.trim() ? `Who we sell to: ${yourCompany.whoYouSellTo.trim()}` : null,
-    yourCompany.painPoints?.trim() ? `Problems we solve: ${yourCompany.painPoints.trim()}` : null,
+    product ? `What we sell: ${product}` : null,
+    industry ? `Industry we serve: ${industry}` : null,
+    geographies?.length ? `Geographies: ${geographies.join(", ")}` : null,
+    dealSize ? `Typical deal size: ${dealSize}` : null,
+    buyerTitles?.length ? `Typical buyers: ${buyerTitles.join(", ")}` : null,
+    painPoints ? `Problems we solve: ${painPoints}` : null,
     yourCompany.customerOutcomes?.trim() ? `Customer outcomes we deliver: ${yourCompany.customerOutcomes.trim()}` : null,
   ].filter(Boolean);
 
@@ -174,7 +219,7 @@ export function buildYourCompanyContext(yourCompany?: YourCompanyInput): string 
 
   return `\n\nSELLER CONTEXT — THE AE'S COMPANY (highest priority for positioning and cold email):
 ${lines.join("\n")}
-Use this to tailor the coldEmail value statement and fullEmail — reference what we sell and the outcomes we deliver, not generic SaaS language.`;
+Use this to tailor the coldEmail value statement and fullEmail — reference what we sell, who we sell to, and the outcomes we deliver, not generic SaaS language.`;
 }
 
 export function buildLinkedinContext(

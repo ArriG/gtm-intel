@@ -92,11 +92,42 @@ export interface IcpUpdate {
   notes?: string;
 }
 
+/**
+ * Typical deal size motion — SMB, mid-market, or enterprise
+ */
+export type DealSize = typeof DealSize[keyof typeof DealSize];
+
+
+export const DealSize = {
+  smb: 'smb',
+  'mid-market': 'mid-market',
+  enterprise: 'enterprise',
+} as const;
+
+/**
+ * Seller profile stored client-side; sent per request for prompt context
+ */
 export interface YourCompany {
-  companyName?: string;
+  /** Seller company name, e.g. "Optalitix" */
+  companyName: string;
+  /** What we sell, in one sentence */
+  oneLineDescription: string;
+  /** Industry or vertical our customers operate in */
+  industryServed: string;
+  /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
+  geographies: string[];
+  dealSize: DealSize;
+  /** Typical decision-maker job titles */
+  buyerTitles: string[];
+  /** Pain points our product addresses */
+  painPointsSolved: string[];
+  /** Legacy field — mirrors oneLineDescription when present */
   whatYouSell?: string;
+  /** Legacy field — mirrors industryServed and geographies when present */
   whoYouSellTo?: string;
+  /** Legacy field — newline-joined painPointsSolved when present */
   painPoints?: string;
+  /** Optional customer outcomes the AE can cite in outreach */
   customerOutcomes?: string;
 }
 

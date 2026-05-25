@@ -571,19 +571,61 @@ components:
         content:
           type: string
 
+    DealSize:
+      type: string
+      enum: [smb, mid-market, enterprise]
+      description: Typical deal size motion — SMB, mid-market, or enterprise
+
     YourCompany:
       type: object
+      description: Seller profile stored client-side; sent per request for prompt context
+      required:
+        - companyName
+        - oneLineDescription
+        - industryServed
+        - geographies
+        - dealSize
+        - buyerTitles
+        - painPointsSolved
       properties:
         companyName:
           type: string
+          description: Seller company name, e.g. "Optalitix"
+        oneLineDescription:
+          type: string
+          description: What we sell, in one sentence
+        industryServed:
+          type: string
+          description: Industry or vertical our customers operate in
+        geographies:
+          type: array
+          items:
+            type: string
+          description: Markets we sell into, e.g. ["UK"], ["AU", "NZ"]
+        dealSize:
+          $ref: "#/components/schemas/DealSize"
+        buyerTitles:
+          type: array
+          items:
+            type: string
+          description: Typical decision-maker job titles
+        painPointsSolved:
+          type: array
+          items:
+            type: string
+          description: Pain points our product addresses
         whatYouSell:
           type: string
+          description: Legacy field — mirrors oneLineDescription when present
         whoYouSellTo:
           type: string
+          description: Legacy field — mirrors industryServed and geographies when present
         painPoints:
           type: string
+          description: Legacy field — newline-joined painPointsSolved when present
         customerOutcomes:
           type: string
+          description: Optional customer outcomes the AE can cite in outreach
 
     EmailTone:
       type: string

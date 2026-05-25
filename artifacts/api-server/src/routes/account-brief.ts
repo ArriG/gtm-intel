@@ -12,6 +12,7 @@ import {
   callClaudeJsonWithSearch,
   parseJsonFromResponse,
   textFromMessageContent,
+  yourCompanyHasContext,
   type EmailTone,
   type YourCompanyInput,
 } from "../lib/brief-ai";
@@ -172,7 +173,7 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   const userContext = {
     hasLinkedIn: !!(linkedinPosts && linkedinPosts.length > 0),
     hasOwnIntel: !!(ownIntel && ownIntel.trim()),
-    hasYourCompany: !!(yourCompany && Object.values(yourCompany).some(v => v?.trim())),
+    hasYourCompany: yourCompanyHasContext(yourCompany),
   };
 
   let icpContext = "";

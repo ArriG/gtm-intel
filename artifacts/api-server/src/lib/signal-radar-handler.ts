@@ -133,7 +133,7 @@ Rules:
 ${sellerContext}${icpContext ? `\n\n${icpContext}` : ""}`;
 
   const userMessage = hasSeller
-    ? `Scan the web for recent buying signals at companies in this target market: "${yourCompany!.whoYouSellTo?.trim() || yourCompany!.whatYouSell!.trim()}". Focus on Australia. Respond with ONLY the JSON object.`
+    ? `Scan the web for recent buying signals at companies in this target market: "${yourCompany!.industryServed?.trim() || yourCompany!.whoYouSellTo?.trim() || yourCompany!.oneLineDescription?.trim() || yourCompany!.whatYouSell!.trim()}". Focus on ${yourCompany!.geographies?.join(", ") || "Australia"}. Respond with ONLY the JSON object.`
     : "Scan the web for recent ICP-matching buying signals in Australia. Respond with ONLY the JSON object.";
 
   try {

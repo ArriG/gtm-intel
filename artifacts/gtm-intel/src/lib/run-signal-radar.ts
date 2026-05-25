@@ -11,8 +11,8 @@ type MarketProspectCompany = {
 
 function buildFallbackDescription(yourCompany?: YourCompany, icps?: Icp[]): string {
   const parts = [
-    yourCompany?.whoYouSellTo?.trim(),
-    yourCompany?.whatYouSell?.trim(),
+    yourCompany?.industryServed?.trim() || yourCompany?.whoYouSellTo?.trim(),
+    yourCompany?.oneLineDescription?.trim() || yourCompany?.whatYouSell?.trim(),
     icps?.length
       ? `ICP targets: ${icps.map(i => `${i.name} (${i.industry})`).join("; ")}`
       : null,

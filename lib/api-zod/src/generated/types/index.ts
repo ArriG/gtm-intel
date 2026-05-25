@@ -25,6 +25,7 @@ export * from './callPrep';
 export * from './callPrepInput';
 export * from './coldEmailRegenerateInput';
 export * from './dashboardSummary';
+export * from './dealSize';
 export * from './emailTone';
 export * from './healthStatus';
 export * from './icp';
