@@ -2,7 +2,7 @@
 
 An AI-powered research tool for AEs and SDRs. Type a company name, get a sourced account brief in ~30 seconds — company snapshot, ICP fit score, buying committee, recent triggers, cold email opener, and discovery talk track.
 
-<GTM Intelligence app, generated account brief" src="https://github.com/user-attachments/assets/18da5e7d-8a1f-4f2f-aa09-16c544a38169" />
+![GTM Intelligence app — generated account brief](https://github.com/user-attachments/assets/18da5e7d-8a1f-4f2f-aa09-16c544a38169)
 
 Built by a Salesman with 15+ years SaaS experience and zero prior coding background — a portfolio piece demonstrating full-stack product thinking from the seller's chair.
 
