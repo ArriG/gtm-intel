@@ -352,11 +352,61 @@ export interface MarketProspectResponse {
   companies: ProspectCompany[];
 }
 
+/**
+ * Category used for source chips in briefs
+ */
+export type ResearchSourceType = typeof ResearchSourceType[keyof typeof ResearchSourceType];
+
+
+export const ResearchSourceType = {
+  web: 'web',
+  registry: 'registry',
+  jobs: 'jobs',
+  linkedin: 'linkedin',
+  press: 'press',
+  other: 'other',
+} as const;
+
+export interface ResearchSource {
+  /** Stable id for UI editing, e.g. companies-house */
+  id: string;
+  /** Human-readable source name shown in the plan UI */
+  name: string;
+  /** Concrete web search instruction Claude should follow for account briefs */
+  searchHint: string;
+  /** Why this source fits the seller's market and motion */
+  reasoning: string;
+  sourceType: ResearchSourceType;
+  enabled: boolean;
+  /**
+     * Lower numbers are searched first
+     * @minimum 1
+     */
+  priority: number;
+}
+
+export interface ResearchSourcePlan {
+  /** Friendly summary shown to the AE, e.g. Great Ari, based on... */
+  introMessage?: string;
+  /** @minItems 3 */
+  sources: ResearchSource[];
+  updatedAt?: string;
+}
+
 export interface AccountBriefInput {
   url: string;
   linkedinPosts?: LinkedInPost[];
   ownIntel?: string;
   yourCompany?: YourCompany;
+  researchSourcePlan?: ResearchSourcePlan;
   emailTone?: EmailTone;
+}
+
+export interface PlanResearchSourcesInput {
+  yourCompany: YourCompany;
+}
+
+export interface PlanResearchSourcesResponse {
+  plan: ResearchSourcePlan;
 }
 

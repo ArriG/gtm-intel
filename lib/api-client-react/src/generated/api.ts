@@ -34,6 +34,8 @@ import type {
   IcpUpdate,
   MarketProspectInput,
   MarketProspectResponse,
+  PlanResearchSourcesInput,
+  PlanResearchSourcesResponse,
   Signal,
   SignalScanInput,
   SignalScanResponse,
@@ -406,6 +408,77 @@ export const useProspectMarket = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getProspectMarketMutationOptions(options));
+    }
+
+export const getPlanResearchSourcesUrl = () => {
+
+
+
+
+  return `/api/research-source-plan`
+}
+
+/**
+ * @summary Generate a tailored research source plan from Your Company profile
+ */
+export const planResearchSources = async (planResearchSourcesInput: PlanResearchSourcesInput, options?: RequestInit): Promise<PlanResearchSourcesResponse> => {
+
+  return customFetch<PlanResearchSourcesResponse>(getPlanResearchSourcesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      planResearchSourcesInput,)
+  }
+);}
+
+
+
+
+export const getPlanResearchSourcesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planResearchSources>>, TError,{data: BodyType<PlanResearchSourcesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof planResearchSources>>, TError,{data: BodyType<PlanResearchSourcesInput>}, TContext> => {
+
+const mutationKey = ['planResearchSources'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof planResearchSources>>, {data: BodyType<PlanResearchSourcesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  planResearchSources(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlanResearchSourcesMutationResult = NonNullable<Awaited<ReturnType<typeof planResearchSources>>>
+    export type PlanResearchSourcesMutationBody = BodyType<PlanResearchSourcesInput>
+    export type PlanResearchSourcesMutationError = ErrorType<void>
+
+    /**
+ * @summary Generate a tailored research source plan from Your Company profile
+ */
+export const usePlanResearchSources = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planResearchSources>>, TError,{data: BodyType<PlanResearchSourcesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof planResearchSources>>,
+        TError,
+        {data: BodyType<PlanResearchSourcesInput>},
+        TContext
+      > => {
+      return useMutation(getPlanResearchSourcesMutationOptions(options));
     }
 
 export const getHealthCheckUrl = () => {

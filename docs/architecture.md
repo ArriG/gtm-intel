@@ -61,6 +61,7 @@ Prospecting opportunities discovered by `POST /signal-radar`. Columns include `c
 | Data | Storage | Rationale |
 |------|---------|-----------|
 | Your Company profile | `localStorage` key `gtm_your_company_v2` | Private AE config; sent per-request in POST body. v1 key ignored — users re-fill on upgrade (Milestone 1). |
+| Research source plan | `localStorage` key `gtm_research_source_plan_v1` | Tailored web search sources; generated via `POST /research-source-plan`, sent with brief requests |
 | Brief history / recent searches | `localStorage` | Client-side, private |
 | Generated account briefs | None (ephemeral) | Returned in HTTP response only |
 | LinkedIn paste / own intel | Request body only | Not persisted server-side |
@@ -89,6 +90,7 @@ POST /account-brief/cold-email
 POST /account-brief/talk-track
 
 POST /market-prospect
+POST /research-source-plan
 ```
 
 ### Validation
@@ -112,6 +114,7 @@ POST /market-prospect
 | `linkedinPosts` | no | AE-pasted posts — highest-priority evidence |
 | `ownIntel` | no | Discovery notes — ground truth |
 | `yourCompany` | no | Seller context from localStorage |
+| `researchSourcePlan` | no | Saved source plan from localStorage — drives web search instructions |
 | `emailTone` | no | `formal` \| `direct` \| `conversational` (default `direct`) |
 
 **Prompt context order (after base research instructions):** ICP scoring → Your Company → own intel → LinkedIn → email tone.

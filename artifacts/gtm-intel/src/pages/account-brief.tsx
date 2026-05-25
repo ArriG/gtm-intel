@@ -21,6 +21,7 @@ import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
+import { researchSourcePlanForRequest, useIsResearchSourcePlanConfigured } from "@/lib/research-source-plan";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
@@ -461,29 +462,33 @@ function RecentTriggersCard({ items, sources }: { items: NonNullable<AccountBrie
   );
 }
 
-function BriefSetupRequired() {
+function BriefSetupRequired({ step }: { step: "company" | "sources" }) {
+  const isCompany = step === "company";
   return (
     <div className="min-h-screen">
       <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
         <div className="max-w-3xl mx-auto">
           <BearMark size={52} className="mb-6" />
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05]">
-            Set up Your Company first
+            {isCompany ? "Set up Your Company first" : "Save your research sources"}
           </h1>
           <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play.
-            That context shapes every brief, email, and fit score.
+            {isCompany
+              ? "Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play. That context shapes every brief, email, and fit score."
+              : "Generate a tailored source plan on Your Company — GTM Intel will search those sources instead of a fixed AU list when building briefs."}
           </p>
         </div>
       </div>
       <div className="bg-secondary px-8 py-10 sm:py-12">
         <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            It takes about two minutes. Once saved, you can search any company and get a brief tailored to your motion.
+            {isCompany
+              ? "It takes about two minutes. Once saved, you'll generate a research source plan next."
+              : "Review the proposed sources, tweak if needed, and save. Then Search unlocks."}
           </p>
           <Link href="/your-company">
             <Button className="gap-1.5">
-              Set up Your Company
+              {isCompany ? "Set up Your Company" : "Review research sources"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -626,7 +631,8 @@ function SaveAsIcpDialog({ brief, companyName }: { brief: AccountBrief; companyN
 
 // --- Main page ---
 export default function AccountBriefPage() {
-  const configured = useIsYourCompanyConfigured();
+  const companyConfigured = useIsYourCompanyConfigured();
+  const sourcePlanConfigured = useIsResearchSourcePlanConfigured();
   const yourCompany = useYourCompany();
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState<AccountBrief | null>(null);
@@ -688,6 +694,7 @@ export default function AccountBriefPage() {
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
     const postsToSend = linkedinPosts.filter(p => p.content.trim());
     const yourCompany = yourCompanyForRequest(loadYourCompany());
+    const researchSourcePlan = researchSourcePlanForRequest();
     try {
       const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       const res = await fetch(`${base}/api/account-brief`, {
@@ -698,6 +705,7 @@ export default function AccountBriefPage() {
           linkedinPosts: postsToSend.length > 0 ? postsToSend : undefined,
           ownIntel: ownIntel.trim() || undefined,
           yourCompany,
+          researchSourcePlan,
           emailTone,
         }),
       });
@@ -786,8 +794,12 @@ export default function AccountBriefPage() {
 
   const exportText = () => brief ? formatBriefForExport(brief, lastLabel, talkTrack) : "";
 
-  if (!configured) {
-    return <BriefSetupRequired />;
+  if (!companyConfigured) {
+    return <BriefSetupRequired step="company" />;
+  }
+
+  if (!sourcePlanConfigured) {
+    return <BriefSetupRequired step="sources" />;
   }
 
   return (

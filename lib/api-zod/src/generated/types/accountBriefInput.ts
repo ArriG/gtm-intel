@@ -7,6 +7,7 @@
  */
 import type { EmailTone } from './emailTone';
 import type { LinkedInPost } from './linkedInPost';
+import type { ResearchSourcePlan } from './researchSourcePlan';
 import type { YourCompany } from './yourCompany';
 
 export interface AccountBriefInput {
@@ -14,5 +15,6 @@ export interface AccountBriefInput {
   linkedinPosts?: LinkedInPost[];
   ownIntel?: string;
   yourCompany?: YourCompany;
+  researchSourcePlan?: ResearchSourcePlan;
   emailTone?: EmailTone;
 }

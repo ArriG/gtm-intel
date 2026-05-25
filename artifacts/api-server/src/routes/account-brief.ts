@@ -17,6 +17,7 @@ import {
   type YourCompanyInput,
 } from "../lib/brief-ai";
 import { handleSignalRadar } from "../lib/signal-radar-handler";
+import { buildResearchSourceInstructions, type ResearchSourcePlan } from "../lib/research-source-plan";
 
 const router: IRouter = Router();
 
@@ -24,21 +25,7 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const BASE_SYSTEM_PROMPT = `You are a world-class GTM research analyst specialising in Australian and Asia-Pacific markets.
-
-When given a company URL, search across these 5 HIGH-PRIORITY sources only — do not spend time on other sources:
-
-SOURCE 1 — Company website and blog: Read their homepage, about page, and any recent blog posts.
-
-SOURCE 2 — Australian business registry: Search "site:abr.business.gov.au [company name]" for ABN details. Search "[company name] ASIC" for any regulatory filings or director information.
-
-SOURCE 3 — Job postings: Search "[company name] jobs site:seek.com.au" — read job descriptions carefully. What roles are they hiring for? What does the job description reveal about their operational challenges? This is your highest-signal source for pain points.
-
-SOURCE 4 — LinkedIn leadership signals: Search "site:linkedin.com [CEO name] [company name]" and "site:linkedin.com [CFO name] [company name]" for any recent public posts from their C-suite. Note exact quotes if found.
-
-SOURCE 5 — Australian press: Search "[company name] site:afr.com OR site:smartcompany.com.au OR site:fintech.com.au" for recent coverage in the last 12 months.
-
-SPEED INSTRUCTION: Complete all searches and return your response within 45 seconds. If a source returns nothing useful after one search attempt, move on immediately — do not retry.
+const BRIEF_PROMPT_SUFFIX = `SPEED INSTRUCTION: Complete all searches and return your response within 45 seconds. If a source returns nothing useful after one search attempt, move on immediately — do not retry.
 
 For each source that produces useful information, record it in the sources arrays using these types: "web", "abn", "asic", "seek_job", "linkedin", "industry_press", "assumed".
 Confidence levels: "verified" = direct quote or official filing, "informed" = strong contextual signal, "assumed" = educated inference.
@@ -132,6 +119,14 @@ RULES:
 - Always include all 6 top-level keys even if some sections have limited data.
 - CRITICAL: All JSON string values must be plain text only. Never include HTML, XML, <cite> tags, or any markup.`;
 
+function buildBriefSystemPrompt(sourceInstructions: string): string {
+  return `You are a world-class GTM research analyst.
+
+${sourceInstructions}
+
+${BRIEF_PROMPT_SUFFIX}`;
+}
+
 function buildActionContext(
   linkedinPosts?: Array<{ role: string; content: string }>,
   ownIntel?: string,
@@ -146,11 +141,12 @@ function briefWithoutColdEmail(brief: Record<string, unknown>): Record<string, u
 }
 
 router.post("/account-brief", async (req, res): Promise<void> => {
-  const { url, linkedinPosts, ownIntel, yourCompany, emailTone } = req.body as {
+  const { url, linkedinPosts, ownIntel, yourCompany, researchSourcePlan, emailTone } = req.body as {
     url?: string;
     linkedinPosts?: Array<{ role: string; content: string }>;
     ownIntel?: string;
     yourCompany?: YourCompanyInput;
+    researchSourcePlan?: ResearchSourcePlan;
     emailTone?: EmailTone;
   };
 
@@ -186,7 +182,9 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   }
 
   const tone = emailTone || "direct";
-  const systemPrompt = `${BASE_SYSTEM_PROMPT}
+  const sourceInstructions = buildResearchSourceInstructions(researchSourcePlan);
+  const enabledSourceCount = researchSourcePlan?.sources?.filter(source => source.enabled).length ?? 5;
+  const systemPrompt = `${buildBriefSystemPrompt(sourceInstructions)}
 
 ICP SCORING INSTRUCTIONS:
 ${icpContext}${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildEmailToneInstruction(tone)}`;
@@ -204,16 +202,10 @@ ${icpContext}${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildE
         system: systemPrompt,
         messages: [{
           role: "user",
-          content: `Research this company across the 5 priority sources and generate a complete account brief: ${parsedUrl.href}
+          content: `Research this company across the priority sources and generate a complete account brief: ${parsedUrl.href}
 
-Work through the sources in order:
-1. Company website
-2. ABN/ASIC lookup
-3. Seek job postings
-4. LinkedIn C-suite posts
-5. Australian press (AFR, SmartCompany)
-
-Stop each search after one attempt if nothing useful is returned. Return the JSON as soon as all 5 searches are complete.
+Work through the sources in priority order (${enabledSourceCount} sources configured).
+Stop each search after one attempt if nothing useful is returned. Return the JSON as soon as all configured sources are checked.
 
 Return ONLY the JSON object. No markdown, no explanation.`,
         }],
