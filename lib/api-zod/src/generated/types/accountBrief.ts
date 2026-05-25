@@ -12,6 +12,7 @@ import type { AccountBriefRecentTriggers } from './accountBriefRecentTriggers';
 import type { AccountBriefSourceSummary } from './accountBriefSourceSummary';
 import type { AccountBriefTheirWorld } from './accountBriefTheirWorld';
 import type { BuyingCommitteeMember } from './buyingCommitteeMember';
+import type { ResearchPackMeta } from './researchPackMeta';
 
 export interface AccountBrief {
   companySnapshot: AccountBriefCompanySnapshot;
@@ -21,4 +22,6 @@ export interface AccountBrief {
   recentTriggers: AccountBriefRecentTriggers;
   coldEmail: AccountBriefColdEmailProperty;
   sourceSummary?: AccountBriefSourceSummary;
+  /** Sector reasoning pack used to generate this brief */
+  researchPack?: ResearchPackMeta;
 }

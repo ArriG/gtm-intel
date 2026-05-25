@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
+import { researchLoadingMessage } from "@/lib/research-loading";
 import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
@@ -911,7 +912,7 @@ export default function AccountBriefPage() {
             {loading && (
               <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin text-foreground" />
-                Searching ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...
+                {researchLoadingMessage(yourCompany)}
               </p>
             )}
           </div>
@@ -978,6 +979,12 @@ export default function AccountBriefPage() {
             </BriefCard>
 
             <SourceSummaryBar summary={brief.sourceSummary} triggersFound={hasTriggers} />
+
+            {brief.researchPack && (
+              <p className="text-xs font-medium text-muted-foreground">
+                Reasoning pack: {brief.researchPack.name} v{brief.researchPack.version}
+              </p>
+            )}
 
             {/* Account fit · Triggers (optional) */}
             <div className={hasTriggers

@@ -36,6 +36,7 @@ export * from './marketProspectInput';
 export * from './marketProspectResponse';
 export * from './meetingType';
 export * from './prospectCompany';
+export * from './researchPackMeta';
 export * from './signal';
 export * from './signalImportance';
 export * from './signalScanInput';

@@ -832,6 +832,29 @@ components:
         recency:
           type: string
 
+    ResearchPackMeta:
+      type: object
+      required:
+        - id
+        - name
+        - version
+        - loadingLabel
+        - expectedSeconds
+      properties:
+        id:
+          type: string
+          description: Sector pack identifier, e.g. uk-dental
+        name:
+          type: string
+        version:
+          type: integer
+        lastReviewed:
+          type: string
+        loadingLabel:
+          type: string
+        expectedSeconds:
+          type: integer
+
     AccountBrief:
       type: object
       required:
@@ -960,3 +983,6 @@ components:
               type: string
             confidenceReason:
               type: string
+        researchPack:
+          $ref: "#/components/schemas/ResearchPackMeta"
+          description: Sector reasoning pack used to generate this brief

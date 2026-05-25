@@ -237,6 +237,16 @@ export interface AccountBriefRecentTriggerItem {
   recency: string;
 }
 
+export interface ResearchPackMeta {
+  /** Sector pack identifier, e.g. uk-dental */
+  id: string;
+  name: string;
+  version: number;
+  lastReviewed?: string;
+  loadingLabel: string;
+  expectedSeconds: number;
+}
+
 export type AccountBriefCompanySnapshot = {
   size: string;
   industry: string;
@@ -294,6 +304,8 @@ export interface AccountBrief {
   recentTriggers: AccountBriefRecentTriggers;
   coldEmail: AccountBriefColdEmailProperty;
   sourceSummary?: AccountBriefSourceSummary;
+  /** Sector reasoning pack used to generate this brief */
+  researchPack?: ResearchPackMeta;
 }
 
 export interface BriefActionInput {

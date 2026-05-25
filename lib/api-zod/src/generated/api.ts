@@ -118,7 +118,15 @@ export const GenerateAccountBriefResponse = zod.object({
   "australianSources": zod.number(),
   "overallConfidence": zod.string(),
   "confidenceReason": zod.string()
-}).optional()
+}).optional(),
+  "researchPack": zod.object({
+  "id": zod.string().describe('Sector pack identifier, e.g. uk-dental'),
+  "name": zod.string(),
+  "version": zod.number(),
+  "lastReviewed": zod.string().optional(),
+  "loadingLabel": zod.string(),
+  "expectedSeconds": zod.number()
+}).optional().describe('Sector reasoning pack used to generate this brief')
 })
 
 
@@ -211,7 +219,15 @@ export const RegenerateColdEmailBody = zod.object({
   "australianSources": zod.number(),
   "overallConfidence": zod.string(),
   "confidenceReason": zod.string()
-}).optional()
+}).optional(),
+  "researchPack": zod.object({
+  "id": zod.string().describe('Sector pack identifier, e.g. uk-dental'),
+  "name": zod.string(),
+  "version": zod.number(),
+  "lastReviewed": zod.string().optional(),
+  "loadingLabel": zod.string(),
+  "expectedSeconds": zod.number()
+}).optional().describe('Sector reasoning pack used to generate this brief')
 }),
   "linkedinPosts": zod.array(zod.object({
   "role": zod.string(),
@@ -337,7 +353,15 @@ export const GenerateTalkTrackBody = zod.object({
   "australianSources": zod.number(),
   "overallConfidence": zod.string(),
   "confidenceReason": zod.string()
-}).optional()
+}).optional(),
+  "researchPack": zod.object({
+  "id": zod.string().describe('Sector pack identifier, e.g. uk-dental'),
+  "name": zod.string(),
+  "version": zod.number(),
+  "lastReviewed": zod.string().optional(),
+  "loadingLabel": zod.string(),
+  "expectedSeconds": zod.number()
+}).optional().describe('Sector reasoning pack used to generate this brief')
 }),
   "linkedinPosts": zod.array(zod.object({
   "role": zod.string(),
@@ -458,7 +482,15 @@ export const GenerateCallPrepBody = zod.object({
   "australianSources": zod.number(),
   "overallConfidence": zod.string(),
   "confidenceReason": zod.string()
-}).optional()
+}).optional(),
+  "researchPack": zod.object({
+  "id": zod.string().describe('Sector pack identifier, e.g. uk-dental'),
+  "name": zod.string(),
+  "version": zod.number(),
+  "lastReviewed": zod.string().optional(),
+  "loadingLabel": zod.string(),
+  "expectedSeconds": zod.number()
+}).optional().describe('Sector reasoning pack used to generate this brief')
 }),
   "linkedinPosts": zod.array(zod.object({
   "role": zod.string(),
