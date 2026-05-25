@@ -4,8 +4,7 @@ An AI-powered research tool for AEs and SDRs. Type a company name, get a sourced
 
 <GTM Intelligence app, generated account brief" src="https://github.com/user-attachments/assets/18da5e7d-8a1f-4f2f-aa09-16c544a38169" />
 
-
-Built by a Senior AE with 15+ years SaaS experience and zero prior coding background — a portfolio piece demonstrating full-stack product thinking from the seller's chair.
+Built by a Salesman with 15+ years SaaS experience and zero prior coding background — a portfolio piece demonstrating full-stack product thinking from the seller's chair.
 
 ## Live demo
 
