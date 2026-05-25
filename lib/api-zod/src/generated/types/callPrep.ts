@@ -9,9 +9,19 @@ import type { MeetingType } from './meetingType';
 
 export interface CallPrep {
   meetingType: MeetingType;
-  whoYouAreMeeting: string;
+  /**
+     * @minItems 1
+     * @maxItems 2
+     */
+  whoYouAreMeeting: string[];
+  /** @maxItems 4 */
   whatTheyCareAbout: string[];
-  yourAngle: string;
+  /**
+     * @minItems 1
+     * @maxItems 2
+     */
+  yourAngle: string[];
+  /** @maxItems 5 */
   keyQuestions: string[];
   askForThisCall: string;
   openingLine: string;

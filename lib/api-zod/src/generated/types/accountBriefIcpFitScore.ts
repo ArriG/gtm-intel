@@ -9,6 +9,9 @@ import type { BriefSource } from './briefSource';
 
 export type AccountBriefIcpFitScore = {
   score: number;
-  reason: string;
+  /** Legacy one-liner; prefer highlights when present */
+  reason?: string;
+  /** 2-3 concise bullets on why this account fits (or does not) */
+  highlights?: string[];
   sources?: BriefSource[];
 };

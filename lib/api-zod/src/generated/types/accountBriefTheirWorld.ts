@@ -8,7 +8,10 @@
 import type { BriefSource } from './briefSource';
 
 export type AccountBriefTheirWorld = {
-  narrative: string;
+  /** Legacy prose summary; prefer bullets when present */
+  narrative?: string;
+  /** 3-4 tight bullets on pressures, priorities, and why they might buy now */
+  bullets?: string[];
   confidence: string;
   sources?: BriefSource[];
 };

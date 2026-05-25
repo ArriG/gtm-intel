@@ -11,7 +11,7 @@ import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
   Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
-  Briefcase, Brain, BookOpen, AlertCircle, ExternalLink, Flag,
+  Brain, BookOpen, AlertCircle, ExternalLink, Flag,
   Download, FileText, MessageCircle, ClipboardList, ArrowRight
 } from "lucide-react";
 import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
@@ -124,6 +124,64 @@ function SourceChips({ sources, sectionId }: { sources?: BriefSource[]; sectionI
   );
 }
 
+function BriefBulletList({ items, className }: { items: string[]; className?: string }) {
+  if (items.length === 0) return null;
+  return (
+    <ul className={`space-y-1.5 ${className ?? ""}`}>
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-foreground leading-snug">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function fitHighlights(brief: AccountBrief): string[] {
+  if (brief.icpFitScore.highlights?.length) return brief.icpFitScore.highlights;
+  if (brief.icpFitScore.reason?.trim()) return [brief.icpFitScore.reason.trim()];
+  return [];
+}
+
+function worldBullets(brief: AccountBrief): string[] {
+  if (brief.theirWorld?.bullets?.length) return brief.theirWorld.bullets;
+  const narrative = brief.theirWorld?.narrative?.trim();
+  if (!narrative) return [];
+  return narrative.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 4);
+}
+
+function snapshotPainPoints(brief: AccountBrief): string[] {
+  return brief.companySnapshot.possiblePainPoints?.filter(Boolean) ?? [];
+}
+
+function CompactSnapshot({ brief }: { brief: AccountBrief }) {
+  const snap = brief.companySnapshot;
+  const tech = snap.techStack?.trim();
+  const showTech = tech && tech !== "Not detected";
+  const pains = snapshotPainPoints(brief);
+  const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean).join(" · ");
+
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-secondary/50 px-4 py-3 space-y-2.5">
+      <p className="text-xs text-muted-foreground leading-snug">{meta}</p>
+      {showTech && (
+        <div className="flex items-start gap-2 text-sm">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0 pt-0.5 w-8">Tech</span>
+          <span className="text-foreground leading-snug">{tech}</span>
+        </div>
+      )}
+      {pains.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Possible pain points</p>
+          <BriefBulletList items={pains} />
+        </div>
+      )}
+      <SourceChips sources={snap.sources} sectionId="snapshot" />
+    </div>
+  );
+}
+
 // --- ICP score display ---
 function icpScoreBand(score: number) {
   if (score >= 8) return { label: "Strong fit", text: "text-green-600", badge: "bg-green-50 text-green-700 border-green-200", fill: "bg-green-500" };
@@ -131,23 +189,20 @@ function icpScoreBand(score: number) {
   return { label: "Weak fit", text: "text-red-600", badge: "bg-red-50 text-red-700 border-red-200", fill: "bg-red-500" };
 }
 
-function IcpScoreDisplay({ score, reason }: { score: number; reason: string }) {
+function IcpScoreDisplay({ score, highlights }: { score: number; highlights: string[] }) {
   const band = icpScoreBand(score);
   return (
-    <div className="space-y-3">
-      <div className="flex items-end gap-1.5">
-        <span className={`text-5xl font-black tabular-nums leading-none ${band.text}`}>{score}</span>
-        <span className="text-lg text-muted-foreground font-normal pb-1">/10</span>
+    <div className="space-y-2.5">
+      <div className="flex items-center gap-3">
+        <div className="flex items-end gap-1">
+          <span className={`text-3xl font-black tabular-nums leading-none ${band.text}`}>{score}</span>
+          <span className="text-sm text-muted-foreground pb-0.5">/10</span>
+        </div>
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${band.badge}`}>
+          {band.label}
+        </span>
       </div>
-      <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border ${band.badge}`}>
-        {band.label}
-      </span>
-      <div className="flex items-center gap-1 pt-1">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className={`w-2 h-2 rounded-full ${i < score ? band.fill : "bg-border"}`} />
-        ))}
-      </div>
-      <p className="text-sm text-muted-foreground leading-snug">{reason}</p>
+      <BriefBulletList items={highlights} />
     </div>
   );
 }
@@ -866,95 +921,67 @@ export default function AccountBriefPage() {
 
           return (
           <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Company header + actions */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                {companyLogo && !logoFailed ? (
-                  <img
-                    src={companyLogo}
-                    alt=""
-                    className="w-14 h-14 rounded-2xl border border-border object-contain bg-white p-1.5 shrink-0"
-                    onError={() => setLogoFailed(true)}
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-2xl border border-border bg-secondary flex items-center justify-center shrink-0">
-                    <Building2 className="w-6 h-6 text-primary" />
+            {/* Company header + inline snapshot + actions */}
+            <BriefCard>
+              <BriefCardContent className="pt-5 pb-5">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    {companyLogo && !logoFailed ? (
+                      <img
+                        src={companyLogo}
+                        alt=""
+                        className="w-12 h-12 rounded-xl border border-border object-contain bg-white p-1 shrink-0"
+                        onError={() => setLogoFailed(true)}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl border border-border bg-secondary flex items-center justify-center shrink-0">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-primary">Brief for</p>
+                      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight text-foreground">{lastLabel}</h2>
+                      <CompactSnapshot brief={brief} />
+                    </div>
                   </div>
-                )}
-                <div>
-                  <p className="text-sm font-medium text-primary">Brief for</p>
-                  <h2 className="text-3xl font-bold tracking-tight leading-[1.15] text-foreground">{lastLabel}</h2>
-                  <p className="text-base text-muted-foreground mt-1">{brief.companySnapshot.industry} · {brief.companySnapshot.location}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-                {currentHistoryId && (
-                  <Link
-                    href={`/prep?h=${currentHistoryId}`}
-                    onClick={() => savePrepContext(currentHistoryId, linkedinPosts, ownIntel)}
-                  >
-                    <Button size="sm" className="gap-1.5 text-xs h-8 px-3 rounded-xl font-bold">
-                      <ClipboardList className="w-3 h-3" />Prep for call
+                  <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">
+                    {currentHistoryId && (
+                      <Link
+                        href={`/prep?h=${currentHistoryId}`}
+                        onClick={() => savePrepContext(currentHistoryId, linkedinPosts, ownIntel)}
+                      >
+                        <Button size="sm" className="gap-1.5 text-xs h-8 px-3 rounded-xl font-bold">
+                          <ClipboardList className="w-3 h-3" />Prep for call
+                        </Button>
+                      </Link>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
+                      <Download className="w-3 h-3" />Download
                     </Button>
-                  </Link>
-                )}
-                <Button variant="outline" size="sm" onClick={() => downloadBriefTxt(exportText(), lastLabel)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
-                  <Download className="w-3 h-3" />Download
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
-                  <FileText className="w-3 h-3" />PDF
-                </Button>
-                <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
-                <CopyButton getText={() => exportText()} />
-              </div>
-            </div>
+                    <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
+                      <FileText className="w-3 h-3" />PDF
+                    </Button>
+                    <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
+                    <CopyButton getText={() => exportText()} />
+                  </div>
+                </div>
+              </BriefCardContent>
+            </BriefCard>
 
             <SourceSummaryBar summary={brief.sourceSummary} triggersFound={hasTriggers} />
 
-            {/* Top row: Snapshot · ICP · Triggers (optional) */}
+            {/* Account fit · Triggers (optional) */}
             <div className={hasTriggers
-              ? "grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_1fr] gap-4"
-              : "grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4"
+              ? "grid grid-cols-1 lg:grid-cols-2 gap-4"
+              : "grid grid-cols-1 gap-4"
             }>
               <BriefCard>
                 <BriefCardHeader>
-                  <BriefCardTitle><Building2 className="w-4 h-4 text-primary" />Company Snapshot</BriefCardTitle>
-                  <CopyButton getText={() => `${brief.companySnapshot.size} | ${brief.companySnapshot.industry} | ${brief.companySnapshot.location} | ${brief.companySnapshot.fundingStage}`} />
-                </BriefCardHeader>
-                <BriefCardContent>
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    {[{ label: "Size", value: brief.companySnapshot.size }, { label: "Industry", value: brief.companySnapshot.industry }, { label: "Location", value: brief.companySnapshot.location }, { label: "Stage", value: brief.companySnapshot.fundingStage }]
-                      .map(({ label, value }) => (
-                        <div key={label} className="px-4 py-3 rounded-xl bg-secondary border border-border">
-                          <p className={`${briefCardLabelClass} mb-1`}>{label}</p>
-                          <p className="font-semibold text-sm text-foreground">{value}</p>
-                        </div>
-                      ))}
-                  </div>
-                  {(brief.companySnapshot.abn || brief.companySnapshot.techStack) && (
-                    <div className="flex gap-4 flex-wrap mb-1">
-                      {brief.companySnapshot.abn && brief.companySnapshot.abn !== "Not found" && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="w-3 h-3 text-primary" /><span>ABN:</span><span className="font-medium text-foreground">{brief.companySnapshot.abn}</span></div>
-                      )}
-                      {brief.companySnapshot.techStack && brief.companySnapshot.techStack !== "Not detected" && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Briefcase className="w-3 h-3 text-primary" /><span>Tech:</span><span className="font-medium text-foreground">{brief.companySnapshot.techStack}</span></div>
-                      )}
-                    </div>
-                  )}
-                  <SourceChips sources={brief.companySnapshot.sources} sectionId="snapshot" />
-                </BriefCardContent>
-              </BriefCard>
-
-              <BriefCard>
-                <BriefCardHeader>
-                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />Account Fit Score</BriefCardTitle>
-                  <CopyButton getText={() => `Account fit: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`} />
+                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />Account Fit</BriefCardTitle>
+                  <CopyButton getText={() => `Account fit: ${brief.icpFitScore.score}/10\n${fitHighlights(brief).map(b => `• ${b}`).join("\n")}`} />
                 </BriefCardHeader>
                 <BriefCardContent className="space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    Scored against your Your Company profile{yourCompany.companyName ? ` (${yourCompany.companyName})` : ""} — how well this account matches what you sell.
-                  </p>
-                  <IcpScoreDisplay score={brief.icpFitScore.score} reason={brief.icpFitScore.reason} />
+                  <IcpScoreDisplay score={brief.icpFitScore.score} highlights={fitHighlights(brief)} />
                   <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
                 </BriefCardContent>
               </BriefCard>
@@ -970,10 +997,10 @@ export default function AccountBriefPage() {
                   <Globe className="w-4 h-4 text-primary" />What's Going On In Their World
                   {brief.theirWorld?.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
                 </BriefCardTitle>
-                <CopyButton getText={() => brief.theirWorld.narrative} />
+                <CopyButton getText={() => worldBullets(brief).map(b => `• ${b}`).join("\n")} />
               </BriefCardHeader>
               <BriefCardContent>
-                <p className="text-sm text-foreground leading-relaxed">{stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
+                <BriefBulletList items={worldBullets(brief)} />
                 <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
               </BriefCardContent>
             </BriefCard>
@@ -1052,20 +1079,16 @@ export default function AccountBriefPage() {
                 )}
                 {talkTrackLoading && <Skeleton className="h-24 w-full rounded-xl" />}
                 {talkTrack && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <p className={`${briefCardLabelClass} mb-1.5`}>Opening</p>
-                      <p className="text-sm text-foreground leading-relaxed">{talkTrack.opening}</p>
+                      <p className={`${briefCardLabelClass} mb-1`}>Open with</p>
+                      <p className="text-sm text-foreground leading-snug border-l-2 border-primary pl-3">{talkTrack.opening}</p>
                     </div>
                     <div>
-                      <p className={`${briefCardLabelClass} mb-2`}>Discovery Questions</p>
-                      <ol className="space-y-2 list-decimal list-inside">
-                        {talkTrack.discoveryQuestions.map((q, i) => (
-                          <li key={i} className="text-sm text-foreground leading-relaxed">{q}</li>
-                        ))}
-                      </ol>
+                      <p className={`${briefCardLabelClass} mb-1.5`}>Ask</p>
+                      <BriefBulletList items={talkTrack.discoveryQuestions} />
                     </div>
-                    <CopyButton getText={() => `${talkTrack.opening}\n\n${talkTrack.discoveryQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`} />
+                    <CopyButton getText={() => `${talkTrack.opening}\n\n${talkTrack.discoveryQuestions.map((q, i) => `• ${q}`).join("\n")}`} />
                   </div>
                 )}
               </BriefCardContent>

@@ -7,6 +7,8 @@
  */
 
 export interface TalkTrack {
+  /** One sentence call opener */
   opening: string;
+  /** @maxItems 5 */
   discoveryQuestions: string[];
 }

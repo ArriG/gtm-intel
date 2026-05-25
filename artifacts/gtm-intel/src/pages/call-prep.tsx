@@ -38,6 +38,19 @@ function CopyAllButton({ getText }: { getText: () => string }) {
   );
 }
 
+function PrepBullets({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-1.5 list-none pl-0">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm leading-snug">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function PrepSection({ icon: Icon, title, children }: { icon: typeof User; title: string; children: ReactNode }) {
   return (
     <section className="space-y-2">
@@ -192,44 +205,33 @@ export default function CallPrepPage() {
         )}
 
         {prep && (
-          <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-6 print:border-0 print:shadow-none print:p-0 animate-in fade-in duration-300">
+          <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-4 print:border-0 print:shadow-none print:p-0 animate-in fade-in duration-300">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground print:hidden">
               {MEETING_OPTIONS.find(o => o.value === prep.meetingType)?.label} call
             </p>
 
             <PrepSection icon={User} title="Who you're meeting">
-              <p>{prep.whoYouAreMeeting}</p>
+              <PrepBullets items={prep.whoYouAreMeeting} />
             </PrepSection>
 
             <PrepSection icon={Target} title="What they care about">
-              <ul className="space-y-1.5 list-none pl-0">
-                {prep.whatTheyCareAbout.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              <PrepBullets items={prep.whatTheyCareAbout} />
             </PrepSection>
 
             <PrepSection icon={Flag} title="Your angle">
-              <p>{prep.yourAngle}</p>
+              <PrepBullets items={prep.yourAngle} />
             </PrepSection>
 
             <PrepSection icon={MessageCircle} title="Open with">
-              <p className="italic border-l-4 border-primary pl-4">{prep.openingLine}</p>
+              <p className="italic border-l-2 border-primary pl-3 leading-snug">{prep.openingLine}</p>
             </PrepSection>
 
             <PrepSection icon={HelpCircle} title="Key questions">
-              <ol className="space-y-2 list-decimal list-inside">
-                {prep.keyQuestions.map((q, i) => (
-                  <li key={i}>{q}</li>
-                ))}
-              </ol>
+              <PrepBullets items={prep.keyQuestions} />
             </PrepSection>
 
             <PrepSection icon={ClipboardList} title="Ask for this call">
-              <p className="font-semibold border-l-4 border-foreground pl-4">{prep.askForThisCall}</p>
+              <p className="font-semibold border-l-2 border-foreground pl-3 leading-snug">{prep.askForThisCall}</p>
             </PrepSection>
           </div>
         )}

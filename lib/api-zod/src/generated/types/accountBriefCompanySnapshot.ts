@@ -14,5 +14,7 @@ export type AccountBriefCompanySnapshot = {
   fundingStage: string;
   abn?: string;
   techStack?: string;
+  /** Likely operational pains inferred from research (job ads, press, positioning) */
+  possiblePainPoints?: string[];
   sources?: BriefSource[];
 };

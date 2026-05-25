@@ -42,6 +42,7 @@ export const GenerateAccountBriefResponse = zod.object({
   "fundingStage": zod.string(),
   "abn": zod.string().optional(),
   "techStack": zod.string().optional(),
+  "possiblePainPoints": zod.array(zod.string()).optional().describe('Likely operational pains inferred from research (job ads, press, positioning)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -52,7 +53,8 @@ export const GenerateAccountBriefResponse = zod.object({
 }),
   "icpFitScore": zod.object({
   "score": zod.number(),
-  "reason": zod.string(),
+  "reason": zod.string().optional().describe('Legacy one-liner; prefer highlights when present'),
+  "highlights": zod.array(zod.string()).optional().describe('2-3 concise bullets on why this account fits (or does not)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -74,7 +76,8 @@ export const GenerateAccountBriefResponse = zod.object({
 })).optional()
 })),
   "theirWorld": zod.object({
-  "narrative": zod.string(),
+  "narrative": zod.string().optional().describe('Legacy prose summary; prefer bullets when present'),
+  "bullets": zod.array(zod.string()).optional().describe('3-4 tight bullets on pressures, priorities, and why they might buy now'),
   "confidence": zod.string(),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
@@ -132,6 +135,7 @@ export const RegenerateColdEmailBody = zod.object({
   "fundingStage": zod.string(),
   "abn": zod.string().optional(),
   "techStack": zod.string().optional(),
+  "possiblePainPoints": zod.array(zod.string()).optional().describe('Likely operational pains inferred from research (job ads, press, positioning)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -142,7 +146,8 @@ export const RegenerateColdEmailBody = zod.object({
 }),
   "icpFitScore": zod.object({
   "score": zod.number(),
-  "reason": zod.string(),
+  "reason": zod.string().optional().describe('Legacy one-liner; prefer highlights when present'),
+  "highlights": zod.array(zod.string()).optional().describe('2-3 concise bullets on why this account fits (or does not)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -164,7 +169,8 @@ export const RegenerateColdEmailBody = zod.object({
 })).optional()
 })),
   "theirWorld": zod.object({
-  "narrative": zod.string(),
+  "narrative": zod.string().optional().describe('Legacy prose summary; prefer bullets when present'),
+  "bullets": zod.array(zod.string()).optional().describe('3-4 tight bullets on pressures, priorities, and why they might buy now'),
   "confidence": zod.string(),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
@@ -255,6 +261,7 @@ export const GenerateTalkTrackBody = zod.object({
   "fundingStage": zod.string(),
   "abn": zod.string().optional(),
   "techStack": zod.string().optional(),
+  "possiblePainPoints": zod.array(zod.string()).optional().describe('Likely operational pains inferred from research (job ads, press, positioning)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -265,7 +272,8 @@ export const GenerateTalkTrackBody = zod.object({
 }),
   "icpFitScore": zod.object({
   "score": zod.number(),
-  "reason": zod.string(),
+  "reason": zod.string().optional().describe('Legacy one-liner; prefer highlights when present'),
+  "highlights": zod.array(zod.string()).optional().describe('2-3 concise bullets on why this account fits (or does not)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -287,7 +295,8 @@ export const GenerateTalkTrackBody = zod.object({
 })).optional()
 })),
   "theirWorld": zod.object({
-  "narrative": zod.string(),
+  "narrative": zod.string().optional().describe('Legacy prose summary; prefer bullets when present'),
+  "bullets": zod.array(zod.string()).optional().describe('3-4 tight bullets on pressures, priorities, and why they might buy now'),
   "confidence": zod.string(),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
@@ -350,9 +359,13 @@ export const GenerateTalkTrackBody = zod.object({
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 
+export const generateTalkTrackResponseDiscoveryQuestionsMax = 5;
+
+
+
 export const GenerateTalkTrackResponse = zod.object({
-  "opening": zod.string(),
-  "discoveryQuestions": zod.array(zod.string())
+  "opening": zod.string().describe('One sentence call opener'),
+  "discoveryQuestions": zod.array(zod.string().describe('Short open-ended question, no fluff')).max(generateTalkTrackResponseDiscoveryQuestionsMax)
 })
 
 
@@ -369,6 +382,7 @@ export const GenerateCallPrepBody = zod.object({
   "fundingStage": zod.string(),
   "abn": zod.string().optional(),
   "techStack": zod.string().optional(),
+  "possiblePainPoints": zod.array(zod.string()).optional().describe('Likely operational pains inferred from research (job ads, press, positioning)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -379,7 +393,8 @@ export const GenerateCallPrepBody = zod.object({
 }),
   "icpFitScore": zod.object({
   "score": zod.number(),
-  "reason": zod.string(),
+  "reason": zod.string().optional().describe('Legacy one-liner; prefer highlights when present'),
+  "highlights": zod.array(zod.string()).optional().describe('2-3 concise bullets on why this account fits (or does not)'),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
   "label": zod.string(),
@@ -401,7 +416,8 @@ export const GenerateCallPrepBody = zod.object({
 })).optional()
 })),
   "theirWorld": zod.object({
-  "narrative": zod.string(),
+  "narrative": zod.string().optional().describe('Legacy prose summary; prefer bullets when present'),
+  "bullets": zod.array(zod.string()).optional().describe('3-4 tight bullets on pressures, priorities, and why they might buy now'),
   "confidence": zod.string(),
   "sources": zod.array(zod.object({
   "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
@@ -466,12 +482,22 @@ export const GenerateCallPrepBody = zod.object({
   "meetingType": zod.enum(['discovery', 'demo', 'renewal'])
 }))
 
+export const generateCallPrepResponseWhoYouAreMeetingMax = 2;
+
+export const generateCallPrepResponseWhatTheyCareAboutMax = 4;
+
+export const generateCallPrepResponseYourAngleMax = 2;
+
+export const generateCallPrepResponseKeyQuestionsMax = 5;
+
+
+
 export const GenerateCallPrepResponse = zod.object({
   "meetingType": zod.enum(['discovery', 'demo', 'renewal']),
-  "whoYouAreMeeting": zod.string(),
-  "whatTheyCareAbout": zod.array(zod.string()),
-  "yourAngle": zod.string(),
-  "keyQuestions": zod.array(zod.string()),
+  "whoYouAreMeeting": zod.array(zod.string()).min(1).max(generateCallPrepResponseWhoYouAreMeetingMax),
+  "whatTheyCareAbout": zod.array(zod.string()).max(generateCallPrepResponseWhatTheyCareAboutMax),
+  "yourAngle": zod.array(zod.string()).min(1).max(generateCallPrepResponseYourAngleMax),
+  "keyQuestions": zod.array(zod.string()).max(generateCallPrepResponseKeyQuestionsMax),
   "askForThisCall": zod.string(),
   "openingLine": zod.string()
 })

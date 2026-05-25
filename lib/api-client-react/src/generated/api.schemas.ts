@@ -244,17 +244,25 @@ export type AccountBriefCompanySnapshot = {
   fundingStage: string;
   abn?: string;
   techStack?: string;
+  /** Likely operational pains inferred from research (job ads, press, positioning) */
+  possiblePainPoints?: string[];
   sources?: BriefSource[];
 };
 
 export type AccountBriefIcpFitScore = {
   score: number;
-  reason: string;
+  /** Legacy one-liner; prefer highlights when present */
+  reason?: string;
+  /** 2-3 concise bullets on why this account fits (or does not) */
+  highlights?: string[];
   sources?: BriefSource[];
 };
 
 export type AccountBriefTheirWorld = {
-  narrative: string;
+  /** Legacy prose summary; prefer bullets when present */
+  narrative?: string;
+  /** 3-4 tight bullets on pressures, priorities, and why they might buy now */
+  bullets?: string[];
   confidence: string;
   sources?: BriefSource[];
 };
@@ -307,7 +315,9 @@ export interface AccountBriefColdEmail {
 }
 
 export interface TalkTrack {
+  /** One sentence call opener */
   opening: string;
+  /** @maxItems 5 */
   discoveryQuestions: string[];
 }
 
@@ -324,9 +334,19 @@ export const MeetingType = {
 
 export interface CallPrep {
   meetingType: MeetingType;
-  whoYouAreMeeting: string;
+  /**
+     * @minItems 1
+     * @maxItems 2
+     */
+  whoYouAreMeeting: string[];
+  /** @maxItems 4 */
   whatTheyCareAbout: string[];
-  yourAngle: string;
+  /**
+     * @minItems 1
+     * @maxItems 2
+     */
+  yourAngle: string[];
+  /** @maxItems 5 */
   keyQuestions: string[];
   askForThisCall: string;
   openingLine: string;

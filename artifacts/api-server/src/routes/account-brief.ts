@@ -39,14 +39,23 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown, no preamble:
     "location": "e.g. Sydney, NSW, Australia",
     "fundingStage": "e.g. Series A or Bootstrapped or Unknown",
     "abn": "e.g. 12 345 678 901 or Not found",
-    "techStack": "e.g. Salesforce, Xero or Not detected",
+    "techStack": "e.g. Salesforce, Xero — comma-separated, or Not detected",
+    "possiblePainPoints": [
+      "Specific likely pain from job ads or press — e.g. Manual underwriting workflows slowing quote turnaround",
+      "Second pain inferred from hiring or positioning — max 12 words each"
+    ],
     "sources": [
       { "type": "web", "label": "Company website", "detail": "Key facts found", "url": "", "confidence": "verified" }
     ]
   },
   "icpFitScore": {
     "score": 7,
-    "reason": "One sentence explaining the score and which ICP they match.",
+    "highlights": [
+      "Matches enterprise UK insurer profile you sell into",
+      "Hiring underwriters signals workflow pain you solve",
+      "Weak signal: no recent trigger — fit is structural not timing"
+    ],
+    "reason": "Optional legacy one-liner if needed",
     "sources": [
       { "type": "assumed", "label": "Inferred from company profile", "detail": "Reasoning", "url": "", "confidence": "assumed" }
     ]
@@ -78,11 +87,15 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown, no preamble:
     }
   ],
   "theirWorld": {
-    "narrative": "Write 2-3 sentences as a senior AE preparing for a first call. Describe what is going on in their world right now — what pressures they are under, what they are trying to achieve, and what would make them pick up the phone today. Reference specific findings. Present tense, conversational but professional.",
+    "bullets": [
+      "Under pressure to cut quote turnaround — hiring ops roles to fix it",
+      "Regulatory scrutiny increasing; need audit-ready underwriting trails",
+      "Leadership publicly prioritising digital transformation this year"
+    ],
     "confidence": "medium",
     "sources": [
-      { "type": "seek_job", "label": "Seek job posting", "detail": "Specific operational signal", "url": "", "confidence": "informed" },
-      { "type": "industry_press", "label": "AFR article", "detail": "Market context", "url": "", "confidence": "verified" }
+      { "type": "seek_job", "label": "Job posting", "detail": "Specific operational signal", "url": "", "confidence": "informed" },
+      { "type": "industry_press", "label": "Press", "detail": "Market context", "url": "", "confidence": "verified" }
     ]
   },
   "recentTriggers": {
@@ -113,9 +126,11 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown, no preamble:
 RULES:
 - Be specific, not generic. Use real facts from your searches.
 - Mark inferences clearly as type "assumed" — do not present guesses as facts.
-- The theirWorld narrative must read like a human AE wrote it — a story, not a list.
+- companySnapshot.possiblePainPoints: 2-4 bullets, each under 15 words, grounded in research (jobs, press, website). Mark inferred pains in sources as "assumed" or "informed".
+- icpFitScore.highlights: exactly 2-3 bullets — why fit/no-fit vs seller context. No filler.
+- theirWorld.bullets: exactly 3-4 bullets — pressures, priorities, why-now. Present tense. No prose paragraph.
 - The fullEmail must reference at least one specific signal from your research.
-- Keep the entire JSON response concise — aim for quality over length.
+- Keep the entire JSON response concise — quality over length, no fluff.
 - Always include all 6 top-level keys even if some sections have limited data.
 - CRITICAL: All JSON string values must be plain text only. Never include HTML, XML, <cite> tags, or any markup.`;
 
@@ -292,10 +307,10 @@ router.post("/account-brief/talk-track", async (req, res): Promise<void> => {
 
   const system = `You are a senior AE preparing for a discovery call. Return ONLY valid JSON:
 {
-  "opening": "2-3 sentence call opener referencing a specific signal from the brief",
-  "discoveryQuestions": ["5-7 open-ended discovery questions tailored to their pains and our solution"]
+  "opening": "One sentence opener referencing a specific signal — no throat-clearing",
+  "discoveryQuestions": ["Max 5 questions, each under 18 words, open-ended, tied to a specific finding"]
 }
-Questions must reference specific findings — job postings, triggers, or committee pain points. Bridge to what we sell.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}`;
+No fluff. Every question must bridge to what we sell.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}`;
 
   try {
     const result = await callClaudeJson(
@@ -345,20 +360,20 @@ router.post("/account-brief/prep", async (req, res): Promise<void> => {
 
   const type: MeetingType = meetingType === "demo" || meetingType === "renewal" ? meetingType : "discovery";
 
-  const system = `You are a senior B2B AE preparing for a call in 10 minutes. Distil a full research brief into a tight 1-page prep card an AE can scan before dialing.
+  const system = `You are a senior B2B AE preparing for a call in 10 minutes. Distil the brief into a scannable prep card — bullets only, zero fluff.
 
 Return ONLY valid JSON with this exact shape:
 {
   "meetingType": "${type}",
-  "whoYouAreMeeting": "2-3 sentences: likely persona(s), title(s), and why they care about this conversation — reference buying committee and signals from the brief",
-  "whatTheyCareAbout": ["3-4 short bullet priorities — specific pains, pressures, or goals from the research, not generic"],
-  "yourAngle": "2-3 sentences: why us, why now — connect our solution to their world using specific findings",
-  "keyQuestions": ["4-6 questions tailored to this meeting type — each must reference something specific from the brief"],
-  "askForThisCall": "One clear sentence: the explicit outcome to ask for before hanging up",
-  "openingLine": "The first 1-2 sentences to say when they pick up — reference a specific trigger or pain"
+  "whoYouAreMeeting": ["1-2 bullets: persona, title, why they care — each under 15 words"],
+  "whatTheyCareAbout": ["Max 4 bullets — specific pains/pressures from research, not generic"],
+  "yourAngle": ["1-2 bullets: why us, why now — tied to findings"],
+  "keyQuestions": ["Max 5 questions for this meeting type — each under 18 words, reference the brief"],
+  "askForThisCall": "One sentence outcome to ask for before hanging up",
+  "openingLine": "One sentence to say when they pick up"
 }
 
-Write like a peer AE briefing another AE — direct, specific, no fluff. Every bullet must trace to research in the brief.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}
+Every bullet must trace to research in the brief.${buildActionContext(linkedinPosts, ownIntel, yourCompany)}
 
 ${buildPrepMeetingInstruction(type)}`;
 

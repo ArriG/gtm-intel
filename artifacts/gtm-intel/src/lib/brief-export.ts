@@ -1,25 +1,37 @@
 import type { AccountBrief, TalkTrack } from "@workspace/api-client-react";
 import { stripCitationTags } from "./strip-citations";
 
+function fitHighlights(brief: AccountBrief): string[] {
+  if (brief.icpFitScore.highlights?.length) return brief.icpFitScore.highlights;
+  if (brief.icpFitScore.reason?.trim()) return [brief.icpFitScore.reason.trim()];
+  return [];
+}
+
+function worldBullets(brief: AccountBrief): string[] {
+  if (brief.theirWorld?.bullets?.length) return brief.theirWorld.bullets;
+  const narrative = brief.theirWorld?.narrative?.trim();
+  if (!narrative) return [];
+  return narrative.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 4);
+}
+
 export function formatBriefForExport(brief: AccountBrief, companyName: string, talkTrack?: TalkTrack | null): string {
+  const pains = brief.companySnapshot.possiblePainPoints?.filter(Boolean) ?? [];
   const lines = [
     `GTM INTELLIGENCE BRIEF`,
     `Company: ${companyName}`,
     `Generated: ${new Date().toLocaleString()}`,
     ``,
     `=== COMPANY SNAPSHOT ===`,
-    `Size: ${brief.companySnapshot.size}`,
-    `Industry: ${brief.companySnapshot.industry}`,
-    `Location: ${brief.companySnapshot.location}`,
-    `Stage: ${brief.companySnapshot.fundingStage}`,
-    brief.companySnapshot.abn ? `ABN: ${brief.companySnapshot.abn}` : null,
+    `${brief.companySnapshot.size} · ${brief.companySnapshot.industry} · ${brief.companySnapshot.location} · ${brief.companySnapshot.fundingStage}`,
     brief.companySnapshot.techStack ? `Tech: ${brief.companySnapshot.techStack}` : null,
+    pains.length > 0 ? `Possible pain points:` : null,
+    ...pains.map(p => `• ${p}`),
     ``,
-    `=== ICP FIT: ${brief.icpFitScore.score}/10 ===`,
-    brief.icpFitScore.reason,
+    `=== ACCOUNT FIT: ${brief.icpFitScore.score}/10 ===`,
+    ...fitHighlights(brief).map(h => `• ${h}`),
     ``,
     `=== THEIR WORLD ===`,
-    stripCitationTags(brief.theirWorld?.narrative ?? ""),
+    ...worldBullets(brief).map(b => `• ${b}`),
     ``,
     `=== BUYING COMMITTEE ===`,
     ...((brief.buyingCommittee ?? []).map(p => `• ${p.title}: ${p.painPoint}`)),
@@ -38,7 +50,7 @@ export function formatBriefForExport(brief: AccountBrief, companyName: string, t
       talkTrack.opening,
       ``,
       `Questions:`,
-      ...talkTrack.discoveryQuestions.map((q, i) => `${i + 1}. ${q}`),
+      ...talkTrack.discoveryQuestions.map(q => `• ${q}`),
     );
   }
 
@@ -57,6 +69,7 @@ export function downloadBriefTxt(content: string, companyName: string) {
 }
 
 export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrack?: TalkTrack | null) {
+  const pains = brief.companySnapshot.possiblePainPoints?.filter(Boolean) ?? [];
   const html = `<!DOCTYPE html><html><head><title>GTM Brief — ${companyName}</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; color: #111; line-height: 1.5; }
@@ -64,6 +77,7 @@ export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrac
   .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
   h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #0d9488; border-bottom: 1px solid #e5e5e5; padding-bottom: 4px; margin-top: 24px; }
   p, li { font-size: 14px; }
+  ul { padding-left: 1rem; }
   pre { white-space: pre-wrap; font-family: inherit; background: #f5f5f5; padding: 12px; border-radius: 6px; }
   @media print { body { margin: 20px; } }
 </style></head><body>
@@ -71,17 +85,19 @@ export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrac
 <p class="meta">GTM Intelligence Brief · ${new Date().toLocaleDateString()}</p>
 <h2>Company Snapshot</h2>
 <p>${brief.companySnapshot.size} · ${brief.companySnapshot.industry} · ${brief.companySnapshot.location} · ${brief.companySnapshot.fundingStage}</p>
-<h2>ICP Fit — ${brief.icpFitScore.score}/10</h2>
-<p>${brief.icpFitScore.reason}</p>
+${brief.companySnapshot.techStack ? `<p><strong>Tech:</strong> ${brief.companySnapshot.techStack}</p>` : ""}
+${pains.length ? `<p><strong>Possible pain points</strong></p><ul>${pains.map(p => `<li>${p}</li>`).join("")}</ul>` : ""}
+<h2>Account Fit — ${brief.icpFitScore.score}/10</h2>
+<ul>${fitHighlights(brief).map(h => `<li>${h}</li>`).join("")}</ul>
 <h2>Their World</h2>
-<p>${stripCitationTags(brief.theirWorld?.narrative ?? "")}</p>
+<ul>${worldBullets(brief).map(b => `<li>${b}</li>`).join("")}</ul>
 <h2>Buying Committee</h2>
 <ul>${(brief.buyingCommittee ?? []).map(p => `<li><strong>${p.title}</strong>: ${p.painPoint}</li>`).join("")}</ul>
 <h2>Recent Triggers</h2>
 <ul>${(brief.recentTriggers?.items ?? []).map(t => `<li>${t.event} (${t.recency}) — ${t.significance}</li>`).join("")}</ul>
 <h2>Cold Email</h2>
 <pre>${brief.coldEmail.fullEmail || brief.coldEmail.opener}</pre>
-${talkTrack ? `<h2>Discovery Talk Track</h2><p>${talkTrack.opening}</p><ol>${talkTrack.discoveryQuestions.map(q => `<li>${q}</li>`).join("")}</ol>` : ""}
+${talkTrack ? `<h2>Discovery Talk Track</h2><p>${talkTrack.opening}</p><ul>${talkTrack.discoveryQuestions.map(q => `<li>${q}</li>`).join("")}</ul>` : ""}
 </body></html>`;
 
   const win = window.open("", "_blank");

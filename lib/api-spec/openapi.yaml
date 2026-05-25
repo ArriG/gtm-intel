@@ -682,10 +682,13 @@ components:
       properties:
         opening:
           type: string
+          description: One sentence call opener
         discoveryQuestions:
           type: array
+          maxItems: 5
           items:
             type: string
+            description: Short open-ended question, no fluff
 
     TalkTrackInput:
       $ref: "#/components/schemas/BriefActionInput"
@@ -708,15 +711,25 @@ components:
         meetingType:
           $ref: "#/components/schemas/MeetingType"
         whoYouAreMeeting:
-          type: string
+          type: array
+          minItems: 1
+          maxItems: 2
+          items:
+            type: string
         whatTheyCareAbout:
           type: array
+          maxItems: 4
           items:
             type: string
         yourAngle:
-          type: string
+          type: array
+          minItems: 1
+          maxItems: 2
+          items:
+            type: string
         keyQuestions:
           type: array
+          maxItems: 5
           items:
             type: string
         askForThisCall:
@@ -849,6 +862,11 @@ components:
               type: string
             techStack:
               type: string
+            possiblePainPoints:
+              type: array
+              description: Likely operational pains inferred from research (job ads, press, positioning)
+              items:
+                type: string
             sources:
               type: array
               items:
@@ -857,12 +875,17 @@ components:
           type: object
           required:
             - score
-            - reason
           properties:
             score:
               type: integer
             reason:
               type: string
+              description: Legacy one-liner; prefer highlights when present
+            highlights:
+              type: array
+              description: 2-3 concise bullets on why this account fits (or does not)
+              items:
+                type: string
             sources:
               type: array
               items:
@@ -874,11 +897,16 @@ components:
         theirWorld:
           type: object
           required:
-            - narrative
             - confidence
           properties:
             narrative:
               type: string
+              description: Legacy prose summary; prefer bullets when present
+            bullets:
+              type: array
+              description: 3-4 tight bullets on pressures, priorities, and why they might buy now
+              items:
+                type: string
             confidence:
               type: string
             sources:
