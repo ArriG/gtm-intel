@@ -17,7 +17,7 @@ import {
   type YourCompanyInput,
 } from "../lib/brief-ai";
 import { handleSignalRadar } from "../lib/signal-radar-handler";
-import { buildResearchSourceInstructions, type ResearchSourcePlan } from "../lib/research-source-plan";
+import { buildResearchSourceInstructions, countConfiguredSources } from "../lib/research-source-plan";
 
 const router: IRouter = Router();
 
@@ -141,12 +141,11 @@ function briefWithoutColdEmail(brief: Record<string, unknown>): Record<string, u
 }
 
 router.post("/account-brief", async (req, res): Promise<void> => {
-  const { url, linkedinPosts, ownIntel, yourCompany, researchSourcePlan, emailTone } = req.body as {
+  const { url, linkedinPosts, ownIntel, yourCompany, emailTone } = req.body as {
     url?: string;
     linkedinPosts?: Array<{ role: string; content: string }>;
     ownIntel?: string;
     yourCompany?: YourCompanyInput;
-    researchSourcePlan?: ResearchSourcePlan;
     emailTone?: EmailTone;
   };
 
@@ -182,8 +181,8 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   }
 
   const tone = emailTone || "direct";
-  const sourceInstructions = buildResearchSourceInstructions(researchSourcePlan);
-  const enabledSourceCount = researchSourcePlan?.sources?.filter(source => source.enabled).length ?? 5;
+  const sourceInstructions = buildResearchSourceInstructions(yourCompany);
+  const enabledSourceCount = countConfiguredSources(yourCompany);
   const systemPrompt = `${buildBriefSystemPrompt(sourceInstructions)}
 
 ICP SCORING INSTRUCTIONS:

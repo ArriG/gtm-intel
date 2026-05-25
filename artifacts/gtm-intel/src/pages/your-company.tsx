@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BriefCard, BriefCardContent } from "@/components/brief-card";
-import { ResearchSourcePlanSection } from "@/components/research-source-plan-section";
 import {
   loadYourCompany,
   saveYourCompany,
@@ -23,7 +22,6 @@ import {
   type YourCompany,
   type DealSize,
 } from "@/lib/your-company";
-import { useResearchSourcePlan, useIsResearchSourcePlanConfigured } from "@/lib/research-source-plan";
 
 type FormState = {
   companyName: string;
@@ -62,15 +60,7 @@ function formToYourCompany(form: FormState): YourCompany {
   };
 }
 
-function ProfileSummary({
-  profile,
-  onEdit,
-  sourcePlanConfigured,
-}: {
-  profile: YourCompany;
-  onEdit: () => void;
-  sourcePlanConfigured: boolean;
-}) {
+function ProfileSummary({ profile, onEdit }: { profile: YourCompany; onEdit: () => void }) {
   return (
     <div className="space-y-6">
       <BriefCard>
@@ -111,18 +101,12 @@ function ProfileSummary({
       </BriefCard>
 
       <div className="flex flex-wrap items-center gap-3">
-        {sourcePlanConfigured ? (
-          <Link href="/">
-            <Button className="gap-1.5">
-              Research an account
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Save your research source plan below to unlock Search.
-          </p>
-        )}
+        <Link href="/">
+          <Button className="gap-1.5">
+            Research an account
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
         <Button variant="outline" onClick={onEdit} className="gap-1.5">
           <Pencil className="w-4 h-4" />
           Edit profile
@@ -144,8 +128,6 @@ function SummaryField({ label, value, multiline }: { label: string; value: strin
 export default function YourCompanyPage() {
   const savedProfile = useYourCompany();
   const savedConfigured = useIsYourCompanyConfigured();
-  const sourcePlan = useResearchSourcePlan();
-  const sourcePlanConfigured = useIsResearchSourcePlanConfigured();
   const [editing, setEditing] = useState(!savedConfigured);
   const [form, setForm] = useState<FormState>(() => toFormState(loadYourCompany()));
   const [saved, setSaved] = useState(false);
@@ -196,10 +178,8 @@ export default function YourCompanyPage() {
     : "Start here — this drives everything else";
 
   const heroSubtitle = savedConfigured && !editing
-    ? sourcePlanConfigured
-      ? "Your profile and research sources are saved. Edit either any time — changes apply from the next search."
-      : "Next step: generate and save your research source plan so briefs search the right places for your market."
-    : "Tell us what you sell, who you serve, and where you play. Every brief, email, and signal uses this as its foundation.";
+    ? "Your profile shapes every brief — geographies, deal motion, and industry pick the right research sources automatically."
+    : "Tell us what you sell, who you serve, and where you play. Every brief, email, and fit score uses this as its foundation.";
 
   return (
     <div className="min-h-screen">
@@ -219,18 +199,7 @@ export default function YourCompanyPage() {
       <div className="bg-secondary px-8 py-10 sm:py-12 border-b border-border">
         <div className="max-w-3xl mx-auto">
           {savedConfigured && !editing ? (
-            <>
-              <ProfileSummary
-                profile={savedProfile}
-                onEdit={startEditing}
-                sourcePlanConfigured={sourcePlanConfigured}
-              />
-              <ResearchSourcePlanSection
-                yourCompany={savedProfile}
-                savedPlan={sourcePlan}
-                onPlanSaved={() => {}}
-              />
-            </>
+            <ProfileSummary profile={savedProfile} onEdit={startEditing} />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               {savedConfigured && (
@@ -268,7 +237,7 @@ export default function YourCompanyPage() {
                   id="industryServed"
                   value={form.industryServed}
                   onChange={e => handleChange("industryServed", e.target.value)}
-                  placeholder="e.g. Financial services, dental practices, B2B SaaS"
+                  placeholder="e.g. Banks, insurers, and reinsurers"
                 />
               </div>
 
@@ -280,7 +249,7 @@ export default function YourCompanyPage() {
                   onChange={e => handleChange("geographiesText", e.target.value)}
                   placeholder="Comma-separated — e.g. UK or AU, NZ"
                 />
-                <p className="text-xs text-muted-foreground">Where you sell today — used to plan your research sources.</p>
+                <p className="text-xs text-muted-foreground">Where you sell today — briefs pick research sources from this automatically.</p>
               </div>
 
               <div className="space-y-1.5">
@@ -347,7 +316,7 @@ export default function YourCompanyPage() {
                 {saved && (
                   <span className="text-sm text-primary flex items-center gap-1">
                     <Check className="w-4 h-4" />
-                    Saved — generate your research source plan next
+                    Saved — you can run a brief now
                   </span>
                 )}
               </div>

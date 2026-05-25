@@ -43,7 +43,7 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 - `openapi.yaml` is the single source of truth. Never edit generated files directly.
 - Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orval.mjs --config ./lib/api-spec/orval.config.ts`
 - **Postgres:** ICPs (drive brief scoring + signal radar), signals. **Not** briefs, Your Company, or history.
-- **localStorage:** Your Company (`gtm_your_company_v2`), research source plan (`gtm_research_source_plan_v1`), brief history, recent searches.
+- **localStorage:** Your Company (`gtm_your_company_v2`), brief history, recent searches.
 - **Your Company** sent in POST body (`yourCompany`) → seller context in Claude prompt.
 - **LinkedIn posts + own intel** in POST body → highest-priority research context.
 - **Account brief AI routes:** `POST /account-brief` (web search), `/cold-email` and `/talk-track` (regenerate from brief JSON), `POST /market-prospect` (web search).
@@ -58,7 +58,7 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 4. LinkedIn C-suite posts
 5. AFR / SmartCompany / fintech.com.au
 
-Account briefs use the saved research source plan when present; otherwise this AU block is the fallback. Signal radar and market prospect still use AU-biased prompts.
+Account briefs derive research sources automatically from Your Company (geographies, deal size, industry). Signal radar and market prospect still use AU-biased prompts.
 
 ## Shipped (through commit `af903c6`)
 
@@ -88,13 +88,11 @@ Account briefs use the saved research source plan when present; otherwise this A
 
 - **Milestone 3:** Flexible Brief schema — enterprise buying committee vs SMB single decision-maker based on `dealSize`
 
-## Milestone 2 — Research source planning (commit `79b39ab`)
+## Milestone 2 — Automatic research sources (commit `79b39ab`, refined locally)
 
-- `POST /research-source-plan` — Claude reads Your Company, returns 5–7 tailored sources with reasoning (no web search)
-- Saved client-side in `gtm_research_source_plan_v1`; sent with `POST /account-brief` as `researchSourcePlan`
-- Your Company page: generate, review, edit, save source plan
-- Search gated until source plan saved (min 3 enabled sources)
-- Account brief prompt uses saved sources instead of hardcoded AU five
+- Account brief prompt derives UK/AU/NZ/US sources from Your Company — no separate source-plan step or UI
+- Driven by geographies, `dealSize`, and industry (e.g. UK enterprise + banks/insurers → Companies House, FCA, UK financial press)
+- Falls back to default AU five when geographies are missing
 
 ## Backlog (next ideas)
 

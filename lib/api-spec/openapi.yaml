@@ -115,27 +115,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/MarketProspectResponse"
 
-  /research-source-plan:
-    post:
-      operationId: planResearchSources
-      tags: [account-brief]
-      summary: Generate a tailored research source plan from Your Company profile
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PlanResearchSourcesInput"
-      responses:
-        "200":
-          description: Recommended research sources with reasoning
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PlanResearchSourcesResponse"
-        "400":
-          description: Invalid input
-
   /healthz:
     get:
       operationId: healthCheck
@@ -806,81 +785,8 @@ components:
           type: string
         yourCompany:
           $ref: "#/components/schemas/YourCompany"
-        researchSourcePlan:
-          $ref: "#/components/schemas/ResearchSourcePlan"
         emailTone:
           $ref: "#/components/schemas/EmailTone"
-
-    ResearchSourceType:
-      type: string
-      enum: [web, registry, jobs, linkedin, press, other]
-      description: Category used for source chips in briefs
-
-    ResearchSource:
-      type: object
-      required:
-        - id
-        - name
-        - searchHint
-        - reasoning
-        - sourceType
-        - enabled
-        - priority
-      properties:
-        id:
-          type: string
-          description: Stable id for UI editing, e.g. companies-house
-        name:
-          type: string
-          description: Human-readable source name shown in the plan UI
-        searchHint:
-          type: string
-          description: Concrete web search instruction Claude should follow for account briefs
-        reasoning:
-          type: string
-          description: Why this source fits the seller's market and motion
-        sourceType:
-          $ref: "#/components/schemas/ResearchSourceType"
-        enabled:
-          type: boolean
-          default: true
-        priority:
-          type: integer
-          minimum: 1
-          description: Lower numbers are searched first
-
-    ResearchSourcePlan:
-      type: object
-      required:
-        - sources
-      properties:
-        introMessage:
-          type: string
-          description: Friendly summary shown to the AE, e.g. Great Ari, based on...
-        sources:
-          type: array
-          minItems: 3
-          items:
-            $ref: "#/components/schemas/ResearchSource"
-        updatedAt:
-          type: string
-          format: date-time
-
-    PlanResearchSourcesInput:
-      type: object
-      required:
-        - yourCompany
-      properties:
-        yourCompany:
-          $ref: "#/components/schemas/YourCompany"
-
-    PlanResearchSourcesResponse:
-      type: object
-      required:
-        - plan
-      properties:
-        plan:
-          $ref: "#/components/schemas/ResearchSourcePlan"
 
     BuyingCommitteeMember:
       type: object

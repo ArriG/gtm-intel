@@ -11,11 +11,6 @@ import * as zod from 'zod';
 /**
  * @summary Generate an AI-powered account brief for a company URL
  */
-export const generateAccountBriefBodyResearchSourcePlanSourcesItemEnabledDefault = true;
-export const generateAccountBriefBodyResearchSourcePlanSourcesMin = 3;
-
-
-
 export const GenerateAccountBriefBody = zod.object({
   "url": zod.string(),
   "linkedinPosts": zod.array(zod.object({
@@ -36,19 +31,6 @@ export const GenerateAccountBriefBody = zod.object({
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
   "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context'),
-  "researchSourcePlan": zod.object({
-  "introMessage": zod.string().optional().describe('Friendly summary shown to the AE, e.g. Great Ari, based on...'),
-  "sources": zod.array(zod.object({
-  "id": zod.string().describe('Stable id for UI editing, e.g. companies-house'),
-  "name": zod.string().describe('Human-readable source name shown in the plan UI'),
-  "searchHint": zod.string().describe('Concrete web search instruction Claude should follow for account briefs'),
-  "reasoning": zod.string().describe('Why this source fits the seller\'s market and motion'),
-  "sourceType": zod.enum(['web', 'registry', 'jobs', 'linkedin', 'press', 'other']).describe('Category used for source chips in briefs'),
-  "enabled": zod.boolean().default(generateAccountBriefBodyResearchSourcePlanSourcesItemEnabledDefault),
-  "priority": zod.number().min(1).describe('Lower numbers are searched first')
-})).min(generateAccountBriefBodyResearchSourcePlanSourcesMin),
-  "updatedAt": zod.coerce.date().optional()
-}).optional(),
   "emailTone": zod.enum(['formal', 'direct', 'conversational']).optional()
 })
 
@@ -522,47 +504,6 @@ export const ProspectMarketResponse = zod.object({
   "reason": zod.string(),
   "estimatedSize": zod.string().optional()
 }))
-})
-
-
-/**
- * @summary Generate a tailored research source plan from Your Company profile
- */
-export const PlanResearchSourcesBody = zod.object({
-  "yourCompany": zod.object({
-  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
-  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
-  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
-  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
-  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
-  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
-  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
-  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
-  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
-}).describe('Seller profile stored client-side; sent per request for prompt context')
-})
-
-export const planResearchSourcesResponsePlanSourcesItemEnabledDefault = true;
-export const planResearchSourcesResponsePlanSourcesMin = 3;
-
-
-
-export const PlanResearchSourcesResponse = zod.object({
-  "plan": zod.object({
-  "introMessage": zod.string().optional().describe('Friendly summary shown to the AE, e.g. Great Ari, based on...'),
-  "sources": zod.array(zod.object({
-  "id": zod.string().describe('Stable id for UI editing, e.g. companies-house'),
-  "name": zod.string().describe('Human-readable source name shown in the plan UI'),
-  "searchHint": zod.string().describe('Concrete web search instruction Claude should follow for account briefs'),
-  "reasoning": zod.string().describe('Why this source fits the seller\'s market and motion'),
-  "sourceType": zod.enum(['web', 'registry', 'jobs', 'linkedin', 'press', 'other']).describe('Category used for source chips in briefs'),
-  "enabled": zod.boolean().default(planResearchSourcesResponsePlanSourcesItemEnabledDefault),
-  "priority": zod.number().min(1).describe('Lower numbers are searched first')
-})).min(planResearchSourcesResponsePlanSourcesMin),
-  "updatedAt": zod.coerce.date().optional()
-})
 })
 
 
