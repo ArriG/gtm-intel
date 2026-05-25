@@ -88,7 +88,7 @@ Account briefs derive research sources automatically from Your Company (geograph
 
 - **Milestone 3:** Flexible Brief schema — enterprise buying committee vs SMB single decision-maker based on `dealSize`
 
-## Milestone 2 — Automatic research sources (commit `79b39ab`, refined locally)
+## Milestone 2 — Automatic research sources (commit `89acbcf`)
 
 - Account brief prompt derives UK/AU/NZ/US sources from Your Company — no separate source-plan step or UI
 - Driven by geographies, `dealSize`, and industry (e.g. UK enterprise + banks/insurers → Companies House, FCA, UK financial press)
