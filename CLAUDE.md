@@ -73,13 +73,13 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 - Cite tag stripping in AI responses
 - Null-safe Save as ICP when brief omits optional sections
 
-## Milestone 1 — Your Company as product spine (shipped locally; commit hash TBD after merge)
+## Milestone 1 — Your Company as product spine (commit `2e77306`)
 
 - **Your Company** is the first sidebar item (Setup section above Research)
 - First-run redirect: unconfigured users land on `/your-company`, not Search
 - Brief generation gated until Your Company is complete (empty state + CTA)
 - Expanded `YourCompany` schema: `companyName`, `oneLineDescription`, `industryServed`, `geographies`, `dealSize`, `buyerTitles`, `painPointsSolved` (+ optional `customerOutcomes`; legacy prompt fields derived on save)
-- localStorage bumped to `gtm_your_company_v2` — no migration from v1
+- localStorage bumped to `gtm_your_company_v2` — no migration from v1 (see `da56b24`)
 - Hero treatment on Your Company setup page
 
 ## Next milestones (not built yet)
