@@ -88,7 +88,7 @@ Account briefs use the saved research source plan when present; otherwise this A
 
 - **Milestone 3:** Flexible Brief schema — enterprise buying committee vs SMB single decision-maker based on `dealSize`
 
-## Milestone 2 — Research source planning
+## Milestone 2 — Research source planning (commit `79b39ab`)
 
 - `POST /research-source-plan` — Claude reads Your Company, returns 5–7 tailored sources with reasoning (no web search)
 - Saved client-side in `gtm_research_source_plan_v1`; sent with `POST /account-brief` as `researchSourcePlan`
