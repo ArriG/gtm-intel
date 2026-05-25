@@ -179,10 +179,10 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   let icpContext = "";
   try {
     const icps = await db.select().from(icpsTable);
-    icpContext = buildIcpScoringContext(icps, userContext);
+    icpContext = buildIcpScoringContext(icps, userContext, yourCompany);
   } catch (err) {
     req.log.warn({ err }, "Could not load ICPs — falling back to generic scoring");
-    icpContext = buildIcpScoringContext([], userContext);
+    icpContext = buildIcpScoringContext([], userContext, yourCompany);
   }
 
   const tone = emailTone || "direct";

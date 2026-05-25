@@ -144,3 +144,32 @@ export const DEAL_SIZE_OPTIONS: { value: DealSize; label: string; hint: string }
   { value: "mid-market", label: "Mid-market", hint: "Mid-sized teams — multiple stakeholders" },
   { value: "enterprise", label: "Enterprise", hint: "Large organisations — complex buying committees" },
 ];
+
+export function formatDealSizeLabel(dealSize: DealSize): string {
+  return DEAL_SIZE_OPTIONS.find(o => o.value === dealSize)?.label ?? dealSize;
+}
+
+/** Hero subtitle on Search — reflects Your Company geographies and deal motion. */
+export function researchHeroSubtitle(yc: YourCompany): string {
+  const geos = yc.geographies.map(g => g.trim().toUpperCase());
+  const isUk = geos.some(g => g === "UK" || g.includes("UNITED KINGDOM"));
+  const isAu = geos.some(g => g === "AU" || g === "NZ" || g.includes("AUSTRALIA"));
+
+  if (isUk && yc.dealSize === "enterprise") {
+    return "Enterprise intel for UK accounts — leadership moves, hiring signals, and trade press. Brief ready to send.";
+  }
+  if (isUk && yc.dealSize === "mid-market") {
+    return "Mid-market intel for UK accounts — hiring, leadership, and industry press. Brief ready to send.";
+  }
+  if (isUk) {
+    return "UK-focused intel from public sources, LinkedIn, and press. Brief ready to send.";
+  }
+  if (isAu && yc.dealSize === "enterprise") {
+    return "Enterprise intel for AU accounts — ASIC, Seek, LinkedIn, and press. Brief ready to send.";
+  }
+  if (isAu) {
+    return "AU-specific intel from ASIC, Seek, LinkedIn, and press. Brief ready to send.";
+  }
+  const geoLabel = formatGeographies(yc.geographies);
+  return `${geoLabel}-focused intel from public sources, LinkedIn, and press. Brief ready to send.`;
+}

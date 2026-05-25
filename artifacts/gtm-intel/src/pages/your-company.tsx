@@ -1,20 +1,23 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Pencil, Building2 } from "lucide-react";
 import { BearMark } from "@/components/bear-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BriefCard, BriefCardContent } from "@/components/brief-card";
 import {
   loadYourCompany,
   saveYourCompany,
   useIsYourCompanyConfigured,
+  useYourCompany,
   linesToList,
   listToLines,
   parseGeographies,
   formatGeographies,
+  formatDealSizeLabel,
   DEAL_SIZE_OPTIONS,
   type YourCompany,
   type DealSize,
@@ -57,11 +60,85 @@ function formToYourCompany(form: FormState): YourCompany {
   };
 }
 
+function ProfileSummary({ profile, onEdit }: { profile: YourCompany; onEdit: () => void }) {
+  return (
+    <div className="space-y-6">
+      <BriefCard>
+        <BriefCardContent className="pt-6 space-y-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl border border-border bg-secondary flex items-center justify-center shrink-0">
+                <Building2 className="w-5 h-5 text-foreground" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Your company</p>
+                <h2 className="text-2xl font-extrabold text-foreground">{profile.companyName}</h2>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full shrink-0">
+              <Check className="w-3.5 h-3.5" />
+              Saved
+            </span>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SummaryField label="What you sell" value={profile.oneLineDescription} />
+            <SummaryField label="Industry served" value={profile.industryServed} />
+            <SummaryField label="Geographies" value={formatGeographies(profile.geographies)} />
+            <SummaryField label="Deal motion" value={formatDealSizeLabel(profile.dealSize)} />
+          </div>
+
+          <SummaryField label="Typical buyers" value={profile.buyerTitles.join(", ")} />
+          <SummaryField
+            label="Pain points you solve"
+            value={profile.painPointsSolved.map(p => `• ${p}`).join("\n")}
+            multiline
+          />
+          {profile.customerOutcomes?.trim() && (
+            <SummaryField label="Outcomes you cite" value={profile.customerOutcomes} />
+          )}
+        </BriefCardContent>
+      </BriefCard>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Link href="/">
+          <Button className="gap-1.5">
+            Research an account
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+        <Button variant="outline" onClick={onEdit} className="gap-1.5">
+          <Pencil className="w-4 h-4" />
+          Edit profile
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryField({ label, value, multiline }: { label: string; value: string; multiline?: boolean }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={`text-sm text-foreground ${multiline ? "whitespace-pre-line leading-relaxed" : ""}`}>{value}</p>
+    </div>
+  );
+}
+
 export default function YourCompanyPage() {
+  const savedProfile = useYourCompany();
+  const savedConfigured = useIsYourCompanyConfigured();
+  const [editing, setEditing] = useState(!savedConfigured);
   const [form, setForm] = useState<FormState>(() => toFormState(loadYourCompany()));
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const savedConfigured = useIsYourCompanyConfigured();
+
+  function startEditing() {
+    setForm(toFormState(loadYourCompany()));
+    setErrors([]);
+    setSaved(false);
+    setEditing(true);
+  }
 
   function handleChange<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm(current => ({ ...current, [field]: value }));
@@ -92,8 +169,17 @@ export default function YourCompanyPage() {
     saveYourCompany(next);
     setSaved(true);
     setErrors([]);
+    setEditing(false);
     setTimeout(() => setSaved(false), 2500);
   }
+
+  const heroTitle = savedConfigured && !editing
+    ? "Your GTM foundation is set"
+    : "Start here — this drives everything else";
+
+  const heroSubtitle = savedConfigured && !editing
+    ? "Every brief, fit score, and email uses this profile. Edit it any time — changes apply from the next search."
+    : "Tell us what you sell, who you serve, and where you play. Every brief, email, and signal uses this as its foundation.";
 
   return (
     <div className="min-h-screen">
@@ -102,142 +188,140 @@ export default function YourCompanyPage() {
           <BearMark size={52} className="mb-6" />
           <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Your company</p>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            Start here — this drives everything else
+            {heroTitle}
           </h1>
           <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            Tell us what you sell, who you serve, and where you play. Every brief, email, and signal uses this as its foundation.
+            {heroSubtitle}
           </p>
         </div>
       </div>
 
       <div className="bg-secondary px-8 py-10 sm:py-12 border-b border-border">
         <div className="max-w-3xl mx-auto">
-          {savedConfigured && (
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-4">
-              <p className="text-sm text-muted-foreground">
-                Your profile is saved. Update it any time — changes apply to the next brief.
-              </p>
-              <Link href="/">
-                <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                  Go to Search
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1.5">
-              <Label htmlFor="companyName">Company name</Label>
-              <Input
-                id="companyName"
-                value={form.companyName}
-                onChange={e => handleChange("companyName", e.target.value)}
-                placeholder='e.g. Optalitix'
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="oneLineDescription">What you sell</Label>
-              <Textarea
-                id="oneLineDescription"
-                value={form.oneLineDescription}
-                onChange={e => handleChange("oneLineDescription", e.target.value)}
-                rows={2}
-                placeholder="One sentence — e.g. Underwriting workbench software for banks and insurers."
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="industryServed">Industry your customers are in</Label>
-              <Input
-                id="industryServed"
-                value={form.industryServed}
-                onChange={e => handleChange("industryServed", e.target.value)}
-                placeholder="e.g. Financial services, dental practices, B2B SaaS"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="geographies">Geographies</Label>
-              <Input
-                id="geographies"
-                value={form.geographiesText}
-                onChange={e => handleChange("geographiesText", e.target.value)}
-                placeholder="Comma-separated — e.g. UK or AU, NZ"
-              />
-              <p className="text-xs text-muted-foreground">Where you sell today. Milestone 2 will use this to plan research sources.</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="dealSize">Typical deal size</Label>
-              <Select value={form.dealSize} onValueChange={value => handleChange("dealSize", value as DealSize)}>
-                <SelectTrigger id="dealSize">
-                  <SelectValue placeholder="Choose deal motion" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEAL_SIZE_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label} — {option.hint}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="buyerTitles">Typical buyer job titles</Label>
-              <Textarea
-                id="buyerTitles"
-                value={form.buyerTitlesText}
-                onChange={e => handleChange("buyerTitlesText", e.target.value)}
-                rows={3}
-                placeholder={"One per line — e.g.\nHead of Underwriting\nChief Risk Officer\nPractice Owner"}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="painPoints">Pain points you solve</Label>
-              <Textarea
-                id="painPoints"
-                value={form.painPointsText}
-                onChange={e => handleChange("painPointsText", e.target.value)}
-                rows={4}
-                placeholder={"One per line — e.g.\nManual spreadsheet workflows\nSlow quote turnaround\nNo visibility into pipeline risk"}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="customerOutcomes">
-                Customer outcomes you can cite <span className="text-muted-foreground font-normal">(optional)</span>
-              </Label>
-              <Textarea
-                id="customerOutcomes"
-                value={form.customerOutcomes}
-                onChange={e => handleChange("customerOutcomes", e.target.value)}
-                rows={3}
-                placeholder="Specific results from existing customers — e.g. 40% faster quote turnaround within 90 days."
-              />
-            </div>
-
-            {errors.length > 0 && (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive space-y-1">
-                {errors.map(error => <p key={error}>{error}</p>)}
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Button type="submit" className="gap-1.5">
-                Save profile
-              </Button>
-              {saved && (
-                <span className="text-sm text-primary flex items-center gap-1">
-                  <Check className="w-4 h-4" />
-                  Saved — you can run a brief now
-                </span>
+          {savedConfigured && !editing ? (
+            <ProfileSummary profile={savedProfile} onEdit={startEditing} />
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {savedConfigured && (
+                <div className="flex justify-end">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                    Cancel
+                  </Button>
+                </div>
               )}
-            </div>
-          </form>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="companyName">Company name</Label>
+                <Input
+                  id="companyName"
+                  value={form.companyName}
+                  onChange={e => handleChange("companyName", e.target.value)}
+                  placeholder='e.g. Optalitix'
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="oneLineDescription">What you sell</Label>
+                <Textarea
+                  id="oneLineDescription"
+                  value={form.oneLineDescription}
+                  onChange={e => handleChange("oneLineDescription", e.target.value)}
+                  rows={2}
+                  placeholder="One sentence — e.g. Underwriting workbench software for banks and insurers."
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="industryServed">Industry your customers are in</Label>
+                <Input
+                  id="industryServed"
+                  value={form.industryServed}
+                  onChange={e => handleChange("industryServed", e.target.value)}
+                  placeholder="e.g. Financial services, dental practices, B2B SaaS"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="geographies">Geographies</Label>
+                <Input
+                  id="geographies"
+                  value={form.geographiesText}
+                  onChange={e => handleChange("geographiesText", e.target.value)}
+                  placeholder="Comma-separated — e.g. UK or AU, NZ"
+                />
+                <p className="text-xs text-muted-foreground">Where you sell today. Milestone 2 will use this to plan research sources.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="dealSize">Typical deal size</Label>
+                <Select value={form.dealSize} onValueChange={value => handleChange("dealSize", value as DealSize)}>
+                  <SelectTrigger id="dealSize">
+                    <SelectValue placeholder="Choose deal motion" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEAL_SIZE_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label} — {option.hint}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="buyerTitles">Typical buyer job titles</Label>
+                <Textarea
+                  id="buyerTitles"
+                  value={form.buyerTitlesText}
+                  onChange={e => handleChange("buyerTitlesText", e.target.value)}
+                  rows={3}
+                  placeholder={"One per line — e.g.\nHead of Underwriting\nChief Risk Officer\nPractice Owner"}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="painPoints">Pain points you solve</Label>
+                <Textarea
+                  id="painPoints"
+                  value={form.painPointsText}
+                  onChange={e => handleChange("painPointsText", e.target.value)}
+                  rows={4}
+                  placeholder={"One per line — e.g.\nManual spreadsheet workflows\nSlow quote turnaround\nNo visibility into pipeline risk"}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="customerOutcomes">
+                  Customer outcomes you can cite <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Textarea
+                  id="customerOutcomes"
+                  value={form.customerOutcomes}
+                  onChange={e => handleChange("customerOutcomes", e.target.value)}
+                  rows={3}
+                  placeholder="Specific results from existing customers — e.g. 40% faster quote turnaround within 90 days."
+                />
+              </div>
+
+              {errors.length > 0 && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive space-y-1">
+                  {errors.map(error => <p key={error}>{error}</p>)}
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Button type="submit" className="gap-1.5">
+                  Save profile
+                </Button>
+                {saved && (
+                  <span className="text-sm text-primary flex items-center gap-1">
+                    <Check className="w-4 h-4" />
+                    Saved — you can run a brief now
+                  </span>
+                )}
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

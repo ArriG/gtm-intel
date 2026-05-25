@@ -19,7 +19,8 @@ import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from 
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
-import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured } from "@/lib/your-company";
+import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
+import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
@@ -206,13 +207,25 @@ function SourceSummaryBar({ summary, triggersFound }: { summary?: AccountBrief["
 // --- Autocomplete ---
 interface CompanySuggestion { name: string; domain: string; logo: string; }
 
-function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }: { onSearch: (url: string, label: string) => void; loading: boolean; cooldownSeconds: number; initialQuery?: string; }) {
-  const [query, setQuery] = useState(initialQuery ?? "");
+function CompanySearchInput({
+  query,
+  onQueryChange,
+  onSearch,
+  loading,
+  cooldownSeconds,
+}: {
+  query: string;
+  onQueryChange: (value: string) => void;
+  onSearch: (url: string, label: string) => void;
+  loading: boolean;
+  cooldownSeconds: number;
+}) {
   const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [fetching, setFetching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const dropdownLockedRef = useRef(false);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -223,27 +236,57 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
   }, []);
 
   useEffect(() => {
+    if (loading) {
+      dropdownLockedRef.current = true;
+      setShowDropdown(false);
+      setSuggestions([]);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    }
+  }, [loading]);
+
+  useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (dropdownLockedRef.current || loading) return;
     if (query.trim().length < 2) { setSuggestions([]); setShowDropdown(false); return; }
     debounceRef.current = setTimeout(async () => {
       setFetching(true);
       try {
         const res = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(query.trim())}`);
-        if (res.ok) { const data = await res.json() as CompanySuggestion[]; setSuggestions(data.slice(0, 6)); setShowDropdown(data.length > 0); }
+        if (res.ok) {
+          const data = await res.json() as CompanySuggestion[];
+          if (!dropdownLockedRef.current) {
+            setSuggestions(data.slice(0, 6));
+            setShowDropdown(data.length > 0);
+          }
+        }
       } catch { setSuggestions([]); } finally { setFetching(false); }
     }, 300);
-  }, [query]);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, loading]);
 
   function handleSelect(s: CompanySuggestion) {
-    setQuery(s.name); setShowDropdown(false); setSuggestions([]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    dropdownLockedRef.current = true;
+    onQueryChange(s.name);
+    setShowDropdown(false);
+    setSuggestions([]);
     onSearch(`https://${s.domain}`, s.name);
   }
 
   function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    dropdownLockedRef.current = true;
     const url = query.trim().startsWith("http") ? query.trim() : `https://${query.trim()}`;
-    onSearch(url, query.trim()); setShowDropdown(false);
+    onSearch(url, query.trim());
+    setShowDropdown(false);
+    setSuggestions([]);
+  }
+
+  function handleQueryChange(value: string) {
+    dropdownLockedRef.current = false;
+    onQueryChange(value);
   }
 
   return (
@@ -253,8 +296,8 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
           <div className="flex items-center pl-2 text-muted-foreground">
             {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           </div>
-          <Input type="text" value={query} onChange={e => setQuery(e.target.value)}
-            onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+          <Input type="text" value={query} onChange={e => handleQueryChange(e.target.value)}
+            onFocus={() => { if (!dropdownLockedRef.current && suggestions.length > 0) setShowDropdown(true); }}
             placeholder="Company name or URL"
             className="flex-1 text-sm font-medium border-0 shadow-none focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground"
             disabled={loading} autoComplete="off" />
@@ -267,7 +310,7 @@ function CompanySearchInput({ onSearch, loading, cooldownSeconds, initialQuery }
           </Button>
         </div>
       </form>
-      {showDropdown && suggestions.length > 0 && (
+      {showDropdown && !loading && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50">
           {suggestions.map((s, i) => (
             <button key={i} type="button" onClick={() => handleSelect(s)}
@@ -584,11 +627,14 @@ function SaveAsIcpDialog({ brief, companyName }: { brief: AccountBrief; companyN
 // --- Main page ---
 export default function AccountBriefPage() {
   const configured = useIsYourCompanyConfigured();
+  const yourCompany = useYourCompany();
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastLabel, setLastLabel] = useState("");
+  const [lastUrl, setLastUrl] = useState("");
   const [lastDomain, setLastDomain] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [logoFailed, setLogoFailed] = useState(false);
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([{ role: "CFO", content: "" }]);
   const [ownIntel, setOwnIntel] = useState("");
@@ -611,13 +657,33 @@ export default function AccountBriefPage() {
   }, [cooldownSeconds]);
 
   useEffect(() => {
+    if (historyParam) return;
+    if (queryParam) {
+      setSearchQuery(queryParam);
+      return;
+    }
+    const session = loadBriefSession();
+    if (session) {
+      setLastLabel(session.label);
+      setLastUrl(session.url);
+      setLastDomain(domainFromUrl(session.url));
+      setSearchQuery(session.label);
+      setBrief(session.brief);
+      setCurrentHistoryId(session.currentHistoryId);
+      setLinkedinPosts(session.linkedinPosts);
+      setOwnIntel(session.ownIntel);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!historyParam) return;
     const entry = loadHistory().find(h => h.id === historyParam);
     if (entry) handleHistorySelect(entry);
   }, [historyParam]);
 
   async function handleSearch(url: string, label: string) {
-    setLoading(true); setError(null); setBrief(null); setLastLabel(label); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
+    setLoading(true); setError(null); setBrief(null); setLastLabel(label); setLastUrl(url); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
+    setSearchQuery(label);
     setTalkTrack(null);
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
     const postsToSend = linkedinPosts.filter(p => p.content.trim());
@@ -641,14 +707,31 @@ export default function AccountBriefPage() {
       const id = Date.now().toString();
       saveToHistory({ id, label, url, icpScore: data.icpFitScore?.score ?? 0, savedAt: new Date().toISOString(), brief: data });
       setCurrentHistoryId(id);
+      saveBriefSession({
+        label,
+        url,
+        brief: data,
+        currentHistoryId: id,
+        linkedinPosts,
+        ownIntel,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
-    setLastLabel(entry.label); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
+    setLastLabel(entry.label); setLastUrl(entry.url); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
+    setSearchQuery(entry.label);
     setCurrentHistoryId(entry.id);
+    saveBriefSession({
+      label: entry.label,
+      url: entry.url,
+      brief: entry.brief,
+      currentHistoryId: entry.id,
+      linkedinPosts,
+      ownIntel,
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -720,7 +803,9 @@ export default function AccountBriefPage() {
               Research any company in 30 seconds
             </h1>
             <p className="mt-4 text-lg sm:text-xl font-medium text-foreground/85 leading-snug max-w-2xl">
-              AU-specific intel from ASIC, Seek, LinkedIn and press — brief ready to send.
+              {isYourCompanyConfigured(yourCompany)
+                ? researchHeroSubtitle(yourCompany)
+                : "Market-specific intel from public sources, LinkedIn, and press. Brief ready to send."}
             </p>
           </div>
         </div>
@@ -731,7 +816,13 @@ export default function AccountBriefPage() {
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-2xl mb-8">
               Finally, GTM research that works for you.
             </h2>
-            <CompanySearchInput onSearch={handleSearch} loading={loading} cooldownSeconds={cooldownSeconds} initialQuery={queryParam ?? undefined} />
+            <CompanySearchInput
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              onSearch={handleSearch}
+              loading={loading}
+              cooldownSeconds={cooldownSeconds}
+            />
             {!brief && !showOptionalContext && (
               <button
                 type="button"
@@ -857,10 +948,13 @@ export default function AccountBriefPage() {
 
               <BriefCard>
                 <BriefCardHeader>
-                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />ICP Fit Score</BriefCardTitle>
-                  <CopyButton getText={() => `ICP Score: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`} />
+                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />Account Fit Score</BriefCardTitle>
+                  <CopyButton getText={() => `Account fit: ${brief.icpFitScore.score}/10 — ${brief.icpFitScore.reason}`} />
                 </BriefCardHeader>
                 <BriefCardContent className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Scored against your Your Company profile{yourCompany.companyName ? ` (${yourCompany.companyName})` : ""} — how well this account matches what you sell.
+                  </p>
                   <IcpScoreDisplay score={brief.icpFitScore.score} reason={brief.icpFitScore.reason} />
                   <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
                 </BriefCardContent>

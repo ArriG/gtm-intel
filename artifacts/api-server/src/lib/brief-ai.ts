@@ -63,17 +63,44 @@ export function sanitizeAiStrings(value: unknown): unknown {
 export function buildIcpScoringContext(
   icps: typeof icpsTable.$inferSelect[],
   userContext: UserContextFlags,
+  yourCompany?: YourCompanyInput,
 ): string {
+  const yourCompanyBlock = yourCompanyHasContext(yourCompany)
+    ? describeYourCompany(yourCompany!)
+    : null;
+
   const contextNote = userContext.hasLinkedIn || userContext.hasOwnIntel || userContext.hasYourCompany
     ? `\nIMPORTANT — Use all AE-provided context (Your Company profile, own intel, pasted LinkedIn posts) when scoring:
 - Weight verified AE intel and LinkedIn quotes heavily — they override weak web signals.
-- Match against ICP pain points, goals, and job titles explicitly — cite which ICP fields align or misalign.
-- If Your Company "who we sell to" is provided, score fit for OUR solution, not generic B2B fit.
-- Penalise score if industry/size match but pain points clearly don't align with any defined ICP.`
+- Score fit for what WE sell (the seller profile below), NOT generic B2B SaaS fit or fit for "GTM intelligence tools".
+- If the target is a large enterprise in our target industry with relevant pains (e.g. a global insurer for underwriting software), score 8–10 — do NOT penalise for being bigger than a typical logo.
+- Match against pain points and buyer titles explicitly — cite which fields align or misalign.
+- Penalise the score only when industry, buyer, or pain evidence clearly does not fit our seller profile.`
     : "";
 
   if (!icps || icps.length === 0) {
-    return `Score ICP fit from 1-10 where 10 is a perfect fit for a GTM intelligence platform used by B2B SaaS sales and marketing teams. Use general best-practice ICP criteria.${contextNote}`;
+    if (yourCompanyBlock) {
+      const { product, industry, geographies, buyerTitles, painPoints, dealSize } = yourCompanyBlock;
+      const sellerLines = [
+        yourCompany!.companyName?.trim() ? `Seller: ${yourCompany!.companyName.trim()}` : null,
+        product ? `What we sell: ${product}` : null,
+        industry ? `Industry we serve: ${industry}` : null,
+        geographies?.length ? `Geographies: ${geographies.join(", ")}` : null,
+        dealSize ? `Typical deal motion: ${dealSize}` : null,
+        buyerTitles?.length ? `Typical buyers: ${buyerTitles.join(", ")}` : null,
+        painPoints ? `Pains we solve: ${painPoints}` : null,
+      ].filter(Boolean);
+
+      return `Score ACCOUNT FIT from 1-10 for the seller below — how well is this researched company a customer for what WE sell?
+A score of 10 means an ideal target: right industry, relevant pains, and plausible buyers in the committee.
+Score dimensions: industry/vertical match, deal size vs our motion, buyer role presence, pain point alignment.
+In your reason, cite research evidence and which seller profile fields align. Do not default to 5.${contextNote}
+
+SELLER PROFILE:
+${sellerLines.join("\n")}`;
+    }
+
+    return `Score account fit from 1-10 using general B2B best-practice criteria until the AE defines ICPs or Your Company.${contextNote}`;
   }
 
   const descriptions = icps.map((icp, i) => {
@@ -97,10 +124,11 @@ export function buildIcpScoringContext(
     ].filter(Boolean).join("\n");
   }).join("\n\n");
 
-  return `Score ICP fit from 1-10 based specifically on how well this company matches the ICP definitions below.
-A score of 10 means near-perfect alignment with at least one ICP.
+  return `Score ICP fit from 1-10 based specifically on how well this company matches the ICP definitions below AND the seller's solution.
+A score of 10 means near-perfect alignment with at least one ICP and strong fit for what we sell.
 In your reason, name which ICP they best match (or "none") and cite specific evidence — job postings, intel, LinkedIn signals, or company profile.
 Score each dimension: industry match, size match, pain point alignment, and buyer role presence.
+Large enterprises in our target industry should not be auto-downgraded if pains and buyers align.${yourCompanyBlock && userContext.hasYourCompany ? "\nAlso cross-check against the seller profile in SELLER CONTEXT below." : ""}
 If they match none well, explain what's misaligned and still give an honest numeric score (don't default to 5).${contextNote}
 
 DEFINED ICPs:
