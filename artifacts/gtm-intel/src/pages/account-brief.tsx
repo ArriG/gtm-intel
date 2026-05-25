@@ -160,23 +160,32 @@ function CompactSnapshot({ brief }: { brief: AccountBrief }) {
   const tech = snap.techStack?.trim();
   const showTech = tech && tech !== "Not detected";
   const pains = snapshotPainPoints(brief);
-  const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean).join(" · ");
+  const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean);
 
   return (
-    <div className="mt-3 rounded-xl border border-border bg-secondary/50 px-4 py-3 space-y-2.5">
-      <p className="text-xs text-muted-foreground leading-snug">{meta}</p>
+    <div className="mt-4 pt-4 border-t border-border/60 space-y-3">
+      <p className="text-sm text-muted-foreground leading-snug">{meta.join(" · ")}</p>
+
       {showTech && (
-        <div className="flex items-start gap-2 text-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0 pt-0.5 w-8">Tech</span>
-          <span className="text-foreground leading-snug">{tech}</span>
-        </div>
+        <p className="text-sm leading-snug">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-2">Tech</span>
+          <span className="font-medium text-foreground">{tech}</span>
+        </p>
       )}
+
       {pains.length > 0 && (
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Possible pain points</p>
-          <BriefBulletList items={pains} />
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Possible pain points</p>
+          <ul className="space-y-1">
+            {pains.map((pain, i) => (
+              <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/30">
+                {pain}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
+
       <SourceChips sources={snap.sources} sectionId="snapshot" />
     </div>
   );
