@@ -258,7 +258,7 @@ function BackgroundSection({
           <button type="button" className="w-full text-left px-6 py-4 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors rounded-2xl">
             <div>
               <p className="text-sm font-bold text-foreground">Background & sources</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Account fit, company snapshot, full email, and source audit</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Account fit, full email, and source audit</p>
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -267,7 +267,7 @@ function BackgroundSection({
           <div className="px-6 pb-6 space-y-4 border-t border-border pt-4">
             <SourceSummaryBar summary={brief.sourceSummary} triggersFound={hasTriggers} />
 
-            <div className={hasTriggers ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : "grid grid-cols-1 gap-4"}>
+            <div className="grid grid-cols-1 gap-4">
               <BriefCard>
                 <BriefCardHeader>
                   <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />Account Fit</BriefCardTitle>
@@ -277,19 +277,7 @@ function BackgroundSection({
                   <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
                 </BriefCardContent>
               </BriefCard>
-              {hasTriggers && (
-                <RecentTriggersCard items={validTriggers} sources={brief.recentTriggers?.sources} />
-              )}
             </div>
-
-            <BriefCard>
-              <BriefCardHeader>
-                <BriefCardTitle><Globe className="w-4 h-4 text-primary" />Company snapshot</BriefCardTitle>
-              </BriefCardHeader>
-              <BriefCardContent>
-                <CompactSnapshot brief={brief} />
-              </BriefCardContent>
-            </BriefCard>
 
             <BriefCard>
               <BriefCardHeader>
@@ -429,42 +417,54 @@ function BriefBulletList({ items, className }: { items: string[]; className?: st
 }
 
 // --- Contact avatar ---
-function CompactSnapshot({ brief }: { brief: AccountBrief }) {
+function CompanySnapshotCard({ brief }: { brief: AccountBrief }) {
   const snap = brief.companySnapshot;
   const tech = snap.techStack?.trim();
   const showTech = tech && tech !== "Not detected";
   const pains = snapshotPainPoints(brief);
-  const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean);
+  const hasPains = pains.length > 0;
 
   return (
-    <div className="space-y-4">
-      <div className={pains.length > 0 ? "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8" : "space-y-3"}>
-        <div className="space-y-3 min-w-0">
-          <p className="text-sm text-muted-foreground leading-snug">{meta.join(" · ")}</p>
-          {showTech && (
-            <p className="text-sm leading-snug">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-2">Tech</span>
-              <span className="font-medium text-foreground">{tech}</span>
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><Globe className="w-4 h-4 text-primary" />Company snapshot</BriefCardTitle>
+        <CopyButton getText={() => {
+          const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean).join(" · ");
+          const painLines = pains.map(p => `• ${p}`).join("\n");
+          return painLines ? `${meta}\n\nPossible pain points:\n${painLines}` : meta;
+        }} />
+      </BriefCardHeader>
+      <BriefCardContent>
+        <div className={`grid gap-5 ${hasPains ? "grid-cols-1 sm:grid-cols-2 sm:gap-6" : "grid-cols-1"}`}>
+          <div className="space-y-3 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Profile</p>
+            <p className="text-sm text-foreground leading-snug">
+              {[snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean).join(" · ")}
             </p>
+            {showTech && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Tech stack</p>
+                <p className="text-sm font-medium text-foreground leading-snug">{tech}</p>
+              </div>
+            )}
+          </div>
+
+          {hasPains && (
+            <div className="min-w-0 rounded-xl border border-border bg-secondary/50 p-4 sm:py-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Possible pain points</p>
+              <ul className="space-y-2">
+                {pains.map((pain, i) => (
+                  <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/40">
+                    {pain}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
-
-        {pains.length > 0 && (
-          <div className="min-w-0 md:border-l md:border-border md:pl-6">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Possible pain points</p>
-            <ul className="space-y-2">
-              {pains.map((pain, i) => (
-                <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/30">
-                  {pain}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <SourceChips sources={snap.sources} sectionId="snapshot" />
-    </div>
+        <SourceChips sources={snap.sources} sectionId="snapshot" />
+      </BriefCardContent>
+    </BriefCard>
   );
 }
 
@@ -760,45 +760,6 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
         )}
       </BriefCard>
     </div>
-  );
-}
-
-function RecentTriggersCard({ items, sources }: { items: NonNullable<AccountBrief["recentTriggers"]>["items"]; sources?: BriefSource[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? items : items.slice(0, 3);
-  const hiddenCount = items.length - 3;
-
-  return (
-    <BriefCard>
-      <BriefCardHeader>
-        <BriefCardTitle><Newspaper className="w-4 h-4 text-primary" />Recent Triggers & News</BriefCardTitle>
-        <CopyButton getText={() => items.map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
-      </BriefCardHeader>
-      <BriefCardContent>
-        <div className="space-y-3">
-          {visible.map((item, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">{item.event}</p>
-                <p className={`${briefCardBodyClass} mt-0.5`}>{item.significance}</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">{item.recency}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        {hiddenCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setExpanded(e => !e)}
-            className="mt-4 text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
-          >
-            {expanded ? <>Show less<ChevronDown className="w-4 h-4 rotate-180" /></> : <>+{hiddenCount} more<ChevronDown className="w-4 h-4" /></>}
-          </button>
-        )}
-        <SourceChips sources={sources} sectionId="triggers" />
-      </BriefCardContent>
-    </BriefCard>
   );
 }
 
@@ -1268,6 +1229,8 @@ export default function AccountBriefPage() {
             <BuyersCard committee={brief.buyingCommittee ?? []} />
             <DiscoveryQuestionsCard questions={brief.discoveryQuestions ?? []} />
             <ManualResearchTipsCard tips={brief.manualResearchTips ?? []} />
+
+            <CompanySnapshotCard brief={brief} />
 
             <BackgroundSection
               brief={brief}
