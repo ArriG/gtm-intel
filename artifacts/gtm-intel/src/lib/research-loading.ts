@@ -1,8 +1,10 @@
 import type { YourCompany } from "./your-company";
 
-const PACK_LOADING_LABELS: Record<string, string> = {
+/** Keep in sync with artifacts/api-server/src/prompts/pack-loader.ts */
+export const PACK_LOADING_LABELS: Record<string, string> = {
   "uk-dental": "Searching CQC, Companies House, Google reviews, and dental trade press — about 60 seconds...",
   "au-dental": "Searching AHPRA, ASIC, Seek, Google reviews, and dental trade press — about 60 seconds...",
+  "uk-financial-services": "Searching Companies House, FCA, UK jobs, and financial trade press — about 60 seconds...",
 };
 
 const PACK_RULES: Array<{
@@ -20,17 +22,28 @@ const PACK_RULES: Array<{
     geographies: ["au", "australia"],
     keywords: ["dental", "dental practice", "dental software", "practice management software", "pms", "chairside"],
   },
+  {
+    id: "uk-financial-services",
+    geographies: ["uk", "united kingdom", "england", "scotland", "wales"],
+    keywords: [
+      "insurance", "insurer", "reinsurance", "financial services", "banking", "bank",
+      "fintech", "underwriting", "wealth management", "asset management", "lender", "mortgage", "broking",
+    ],
+  },
 ];
 
 function normaliseGeo(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function profileText(yc: YourCompany): string {
+export function profileTextForPackMatch(yc: YourCompany): string {
   return [
+    yc.companyName,
     yc.industryServed,
     yc.oneLineDescription,
     yc.whatYouSell,
+    yc.customerOutcomes,
+    yc.whyNowPattern,
     ...yc.buyerTitles,
     ...yc.painPointsSolved,
     yc.painPoints,
@@ -53,25 +66,41 @@ function geoMatches(packGeographies: string[], userGeographies: string[]): boole
   );
 }
 
-/** Keep in sync with artifacts/api-server/src/prompts/pack-loader.ts */
-export function matchSectorPackId(yc: YourCompany): string | null {
-  if (!yc.geographies.length) return null;
+export function detectSectorPackClient(yc: YourCompany): {
+  packId: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
+} {
+  if (yc.sectorPackOverride?.trim()) {
+    return { packId: yc.sectorPackOverride.trim(), matchScore: 0, matchedKeywords: [] };
+  }
 
-  const text = profileText(yc);
-  let best: { id: string; score: number } | null = null;
+  if (!yc.geographies.length) {
+    return { packId: null, matchScore: 0, matchedKeywords: [] };
+  }
+
+  const text = profileTextForPackMatch(yc);
+  let best: { id: string; score: number; matched: string[] } | null = null;
 
   for (const rule of PACK_RULES) {
     if (!geoMatches(rule.geographies, yc.geographies)) continue;
 
-    const score = rule.keywords.reduce((total, keyword) => (
-      text.includes(keyword) ? total + 1 : total
-    ), 0);
-
+    const matched = rule.keywords.filter(keyword => text.includes(keyword));
+    const score = matched.length;
     if (score <= 0) continue;
-    if (!best || score > best.score) best = { id: rule.id, score };
+    if (!best || score > best.score) best = { id: rule.id, score, matched };
   }
 
-  return best?.id ?? null;
+  return {
+    packId: best?.id ?? null,
+    matchScore: best?.score ?? 0,
+    matchedKeywords: best?.matched ?? [],
+  };
+}
+
+export function matchSectorPackId(yc: YourCompany): string | null {
+  if (yc.sectorPackOverride?.trim()) return yc.sectorPackOverride.trim();
+  return detectSectorPackClient(yc).packId;
 }
 
 function defaultLoadingMessage(yc: YourCompany): string {

@@ -33,6 +33,16 @@ type ParsedFrontmatter = {
 const DEFAULT_LOADING_LABELS: Record<string, string> = {
   "uk-dental": "Searching CQC, Companies House, Google reviews, and dental trade press — about 60 seconds...",
   "au-dental": "Searching AHPRA, ASIC, Seek, Google reviews, and dental trade press — about 60 seconds...",
+  "uk-financial-services": "Searching Companies House, FCA, UK jobs, and financial trade press — about 60 seconds...",
+};
+
+export type SectorPackSelection = {
+  pack: SectorPack | null;
+  mode: "override" | "auto" | "legacy";
+  autoDetectedId: string | null;
+  autoDetectedName: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
 };
 
 function moduleDir(): string {
@@ -205,10 +215,13 @@ function normaliseGeo(value: string): string {
 
 function profileText(yourCompany: YourCompanyInput): string {
   return [
+    yourCompany.companyName,
     yourCompany.industryServed,
     yourCompany.whoYouSellTo,
     yourCompany.oneLineDescription,
     yourCompany.whatYouSell,
+    yourCompany.customerOutcomes,
+    yourCompany.whyNowPattern,
     ...(yourCompany.buyerTitles ?? []),
     ...(yourCompany.painPointsSolved ?? []),
     yourCompany.painPoints,
@@ -231,30 +244,89 @@ function geoMatches(packGeographies: string[], userGeographies: string[]): boole
   );
 }
 
-function keywordScore(packKeywords: string[], text: string): number {
-  return packKeywords.reduce((score, keyword) => (
-    text.includes(keyword.toLowerCase()) ? score + 1 : score
-  ), 0);
+function keywordScore(packKeywords: string[], text: string): { score: number; matched: string[] } {
+  const matched: string[] = [];
+  const score = packKeywords.reduce((total, keyword) => {
+    if (text.includes(keyword.toLowerCase())) {
+      matched.push(keyword);
+      return total + 1;
+    }
+    return total;
+  }, 0);
+  return { score, matched };
 }
 
-export function selectSectorPack(yourCompany?: YourCompanyInput): SectorPack | null {
-  if (!yourCompany?.geographies?.length) return null;
-
+function detectBestPack(yourCompany: YourCompanyInput): {
+  pack: SectorPack | null;
+  matchScore: number;
+  matchedKeywords: string[];
+} {
   const text = profileText(yourCompany);
-  let best: { pack: SectorPack; score: number } | null = null;
+  let best: { pack: SectorPack; score: number; matched: string[] } | null = null;
 
   for (const pack of loadSectorPacks()) {
-    if (!geoMatches(pack.geographies, yourCompany.geographies)) continue;
+    if (!geoMatches(pack.geographies, yourCompany.geographies ?? [])) continue;
 
-    const score = keywordScore(pack.keywords, text);
+    const { score, matched } = keywordScore(pack.keywords, text);
     if (score <= 0) continue;
 
     if (!best || score > best.score) {
-      best = { pack, score };
+      best = { pack, score, matched };
     }
   }
 
-  return best?.pack ?? null;
+  return {
+    pack: best?.pack ?? null,
+    matchScore: best?.score ?? 0,
+    matchedKeywords: best?.matched ?? [],
+  };
+}
+
+export function resolveSectorPackSelection(yourCompany?: YourCompanyInput): SectorPackSelection {
+  const auto = yourCompany?.geographies?.length
+    ? detectBestPack(yourCompany)
+    : { pack: null as SectorPack | null, matchScore: 0, matchedKeywords: [] as string[] };
+
+  const overrideId = yourCompany?.sectorPackOverride?.trim();
+  if (overrideId) {
+    const pack = loadSectorPacks().find(item => item.id === overrideId) ?? null;
+    return {
+      pack,
+      mode: "override",
+      autoDetectedId: auto.pack?.id ?? null,
+      autoDetectedName: auto.pack?.name ?? null,
+      matchScore: auto.matchScore,
+      matchedKeywords: auto.matchedKeywords,
+    };
+  }
+
+  if (auto.pack) {
+    return {
+      pack: auto.pack,
+      mode: "auto",
+      autoDetectedId: auto.pack.id,
+      autoDetectedName: auto.pack.name,
+      matchScore: auto.matchScore,
+      matchedKeywords: auto.matchedKeywords,
+    };
+  }
+
+  return {
+    pack: null,
+    mode: "legacy",
+    autoDetectedId: null,
+    autoDetectedName: null,
+    matchScore: 0,
+    matchedKeywords: [],
+  };
+}
+
+export function listSectorPackOptions(): SectorPackMeta[] {
+  return loadSectorPacks().map(({ body: _, ...meta }) => meta);
+}
+
+export function selectSectorPack(yourCompany?: YourCompanyInput): SectorPack | null {
+  return resolveSectorPackSelection(yourCompany).pack;
 }
 
 export function countSourcesInPack(body: string): number {
@@ -267,18 +339,22 @@ export function toResearchPackMeta(pack: SectorPack): SectorPackMeta {
   return meta;
 }
 
-/** Exported for frontend parity — keep in sync with selectSectorPack rules. */
+/** Exported for frontend parity — keep in sync with resolveSectorPackSelection rules. */
 export function matchSectorPackId(yourCompany: {
+  companyName?: string;
   geographies?: string[];
   industryServed?: string;
   whoYouSellTo?: string;
   oneLineDescription?: string;
   whatYouSell?: string;
+  customerOutcomes?: string;
+  whyNowPattern?: string;
+  sectorPackOverride?: string;
   buyerTitles?: string[];
   painPointsSolved?: string[];
   painPoints?: string;
 }): string | null {
-  return selectSectorPack(yourCompany)?.id ?? null;
+  return resolveSectorPackSelection(yourCompany).pack?.id ?? null;
 }
 
 export function getLoadingLabelForPackId(packId: string | null): string | null {

@@ -16,6 +16,9 @@ const EMPTY: YourCompany = {
   buyerTitles: [],
   painPointsSolved: [],
   customerOutcomes: "",
+  whyNowPattern: "",
+  reasoningOverrides: "",
+  sectorPackOverride: "",
 };
 
 /** Normalise free-text or saved data into the v2 shape (ignores v1 localStorage). */
@@ -41,6 +44,9 @@ function normaliseYourCompany(raw: Partial<YourCompany> | null | undefined): You
         ? raw.painPoints.split("\n").map(p => p.trim()).filter(Boolean)
         : [],
     customerOutcomes: raw.customerOutcomes?.trim() ?? "",
+    whyNowPattern: raw.whyNowPattern?.trim() ?? "",
+    reasoningOverrides: raw.reasoningOverrides?.trim() ?? "",
+    sectorPackOverride: raw.sectorPackOverride?.trim() ?? "",
     whatYouSell: raw.whatYouSell?.trim(),
     whoYouSellTo: raw.whoYouSellTo?.trim(),
     painPoints: raw.painPoints?.trim(),
@@ -61,6 +67,9 @@ function withLegacyFields(data: YourCompany): YourCompany {
     buyerTitles: data.buyerTitles.map(t => t.trim()).filter(Boolean),
     painPointsSolved,
     customerOutcomes: data.customerOutcomes?.trim() || undefined,
+    whyNowPattern: data.whyNowPattern?.trim() || undefined,
+    reasoningOverrides: data.reasoningOverrides?.trim() || undefined,
+    sectorPackOverride: data.sectorPackOverride?.trim() || undefined,
     whatYouSell: data.oneLineDescription.trim(),
     whoYouSellTo: [data.industryServed.trim(), ...geographies].filter(Boolean).join(" · "),
     painPoints: painPointsSolved.join("\n"),

@@ -34,6 +34,9 @@ import type {
   IcpUpdate,
   MarketProspectInput,
   MarketProspectResponse,
+  PreviewPromptInput,
+  PreviewPromptResponse,
+  SectorPackListResponse,
   Signal,
   SignalScanInput,
   SignalScanResponse,
@@ -335,6 +338,154 @@ export const useGenerateCallPrep = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGenerateCallPrepMutationOptions(options));
+    }
+
+export const getListSectorPacksUrl = () => {
+
+
+
+
+  return `/api/your-company/sector-packs`
+}
+
+/**
+ * @summary List available sector reasoning packs
+ */
+export const listSectorPacks = async ( options?: RequestInit): Promise<SectorPackListResponse> => {
+
+  return customFetch<SectorPackListResponse>(getListSectorPacksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSectorPacksQueryKey = () => {
+    return [
+    `/api/your-company/sector-packs`
+    ] as const;
+    }
+
+
+export const getListSectorPacksQueryOptions = <TData = Awaited<ReturnType<typeof listSectorPacks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSectorPacks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSectorPacksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSectorPacks>>> = ({ signal }) => listSectorPacks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSectorPacks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSectorPacksQueryResult = NonNullable<Awaited<ReturnType<typeof listSectorPacks>>>
+export type ListSectorPacksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List available sector reasoning packs
+ */
+
+export function useListSectorPacks<TData = Awaited<ReturnType<typeof listSectorPacks>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSectorPacks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSectorPacksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPreviewAccountBriefPromptUrl = () => {
+
+
+
+
+  return `/api/your-company/preview-prompt`
+}
+
+/**
+ * @summary Preview the composed account brief system prompt for a seller profile
+ */
+export const previewAccountBriefPrompt = async (previewPromptInput: PreviewPromptInput, options?: RequestInit): Promise<PreviewPromptResponse> => {
+
+  return customFetch<PreviewPromptResponse>(getPreviewAccountBriefPromptUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      previewPromptInput,)
+  }
+);}
+
+
+
+
+export const getPreviewAccountBriefPromptMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewAccountBriefPrompt>>, TError,{data: BodyType<PreviewPromptInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewAccountBriefPrompt>>, TError,{data: BodyType<PreviewPromptInput>}, TContext> => {
+
+const mutationKey = ['previewAccountBriefPrompt'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewAccountBriefPrompt>>, {data: BodyType<PreviewPromptInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewAccountBriefPrompt(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewAccountBriefPromptMutationResult = NonNullable<Awaited<ReturnType<typeof previewAccountBriefPrompt>>>
+    export type PreviewAccountBriefPromptMutationBody = BodyType<PreviewPromptInput>
+    export type PreviewAccountBriefPromptMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Preview the composed account brief system prompt for a seller profile
+ */
+export const usePreviewAccountBriefPrompt = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewAccountBriefPrompt>>, TError,{data: BodyType<PreviewPromptInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof previewAccountBriefPrompt>>,
+        TError,
+        {data: BodyType<PreviewPromptInput>},
+        TContext
+      > => {
+      return useMutation(getPreviewAccountBriefPromptMutationOptions(options));
     }
 
 export const getProspectMarketUrl = () => {

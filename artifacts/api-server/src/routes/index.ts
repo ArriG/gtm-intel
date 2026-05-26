@@ -6,6 +6,7 @@ import dashboardRouter from "./dashboard";
 import accountBriefRouter from "./account-brief";
 import marketProspectRouter from "./market-prospect";
 import signalRadarRouter from "./signal-radar";
+import yourCompanyRouter from "./your-company";
 
 const router: IRouter = Router();
 
@@ -14,6 +15,7 @@ router.use(dashboardRouter);
 router.use(icpsRouter);
 router.use(signalsRouter);
 router.use(signalRadarRouter);
+router.use(yourCompanyRouter);
 router.use(accountBriefRouter);
 router.use(marketProspectRouter);
 

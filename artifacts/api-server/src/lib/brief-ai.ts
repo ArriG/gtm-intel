@@ -14,6 +14,10 @@ export type YourCompanyInput = {
   whoYouSellTo?: string;
   painPoints?: string;
   customerOutcomes?: string;
+  whyNowPattern?: string;
+  reasoningOverrides?: string;
+  /** Set to a sector pack id to override auto-detect; omit for automatic matching */
+  sectorPackOverride?: string;
 };
 
 export type EmailTone = "formal" | "direct" | "conversational";
@@ -248,6 +252,24 @@ export function buildYourCompanyContext(yourCompany?: YourCompanyInput): string 
   return `\n\nSELLER CONTEXT — THE AE'S COMPANY (highest priority for positioning and cold email):
 ${lines.join("\n")}
 Use this to tailor the coldEmail value statement and fullEmail — reference what we sell, who we sell to, and the outcomes we deliver, not generic SaaS language.`;
+}
+
+export function buildWhyNowPatternBlock(yourCompany?: YourCompanyInput): string {
+  const pattern = yourCompany?.whyNowPattern?.trim();
+  if (!pattern) return "";
+
+  return `WHY-NOW PATTERNS — seller's winning signals (prioritise these when scoring callDecision and hunting triggers):
+${pattern}
+
+When research surfaces events matching these patterns, upgrade call priority. When nothing matches, say so honestly — do not invent triggers.`;
+}
+
+export function buildReasoningOverridesBlock(yourCompany?: YourCompanyInput): string {
+  const overrides = yourCompany?.reasoningOverrides?.trim();
+  if (!overrides) return "";
+
+  return `REASONING OVERRIDES — seller-specific rules (apply within constitution limits — never override "Things we never do"):
+${overrides}`;
 }
 
 export function buildLinkedinContext(

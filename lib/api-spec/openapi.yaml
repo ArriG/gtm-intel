@@ -18,6 +18,8 @@ tags:
     description: Dashboard summaries
   - name: account-brief
     description: AI-powered account brief generation
+  - name: your-company
+    description: Seller profile reasoning and prompt preview
 
 paths:
   /account-brief:
@@ -95,6 +97,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CallPrep"
+
+  /your-company/sector-packs:
+    get:
+      operationId: listSectorPacks
+      tags: [your-company]
+      summary: List available sector reasoning packs
+      responses:
+        "200":
+          description: Sector pack catalogue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectorPackListResponse"
+
+  /your-company/preview-prompt:
+    post:
+      operationId: previewAccountBriefPrompt
+      tags: [your-company]
+      summary: Preview the composed account brief system prompt for a seller profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewPromptInput"
+      responses:
+        "200":
+          description: Composed system prompt and sector pack detection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewPromptResponse"
 
   /market-prospect:
     post:
@@ -626,6 +660,99 @@ components:
         customerOutcomes:
           type: string
           description: Optional customer outcomes the AE can cite in outreach
+        whyNowPattern:
+          type: string
+          description: Patterns that make accounts worth calling now for this seller
+        reasoningOverrides:
+          type: string
+          description: Free-text reasoning rules appended to the system prompt
+        sectorPackOverride:
+          type: string
+          description: Sector pack id to use instead of auto-detect; omit or empty for automatic matching
+
+    SectorPackOption:
+      type: object
+      required:
+        - id
+        - name
+        - version
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: integer
+        geographies:
+          type: array
+          items:
+            type: string
+
+    SectorPackSelectionMeta:
+      type: object
+      required:
+        - mode
+        - matchScore
+        - matchedKeywords
+      properties:
+        mode:
+          type: string
+          enum: [auto, override, legacy]
+        packId:
+          type: string
+          nullable: true
+        packName:
+          type: string
+          nullable: true
+        autoDetectedId:
+          type: string
+          nullable: true
+          description: Auto-detected pack id when override is set
+        autoDetectedName:
+          type: string
+          nullable: true
+        matchScore:
+          type: integer
+        matchedKeywords:
+          type: array
+          items:
+            type: string
+
+    SectorPackListResponse:
+      type: object
+      required:
+        - packs
+      properties:
+        packs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorPackOption"
+
+    PreviewPromptInput:
+      type: object
+      required:
+        - yourCompany
+      properties:
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    PreviewPromptResponse:
+      type: object
+      required:
+        - systemPrompt
+        - sectorPackSelection
+        - availablePacks
+      properties:
+        systemPrompt:
+          type: string
+        sectorPackSelection:
+          $ref: "#/components/schemas/SectorPackSelectionMeta"
+        researchPack:
+          $ref: "#/components/schemas/ResearchPackMeta"
+        availablePacks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorPackOption"
 
     EmailTone:
       type: string

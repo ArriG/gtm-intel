@@ -129,6 +129,12 @@ export interface YourCompany {
   painPoints?: string;
   /** Optional customer outcomes the AE can cite in outreach */
   customerOutcomes?: string;
+  /** Patterns that make accounts worth calling now for this seller */
+  whyNowPattern?: string;
+  /** Free-text reasoning rules appended to the system prompt */
+  reasoningOverrides?: string;
+  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
+  sectorPackOverride?: string;
 }
 
 export interface SignalScanInput {
@@ -215,6 +221,58 @@ export interface LinkedInPost {
   content: string;
 }
 
+export interface SectorPackOption {
+  id: string;
+  name: string;
+  version: number;
+  geographies?: string[];
+}
+
+export type SectorPackSelectionMetaMode = typeof SectorPackSelectionMetaMode[keyof typeof SectorPackSelectionMetaMode];
+
+
+export const SectorPackSelectionMetaMode = {
+  auto: 'auto',
+  override: 'override',
+  legacy: 'legacy',
+} as const;
+
+export interface SectorPackSelectionMeta {
+  mode: SectorPackSelectionMetaMode;
+  packId?: string | null;
+  packName?: string | null;
+  /** Auto-detected pack id when override is set */
+  autoDetectedId?: string | null;
+  autoDetectedName?: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
+}
+
+export interface SectorPackListResponse {
+  packs: SectorPackOption[];
+}
+
+export interface PreviewPromptInput {
+  yourCompany: YourCompany;
+}
+
+export interface ResearchPackMeta {
+  /** Sector pack identifier, e.g. uk-dental */
+  id: string;
+  name: string;
+  version: number;
+  lastReviewed?: string;
+  loadingLabel: string;
+  expectedSeconds: number;
+}
+
+export interface PreviewPromptResponse {
+  systemPrompt: string;
+  sectorPackSelection: SectorPackSelectionMeta;
+  researchPack?: ResearchPackMeta;
+  availablePacks: SectorPackOption[];
+}
+
 export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
 
 
@@ -281,16 +339,6 @@ export interface DiscoveryQuestion {
 export interface ManualResearchTip {
   tip: string;
   reason?: string;
-}
-
-export interface ResearchPackMeta {
-  /** Sector pack identifier, e.g. uk-dental */
-  id: string;
-  name: string;
-  version: number;
-  lastReviewed?: string;
-  loadingLabel: string;
-  expectedSeconds: number;
 }
 
 export type AccountBriefCompanySnapshot = {

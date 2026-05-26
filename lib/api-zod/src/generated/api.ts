@@ -29,7 +29,10 @@ export const GenerateAccountBriefBody = zod.object({
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
   "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context'),
   "emailTone": zod.enum(['formal', 'direct', 'conversational']).optional()
 })
@@ -289,7 +292,10 @@ export const RegenerateColdEmailBody = zod.object({
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
   "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 }).and(zod.object({
   "emailTone": zod.enum(['formal', 'direct', 'conversational'])
@@ -445,7 +451,10 @@ export const GenerateTalkTrackBody = zod.object({
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
   "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 
@@ -596,7 +605,10 @@ export const GenerateCallPrepBody = zod.object({
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
   "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 }).and(zod.object({
   "meetingType": zod.enum(['discovery', 'demo', 'renewal'])
@@ -624,6 +636,69 @@ export const GenerateCallPrepResponse = zod.object({
 
 
 /**
+ * @summary List available sector reasoning packs
+ */
+export const ListSectorPacksResponse = zod.object({
+  "packs": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "version": zod.number(),
+  "geographies": zod.array(zod.string()).optional()
+}))
+})
+
+
+/**
+ * @summary Preview the composed account brief system prompt for a seller profile
+ */
+export const PreviewAccountBriefPromptBody = zod.object({
+  "yourCompany": zod.object({
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
+}).describe('Seller profile stored client-side; sent per request for prompt context')
+})
+
+export const PreviewAccountBriefPromptResponse = zod.object({
+  "systemPrompt": zod.string(),
+  "sectorPackSelection": zod.object({
+  "mode": zod.enum(['auto', 'override', 'legacy']),
+  "packId": zod.string().nullish(),
+  "packName": zod.string().nullish(),
+  "autoDetectedId": zod.string().nullish().describe('Auto-detected pack id when override is set'),
+  "autoDetectedName": zod.string().nullish(),
+  "matchScore": zod.number(),
+  "matchedKeywords": zod.array(zod.string())
+}),
+  "researchPack": zod.object({
+  "id": zod.string().describe('Sector pack identifier, e.g. uk-dental'),
+  "name": zod.string(),
+  "version": zod.number(),
+  "lastReviewed": zod.string().optional(),
+  "loadingLabel": zod.string(),
+  "expectedSeconds": zod.number()
+}).optional(),
+  "availablePacks": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "version": zod.number(),
+  "geographies": zod.array(zod.string()).optional()
+}))
+})
+
+
+/**
  * @summary Find matching companies for a target market description
  */
 export const ProspectMarketBody = zod.object({
@@ -639,7 +714,10 @@ export const ProspectMarketBody = zod.object({
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
   "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 
@@ -814,7 +892,10 @@ export const RunSignalRadarBody = zod.object({
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
   "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
   "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach')
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
 }).optional().describe('Seller profile stored client-side; sent per request for prompt context')
 })
 

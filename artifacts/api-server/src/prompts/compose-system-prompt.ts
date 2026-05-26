@@ -1,4 +1,8 @@
 import type { YourCompanyInput } from "../lib/brief-ai";
+import {
+  buildReasoningOverridesBlock,
+  buildWhyNowPatternBlock,
+} from "../lib/brief-ai";
 import { buildBuyerMotionPromptBlock } from "../lib/brief-motion";
 import {
   buildResearchSourceInstructions,
@@ -8,14 +12,16 @@ import { BRIEF_RESPONSE_FORMAT } from "./brief-response-format";
 import {
   countSourcesInPack,
   loadConstitution,
-  selectSectorPack,
+  resolveSectorPackSelection,
   toResearchPackMeta,
   type SectorPackMeta,
+  type SectorPackSelection,
 } from "./pack-loader";
 
 export type ComposedBriefPrompt = {
   systemPrompt: string;
   researchPack: SectorPackMeta | null;
+  sectorPackSelection: SectorPackSelection;
   enabledSourceCount: number;
   timeoutMs: number;
   speedSeconds: number;
@@ -37,7 +43,8 @@ When given a company URL, follow the sector pack above. Search across these HIGH
 
 export function composeAccountBriefPrompt(yourCompany?: YourCompanyInput): ComposedBriefPrompt {
   const constitution = loadConstitution();
-  const pack = selectSectorPack(yourCompany);
+  const selection = resolveSectorPackSelection(yourCompany);
+  const pack = selection.pack;
 
   const sourceBlock = pack
     ? buildSectorPackSourceBlock(pack.body)
@@ -50,23 +57,27 @@ export function composeAccountBriefPrompt(yourCompany?: YourCompanyInput): Compo
   const speedSeconds = pack?.expectedSeconds ?? 45;
   const timeoutMs = (pack?.expectedSeconds ?? 55) * 1000 + 10_000;
   const researchPack = pack ? toResearchPackMeta(pack) : null;
+  const whyNowBlock = buildWhyNowPatternBlock(yourCompany);
+  const reasoningBlock = buildReasoningOverridesBlock(yourCompany);
   const buyerMotionBlock = buildBuyerMotionPromptBlock(yourCompany);
 
-  const systemPrompt = `You are a world-class GTM research analyst.
-
-${constitution}
-
-${sourceBlock}
-
-${buyerMotionBlock}
-
-${buildSpeedInstruction(speedSeconds)}
-
-${BRIEF_RESPONSE_FORMAT}`;
+  const systemPrompt = [
+    "You are a world-class GTM research analyst.",
+    "",
+    constitution,
+    "",
+    sourceBlock,
+    whyNowBlock,
+    reasoningBlock,
+    buyerMotionBlock,
+    buildSpeedInstruction(speedSeconds),
+    BRIEF_RESPONSE_FORMAT,
+  ].filter(Boolean).join("\n\n");
 
   return {
     systemPrompt,
     researchPack,
+    sectorPackSelection: selection,
     enabledSourceCount,
     timeoutMs,
     speedSeconds,

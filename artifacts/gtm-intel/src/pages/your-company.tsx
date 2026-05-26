@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, Pencil, Building2 } from "lucide-react";
+import { Check, ArrowRight, Pencil, Building2, Brain } from "lucide-react";
 import { BearMark } from "@/components/bear-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,7 @@ function toFormState(data: YourCompany): FormState {
   };
 }
 
-function formToYourCompany(form: FormState): YourCompany {
+function formToYourCompany(form: FormState, existing?: YourCompany): YourCompany {
   return {
     companyName: form.companyName.trim(),
     oneLineDescription: form.oneLineDescription.trim(),
@@ -57,6 +57,9 @@ function formToYourCompany(form: FormState): YourCompany {
     buyerTitles: linesToList(form.buyerTitlesText),
     painPointsSolved: linesToList(form.painPointsText),
     customerOutcomes: form.customerOutcomes.trim() || undefined,
+    whyNowPattern: existing?.whyNowPattern,
+    reasoningOverrides: existing?.reasoningOverrides,
+    sectorPackOverride: existing?.sectorPackOverride,
   };
 }
 
@@ -105,6 +108,12 @@ function ProfileSummary({ profile, onEdit }: { profile: YourCompany; onEdit: () 
           <Button className="gap-1.5">
             Research an account
             <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+        <Link href="/reasoning">
+          <Button variant="outline" className="gap-1.5">
+            <Brain className="w-4 h-4" />
+            Reasoning settings
           </Button>
         </Link>
         <Button variant="outline" onClick={onEdit} className="gap-1.5">
@@ -160,7 +169,7 @@ export default function YourCompanyPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const next = formToYourCompany(form);
+    const next = formToYourCompany(form, loadYourCompany());
     const problems = validate(next);
     if (problems.length > 0) {
       setErrors(problems);

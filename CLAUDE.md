@@ -88,6 +88,14 @@ Account briefs derive research sources automatically from Your Company (geograph
 
 - **Milestone 3:** Flexible Brief schema — up to 3 relevant decision-makers regardless of deal size *(shipped on branch)*
 
+## Milestone 4 — Reasoning UI *(shipped on branch)*
+
+- Auto-detect sector pack from Your Company profile (geographies + industry + what you sell + company name)
+- Optional manual pack override on `/reasoning`
+- `whyNowPattern` and `reasoningOverrides` fields wired into composed system prompt
+- `POST /api/your-company/preview-prompt` + Reasoning sidebar page with prompt preview
+- New sector pack: `uk-financial-services.md`
+
 ## Milestone 2 — Automatic research sources (commit `89acbcf`)
 
 - Account brief prompt derives UK/AU/NZ/US sources from Your Company — no separate source-plan step or UI
