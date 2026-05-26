@@ -437,28 +437,31 @@ function CompactSnapshot({ brief }: { brief: AccountBrief }) {
   const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean);
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground leading-snug">{meta.join(" · ")}</p>
-
-      {showTech && (
-        <p className="text-sm leading-snug">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-2">Tech</span>
-          <span className="font-medium text-foreground">{tech}</span>
-        </p>
-      )}
-
-      {pains.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Possible pain points</p>
-          <ul className="space-y-1">
-            {pains.map((pain, i) => (
-              <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/30">
-                {pain}
-              </li>
-            ))}
-          </ul>
+    <div className="space-y-4">
+      <div className={pains.length > 0 ? "grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8" : "space-y-3"}>
+        <div className="space-y-3 min-w-0">
+          <p className="text-sm text-muted-foreground leading-snug">{meta.join(" · ")}</p>
+          {showTech && (
+            <p className="text-sm leading-snug">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-2">Tech</span>
+              <span className="font-medium text-foreground">{tech}</span>
+            </p>
+          )}
         </div>
-      )}
+
+        {pains.length > 0 && (
+          <div className="min-w-0 md:border-l md:border-border md:pl-6">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Possible pain points</p>
+            <ul className="space-y-2">
+              {pains.map((pain, i) => (
+                <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/30">
+                  {pain}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       <SourceChips sources={snap.sources} sectionId="snapshot" />
     </div>
