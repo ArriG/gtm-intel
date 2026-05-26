@@ -31,6 +31,7 @@ Structure the brief as a CALL DECISION tool. Populate call-ready fields first in
     {
       "name": "Jane Smith or empty string if not found",
       "title": "Principal",
+      "buyingRole": "decision_maker",
       "painPoint": "Specific pain for this person at this company — their language, not generic SaaS",
       "linkedinSignal": "Exact quote from their post if found, otherwise empty string",
       "sources": [
@@ -98,7 +99,7 @@ RULES — call-ready output:
 - callDecision.justification: one sentence only. Must match the priority rubric in the constitution.
 - coldEmail.opener: reference a specific signal. Tag stale signals (6+ months) with the date inline.
 - recentTriggers.items: 0-2 items. Empty array is OK if nothing found — do not invent triggers.
-- buyingCommittee: 1-2 people maximum. Include name when found. "No public signal found" is OK in linkedinSignal as empty string.
+- buyingCommittee: up to 3 relevant decision-makers maximum — quality over count. Include name when found. Empty linkedinSignal is OK when no public post was found.
 - discoveryQuestions: exactly 3 when possible. Each must reference a specific finding — never generic discovery scripts.
 - manualResearchTips: 2-4 items from sector pack manual tips when relevant; honest about what AI could not search.
 - companySnapshot, icpFitScore, theirWorld: background context — still required but keep concise.

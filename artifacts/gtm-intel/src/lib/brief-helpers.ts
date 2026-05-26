@@ -1,5 +1,7 @@
 import type { AccountBrief, CallPriority } from "@workspace/api-client-react";
 
+export const MAX_BUYERS = 3;
+
 export function fitHighlights(brief: AccountBrief): string[] {
   if (brief.icpFitScore.highlights?.length) return brief.icpFitScore.highlights;
   if (brief.icpFitScore.reason?.trim()) return [brief.icpFitScore.reason.trim()];
@@ -67,4 +69,8 @@ export function callPriorityStyles(priority: CallPriority): {
 export function buyerDisplayName(member: { name?: string; title: string }): string {
   const name = member.name?.trim();
   return name ? `${name} · ${member.title}` : member.title;
+}
+
+export function buyerExportLine(member: { name?: string; title: string; painPoint: string }): string {
+  return `• ${buyerDisplayName(member)}: ${member.painPoint}`;
 }

@@ -31,6 +31,7 @@ import {
   callPriorityLabel,
   callPriorityStyles,
   fitHighlights,
+  MAX_BUYERS,
   snapshotPainPoints,
   worldBullets,
 } from "@/lib/brief-helpers";
@@ -161,11 +162,11 @@ function BuyersCard({ committee }: { committee: BuyingCommitteeMember[] }) {
     <BriefCard>
       <BriefCardHeader>
         <BriefCardTitle><Users className="w-4 h-4 text-primary" />Who to call</BriefCardTitle>
-        <CopyButton getText={() => committee.map(p => `${buyerDisplayName(p)}: ${p.painPoint}`).join("\n")} />
+        <CopyButton getText={() => committee.slice(0, MAX_BUYERS).map(p => `${buyerDisplayName(p)}: ${p.painPoint}`).join("\n")} />
       </BriefCardHeader>
       <BriefCardContent>
         <div className="space-y-3">
-          {committee.slice(0, 2).map((person, i) => (
+          {committee.slice(0, MAX_BUYERS).map((person, i) => (
             <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-secondary border border-border">
               <ContactAvatar title={person.name?.trim() || person.title} />
               <div className="flex-1 min-w-0">

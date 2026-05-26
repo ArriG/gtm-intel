@@ -86,7 +86,7 @@ Account briefs derive research sources automatically from Your Company (geograph
 
 ## Next milestones (not built yet)
 
-- **Milestone 3:** Flexible Brief schema — enterprise buying committee vs SMB single decision-maker based on `dealSize`
+- **Milestone 3:** Flexible Brief schema — up to 3 relevant decision-makers regardless of deal size *(shipped on branch)*
 
 ## Milestone 2 — Automatic research sources (commit `89acbcf`)
 

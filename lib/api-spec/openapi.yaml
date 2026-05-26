@@ -844,6 +844,11 @@ components:
         reason:
           type: string
 
+    BuyingRole:
+      type: string
+      enum: [decision_maker, champion, economic_buyer, technical, influencer]
+      description: Optional role in the buying process when inferrable from research
+
     BuyingCommitteeMember:
       type: object
       required:
@@ -855,6 +860,8 @@ components:
           description: Person's name when found in research; omit if unknown
         title:
           type: string
+        buyingRole:
+          $ref: "#/components/schemas/BuyingRole"
         painPoint:
           type: string
         linkedinSignal:

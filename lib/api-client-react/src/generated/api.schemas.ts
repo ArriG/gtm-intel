@@ -224,10 +224,25 @@ export const EmailTone = {
   conversational: 'conversational',
 } as const;
 
+/**
+ * Optional role in the buying process when inferrable from research
+ */
+export type BuyingRole = typeof BuyingRole[keyof typeof BuyingRole];
+
+
+export const BuyingRole = {
+  decision_maker: 'decision_maker',
+  champion: 'champion',
+  economic_buyer: 'economic_buyer',
+  technical: 'technical',
+  influencer: 'influencer',
+} as const;
+
 export interface BuyingCommitteeMember {
   /** Person's name when found in research; omit if unknown */
   name?: string;
   title: string;
+  buyingRole?: BuyingRole;
   painPoint: string;
   linkedinSignal?: string;
   sources?: BriefSource[];

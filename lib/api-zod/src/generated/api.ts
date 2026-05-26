@@ -66,6 +66,7 @@ export const GenerateAccountBriefResponse = zod.object({
   "buyingCommittee": zod.array(zod.object({
   "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
+  "buyingRole": zod.enum(['decision_maker', 'champion', 'economic_buyer', 'technical', 'influencer']).optional().describe('Optional role in the buying process when inferrable from research'),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
   "sources": zod.array(zod.object({
@@ -188,6 +189,7 @@ export const RegenerateColdEmailBody = zod.object({
   "buyingCommittee": zod.array(zod.object({
   "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
+  "buyingRole": zod.enum(['decision_maker', 'champion', 'economic_buyer', 'technical', 'influencer']).optional().describe('Optional role in the buying process when inferrable from research'),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
   "sources": zod.array(zod.object({
@@ -343,6 +345,7 @@ export const GenerateTalkTrackBody = zod.object({
   "buyingCommittee": zod.array(zod.object({
   "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
+  "buyingRole": zod.enum(['decision_maker', 'champion', 'economic_buyer', 'technical', 'influencer']).optional().describe('Optional role in the buying process when inferrable from research'),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
   "sources": zod.array(zod.object({
@@ -493,6 +496,7 @@ export const GenerateCallPrepBody = zod.object({
   "buyingCommittee": zod.array(zod.object({
   "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
+  "buyingRole": zod.enum(['decision_maker', 'champion', 'economic_buyer', 'technical', 'influencer']).optional().describe('Optional role in the buying process when inferrable from research'),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
   "sources": zod.array(zod.object({

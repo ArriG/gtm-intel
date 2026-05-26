@@ -2,6 +2,7 @@ import type { AccountBrief, TalkTrack } from "@workspace/api-client-react";
 import { stripCitationTags } from "./strip-citations";
 import {
   buyerDisplayName,
+  buyerExportLine,
   callPriorityLabel,
   fitHighlights,
   worldBullets,
@@ -41,7 +42,7 @@ export function formatBriefForExport(brief: AccountBrief, companyName: string, t
   const committee = brief.buyingCommittee ?? [];
   if (committee.length > 0) {
     lines.push(`=== WHO TO CALL ===`);
-    lines.push(...committee.map(p => `• ${buyerDisplayName(p)}: ${p.painPoint}`));
+    lines.push(...committee.map(p => buyerExportLine(p)));
     lines.push(``);
   }
 
@@ -134,7 +135,7 @@ ${callBlock}
 <h2>Why Now</h2>
 <ul>${(brief.recentTriggers?.items ?? []).map(t => `<li>${t.event} (${t.recency}) — ${t.significance}</li>`).join("")}</ul>
 <h2>Who to Call</h2>
-<ul>${(brief.buyingCommittee ?? []).map(p => `<li><strong>${buyerDisplayName(p)}</strong>: ${p.painPoint}</li>`).join("")}</ul>
+<ul>${(brief.buyingCommittee ?? []).slice(0, 3).map(p => `<li><strong>${buyerDisplayName(p)}</strong>: ${p.painPoint}</li>`).join("")}</ul>
 ${questionsBlock}
 ${tipsBlock}
 <h2>Background</h2>

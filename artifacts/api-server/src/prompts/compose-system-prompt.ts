@@ -1,4 +1,5 @@
 import type { YourCompanyInput } from "../lib/brief-ai";
+import { buildBuyerMotionPromptBlock } from "../lib/brief-motion";
 import {
   buildResearchSourceInstructions,
   countConfiguredSources,
@@ -49,12 +50,15 @@ export function composeAccountBriefPrompt(yourCompany?: YourCompanyInput): Compo
   const speedSeconds = pack?.expectedSeconds ?? 45;
   const timeoutMs = (pack?.expectedSeconds ?? 55) * 1000 + 10_000;
   const researchPack = pack ? toResearchPackMeta(pack) : null;
+  const buyerMotionBlock = buildBuyerMotionPromptBlock(yourCompany);
 
   const systemPrompt = `You are a world-class GTM research analyst.
 
 ${constitution}
 
 ${sourceBlock}
+
+${buyerMotionBlock}
 
 ${buildSpeedInstruction(speedSeconds)}
 

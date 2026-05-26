@@ -1,3 +1,5 @@
+import { MAX_BUYERS } from "./brief-motion";
+
 type CallPriority = "hot" | "warm" | "watch" | "skip";
 
 type TriggerItem = {
@@ -98,8 +100,8 @@ export function normalizeAccountBrief(brief: Record<string, unknown>): Record<st
     normalized.manualResearchTips = [];
   }
 
-  if (Array.isArray(normalized.buyingCommittee) && normalized.buyingCommittee.length > 2) {
-    normalized.buyingCommittee = normalized.buyingCommittee.slice(0, 2);
+  if (Array.isArray(normalized.buyingCommittee) && normalized.buyingCommittee.length > MAX_BUYERS) {
+    normalized.buyingCommittee = normalized.buyingCommittee.slice(0, MAX_BUYERS);
   }
 
   return normalized;

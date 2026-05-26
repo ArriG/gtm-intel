@@ -21,6 +21,7 @@ export * from './briefSource';
 export * from './briefSourceConfidence';
 export * from './briefSourceType';
 export * from './buyingCommitteeMember';
+export * from './buyingRole';
 export * from './callDecision';
 export * from './callPrep';
 export * from './callPrepInput';
