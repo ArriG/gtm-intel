@@ -225,6 +225,8 @@ export const EmailTone = {
 } as const;
 
 export interface BuyingCommitteeMember {
+  /** Person's name when found in research; omit if unknown */
+  name?: string;
   title: string;
   painPoint: string;
   linkedinSignal?: string;
@@ -235,6 +237,35 @@ export interface AccountBriefRecentTriggerItem {
   event: string;
   significance: string;
   recency: string;
+}
+
+export type CallPriority = typeof CallPriority[keyof typeof CallPriority];
+
+
+export const CallPriority = {
+  hot: 'hot',
+  warm: 'warm',
+  watch: 'watch',
+  skip: 'skip',
+} as const;
+
+export interface CallDecision {
+  priority: CallPriority;
+  /** One sentence — why call (or not) this week */
+  justification: string;
+  sources?: BriefSource[];
+}
+
+export interface DiscoveryQuestion {
+  question: string;
+  /** The specific research finding this question references */
+  tiedToSignal?: string;
+  confidence?: BriefSourceConfidence;
+}
+
+export interface ManualResearchTip {
+  tip: string;
+  reason?: string;
 }
 
 export interface ResearchPackMeta {
@@ -303,6 +334,12 @@ export interface AccountBrief {
   theirWorld: AccountBriefTheirWorld;
   recentTriggers: AccountBriefRecentTriggers;
   coldEmail: AccountBriefColdEmailProperty;
+  /** Should this account be called this week, and why */
+  callDecision?: CallDecision;
+  /** Up to 3 discovery questions tied to specific found signals */
+  discoveryQuestions?: DiscoveryQuestion[];
+  /** Sources the AE should check manually before calling */
+  manualResearchTips?: ManualResearchTip[];
   sourceSummary?: AccountBriefSourceSummary;
   /** Sector reasoning pack used to generate this brief */
   researchPack?: ResearchPackMeta;

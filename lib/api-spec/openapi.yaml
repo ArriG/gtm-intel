@@ -801,12 +801,58 @@ components:
         emailTone:
           $ref: "#/components/schemas/EmailTone"
 
+    CallPriority:
+      type: string
+      enum: [hot, warm, watch, skip]
+
+    CallDecision:
+      type: object
+      required:
+        - priority
+        - justification
+      properties:
+        priority:
+          $ref: "#/components/schemas/CallPriority"
+        justification:
+          type: string
+          description: One sentence — why call (or not) this week
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    DiscoveryQuestion:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+        tiedToSignal:
+          type: string
+          description: The specific research finding this question references
+        confidence:
+          $ref: "#/components/schemas/BriefSourceConfidence"
+
+    ManualResearchTip:
+      type: object
+      required:
+        - tip
+      properties:
+        tip:
+          type: string
+        reason:
+          type: string
+
     BuyingCommitteeMember:
       type: object
       required:
         - title
         - painPoint
       properties:
+        name:
+          type: string
+          description: Person's name when found in research; omit if unknown
         title:
           type: string
         painPoint:
@@ -962,6 +1008,19 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/BriefSource"
+        callDecision:
+          $ref: "#/components/schemas/CallDecision"
+          description: Should this account be called this week, and why
+        discoveryQuestions:
+          type: array
+          description: Up to 3 discovery questions tied to specific found signals
+          items:
+            $ref: "#/components/schemas/DiscoveryQuestion"
+        manualResearchTips:
+          type: array
+          description: Sources the AE should check manually before calling
+          items:
+            $ref: "#/components/schemas/ManualResearchTip"
         sourceSummary:
           type: object
           required:

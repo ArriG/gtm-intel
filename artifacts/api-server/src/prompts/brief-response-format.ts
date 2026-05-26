@@ -1,19 +1,65 @@
 export const BRIEF_RESPONSE_FORMAT = `For each source that produces useful information, record it in the sources arrays using these types: "web", "abn", "asic", "seek_job", "linkedin", "industry_press", "assumed".
 Confidence levels: "verified" = direct quote or official filing, "informed" = strong contextual signal, "assumed" = educated inference.
 
-RESPONSE FORMAT — return ONLY valid JSON, no markdown, no preamble:
+RESPONSE FORMAT — return ONLY valid JSON, no markdown, no preamble.
+Structure the brief as a CALL DECISION tool. Populate call-ready fields first in your reasoning, then background.
 
 {
+  "callDecision": {
+    "priority": "hot | warm | watch | skip",
+    "justification": "One sentence — should the seller call this account this week, and why",
+    "sources": [
+      { "type": "industry_press", "label": "Trigger source", "detail": "What drove the priority", "url": "", "confidence": "verified" }
+    ]
+  },
+  "coldEmail": {
+    "opener": "One sentence the AE can say on a cold call or email — must reference a verified or informed signal with date if 6+ months old",
+    "fullEmail": "Subject: [subject line]\\n\\nHi [First name],\\n\\n[Opening referencing a specific signal]\\n\\n[Value statement — outcome not features]\\n\\nWorth a 15-minute call to see if it fits?\\n\\n[Your name]",
+    "sources": [
+      { "type": "seek_job", "label": "Signal used", "detail": "What informed the opener", "url": "", "confidence": "informed" }
+    ]
+  },
+  "recentTriggers": {
+    "items": [
+      { "event": "Specific trigger event", "significance": "Why this matters for outreach", "recency": "e.g. 3 weeks ago" }
+    ],
+    "sources": [
+      { "type": "industry_press", "label": "Source label", "detail": "What you found", "url": "", "confidence": "verified" }
+    ]
+  },
+  "buyingCommittee": [
+    {
+      "name": "Jane Smith or empty string if not found",
+      "title": "Principal",
+      "painPoint": "Specific pain for this person at this company — their language, not generic SaaS",
+      "linkedinSignal": "Exact quote from their post if found, otherwise empty string",
+      "sources": [
+        { "type": "linkedin", "label": "LinkedIn post", "detail": "What they posted", "url": "", "confidence": "verified" }
+      ]
+    }
+  ],
+  "discoveryQuestions": [
+    {
+      "question": "Open question tied to a specific finding — max 18 words",
+      "tiedToSignal": "The signal this question references",
+      "confidence": "informed"
+    }
+  ],
+  "manualResearchTips": [
+    {
+      "tip": "Spend 10 minutes in [forum/community] before calling",
+      "reason": "Why AI could not reach this source"
+    }
+  ],
   "companySnapshot": {
     "size": "e.g. 50-200 employees",
-    "industry": "e.g. Financial Services / Mortgage Broking",
-    "location": "e.g. Sydney, NSW, Australia",
-    "fundingStage": "e.g. Series A or Bootstrapped or Unknown",
+    "industry": "e.g. Dental Practice",
+    "location": "e.g. Manchester, UK",
+    "fundingStage": "e.g. Bootstrapped or Unknown",
     "abn": "e.g. 12 345 678 901 or Not found",
-    "techStack": "e.g. Salesforce, Xero — comma-separated, or Not detected",
+    "techStack": "e.g. SOE, Xero — or Not detected",
     "possiblePainPoints": [
-      "Specific likely pain from job ads or press — e.g. Manual underwriting workflows slowing quote turnaround",
-      "Second pain inferred from hiring or positioning — max 12 words each"
+      "Specific likely pain from research — max 15 words each"
     ],
     "sources": [
       { "type": "web", "label": "Company website", "detail": "Key facts found", "url": "", "confidence": "verified" }
@@ -22,85 +68,40 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown, no preamble:
   "icpFitScore": {
     "score": 7,
     "highlights": [
-      "Matches enterprise UK insurer profile you sell into",
-      "Hiring underwriters signals workflow pain you solve",
-      "Weak signal: no recent trigger — fit is structural not timing"
+      "Why fit or no-fit vs seller context — max 3 bullets"
     ],
-    "reason": "Optional legacy one-liner if needed",
+    "reason": "Optional legacy one-liner",
     "sources": [
-      { "type": "assumed", "label": "Inferred from company profile", "detail": "Reasoning", "url": "", "confidence": "assumed" }
+      { "type": "assumed", "label": "Inferred from profile", "detail": "Reasoning", "url": "", "confidence": "assumed" }
     ]
   },
-  "buyingCommittee": [
-    {
-      "title": "CFO",
-      "painPoint": "Specific pain point for this persona at this company.",
-      "linkedinSignal": "Direct quote from their LinkedIn post if found, otherwise empty string",
-      "sources": [
-        { "type": "linkedin", "label": "LinkedIn post", "detail": "What they posted", "url": "", "confidence": "verified" }
-      ]
-    },
-    {
-      "title": "Head of Operations",
-      "painPoint": "Specific pain point inferred from job postings or website.",
-      "linkedinSignal": "",
-      "sources": [
-        { "type": "seek_job", "label": "Seek job posting", "detail": "Signal from job description", "url": "", "confidence": "informed" }
-      ]
-    },
-    {
-      "title": "CEO / Founder",
-      "painPoint": "Strategic pain point for this persona.",
-      "linkedinSignal": "",
-      "sources": [
-        { "type": "web", "label": "Company website", "detail": "Inferred from positioning", "url": "", "confidence": "assumed" }
-      ]
-    }
-  ],
   "theirWorld": {
     "bullets": [
-      "Under pressure to cut quote turnaround — hiring ops roles to fix it",
-      "Regulatory scrutiny increasing; need audit-ready underwriting trails",
-      "Leadership publicly prioritising digital transformation this year"
+      "Pressure or priority in present tense — 3-4 bullets max"
     ],
     "confidence": "medium",
     "sources": [
-      { "type": "seek_job", "label": "Job posting", "detail": "Specific operational signal", "url": "", "confidence": "informed" },
-      { "type": "industry_press", "label": "Press", "detail": "Market context", "url": "", "confidence": "verified" }
-    ]
-  },
-  "recentTriggers": {
-    "items": [
-      { "event": "Specific trigger event", "significance": "Why this matters for outreach", "recency": "e.g. 3 weeks ago" },
-      { "event": "Second trigger event", "significance": "Why this matters", "recency": "e.g. 2 months ago" }
-    ],
-    "sources": [
-      { "type": "industry_press", "label": "Source label", "detail": "What you found", "url": "", "confidence": "verified" }
-    ]
-  },
-  "coldEmail": {
-    "opener": "One compelling personalised sentence referencing a specific verified signal.",
-    "fullEmail": "Subject: [subject line]\\n\\nHi [First name],\\n\\n[Opening referencing a specific signal — job posting, news, or LinkedIn post]\\n\\n[Value statement relevant to their situation — outcome not features]\\n\\nWorth a 15-minute call to see if it fits?\\n\\n[Your name]",
-    "sources": [
-      { "type": "seek_job", "label": "Signal used for personalisation", "detail": "What informed the opener", "url": "", "confidence": "informed" }
+      { "type": "seek_job", "label": "Job posting", "detail": "Operational signal", "url": "", "confidence": "informed" }
     ]
   },
   "sourceSummary": {
     "totalSources": 4,
-    "sourceTypes": ["web", "abn", "seek_job", "industry_press"],
+    "sourceTypes": ["web", "asic", "seek_job", "industry_press"],
     "australianSources": 2,
     "overallConfidence": "medium",
-    "confidenceReason": "Brief based on 2 verified sources and 2 informed inferences. Add LinkedIn context to improve."
+    "confidenceReason": "Brief based on N verified and N informed sources."
   }
 }
 
-RULES:
-- Be specific, not generic. Use real facts from your searches.
-- Mark inferences clearly as type "assumed" — do not present guesses as facts.
-- companySnapshot.possiblePainPoints: 2-4 bullets, each under 15 words, grounded in research (jobs, press, website). Mark inferred pains in sources as "assumed" or "informed".
-- icpFitScore.highlights: exactly 2-3 bullets — why fit/no-fit vs seller context. No filler.
-- theirWorld.bullets: exactly 3-4 bullets — pressures, priorities, why-now. Present tense. No prose paragraph.
-- The fullEmail must reference at least one specific signal from your research.
-- Keep the entire JSON response concise — quality over length, no fluff.
-- Always include all 6 top-level keys even if some sections have limited data.
+RULES — call-ready output:
+- callDecision.priority: use hot (2+ recent verified triggers), warm (1 trigger or strong fit + hiring), watch (structural fit only), skip (no fit + no signals). When in doubt, downgrade.
+- callDecision.justification: one sentence only. Must match the priority rubric in the constitution.
+- coldEmail.opener: reference a specific signal. Tag stale signals (6+ months) with the date inline.
+- recentTriggers.items: 0-2 items. Empty array is OK if nothing found — do not invent triggers.
+- buyingCommittee: 1-2 people maximum. Include name when found. "No public signal found" is OK in linkedinSignal as empty string.
+- discoveryQuestions: exactly 3 when possible. Each must reference a specific finding — never generic discovery scripts.
+- manualResearchTips: 2-4 items from sector pack manual tips when relevant; honest about what AI could not search.
+- companySnapshot, icpFitScore, theirWorld: background context — still required but keep concise.
+- Be specific, not generic. Mark inferences as "assumed" in sources.
+- Always include all top-level keys even if some arrays are empty.
 - CRITICAL: All JSON string values must be plain text only. Never include HTML, XML, <cite> tags, or any markup.`;

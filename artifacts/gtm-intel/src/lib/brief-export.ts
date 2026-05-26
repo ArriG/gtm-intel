@@ -1,47 +1,82 @@
 import type { AccountBrief, TalkTrack } from "@workspace/api-client-react";
 import { stripCitationTags } from "./strip-citations";
-
-function fitHighlights(brief: AccountBrief): string[] {
-  if (brief.icpFitScore.highlights?.length) return brief.icpFitScore.highlights;
-  if (brief.icpFitScore.reason?.trim()) return [brief.icpFitScore.reason.trim()];
-  return [];
-}
-
-function worldBullets(brief: AccountBrief): string[] {
-  if (brief.theirWorld?.bullets?.length) return brief.theirWorld.bullets;
-  const narrative = brief.theirWorld?.narrative?.trim();
-  if (!narrative) return [];
-  return narrative.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 4);
-}
+import {
+  buyerDisplayName,
+  callPriorityLabel,
+  fitHighlights,
+  worldBullets,
+  snapshotPainPoints,
+} from "./brief-helpers";
 
 export function formatBriefForExport(brief: AccountBrief, companyName: string, talkTrack?: TalkTrack | null): string {
-  const pains = brief.companySnapshot.possiblePainPoints?.filter(Boolean) ?? [];
+  const pains = snapshotPainPoints(brief);
   const lines = [
     `GTM INTELLIGENCE BRIEF`,
     `Company: ${companyName}`,
     `Generated: ${new Date().toLocaleString()}`,
     ``,
-    `=== COMPANY SNAPSHOT ===`,
-    `${brief.companySnapshot.size} · ${brief.companySnapshot.industry} · ${brief.companySnapshot.location} · ${brief.companySnapshot.fundingStage}`,
-    brief.companySnapshot.techStack ? `Tech: ${brief.companySnapshot.techStack}` : null,
-    pains.length > 0 ? `Possible pain points:` : null,
-    ...pains.map(p => `• ${p}`),
+  ];
+
+  if (brief.callDecision) {
+    lines.push(
+      `=== CALL DECISION: ${callPriorityLabel(brief.callDecision.priority).toUpperCase()} ===`,
+      brief.callDecision.justification,
+      ``,
+    );
+  }
+
+  lines.push(
+    `=== OPENER ===`,
+    stripCitationTags(brief.coldEmail.opener),
     ``,
-    `=== ACCOUNT FIT: ${brief.icpFitScore.score}/10 ===`,
+  );
+
+  const triggers = brief.recentTriggers?.items ?? [];
+  if (triggers.length > 0) {
+    lines.push(`=== WHY NOW ===`);
+    lines.push(...triggers.map(t => `• ${t.event} (${t.recency}) — ${t.significance}`));
+    lines.push(``);
+  }
+
+  const committee = brief.buyingCommittee ?? [];
+  if (committee.length > 0) {
+    lines.push(`=== WHO TO CALL ===`);
+    lines.push(...committee.map(p => `• ${buyerDisplayName(p)}: ${p.painPoint}`));
+    lines.push(``);
+  }
+
+  if (brief.discoveryQuestions?.length) {
+    lines.push(`=== QUESTIONS TO ASK ===`);
+    lines.push(...brief.discoveryQuestions.map(q => `• ${q.question}${q.tiedToSignal ? ` [re: ${q.tiedToSignal}]` : ""}`));
+    lines.push(``);
+  }
+
+  if (brief.manualResearchTips?.length) {
+    lines.push(`=== CHECK MANUALLY BEFORE CALLING ===`);
+    lines.push(...brief.manualResearchTips.map(t => `• ${t.tip}${t.reason ? ` — ${t.reason}` : ""}`));
+    lines.push(``);
+  }
+
+  lines.push(
+    `=== BACKGROUND ===`,
+    `${brief.companySnapshot.size} · ${brief.companySnapshot.industry} · ${brief.companySnapshot.location} · ${brief.companySnapshot.fundingStage}`,
+  );
+  if (brief.companySnapshot.techStack) lines.push(`Tech: ${brief.companySnapshot.techStack}`);
+  if (pains.length > 0) {
+    lines.push(`Possible pain points:`);
+    lines.push(...pains.map(p => `• ${p}`));
+  }
+  lines.push(
+    ``,
+    `Account fit: ${brief.icpFitScore.score}/10`,
     ...fitHighlights(brief).map(h => `• ${h}`),
     ``,
-    `=== THEIR WORLD ===`,
+    `Their world:`,
     ...worldBullets(brief).map(b => `• ${b}`),
     ``,
-    `=== BUYING COMMITTEE ===`,
-    ...((brief.buyingCommittee ?? []).map(p => `• ${p.title}: ${p.painPoint}`)),
-    ``,
-    `=== RECENT TRIGGERS ===`,
-    ...((brief.recentTriggers?.items ?? []).map(t => `• ${t.event} (${t.recency}) — ${t.significance}`)),
-    ``,
-    `=== COLD EMAIL ===`,
+    `=== FULL COLD EMAIL ===`,
     stripCitationTags(brief.coldEmail.fullEmail || brief.coldEmail.opener),
-  ];
+  );
 
   if (talkTrack) {
     lines.push(
@@ -69,7 +104,17 @@ export function downloadBriefTxt(content: string, companyName: string) {
 }
 
 export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrack?: TalkTrack | null) {
-  const pains = brief.companySnapshot.possiblePainPoints?.filter(Boolean) ?? [];
+  const pains = snapshotPainPoints(brief);
+  const callBlock = brief.callDecision
+    ? `<h2>Call Decision — ${callPriorityLabel(brief.callDecision.priority)}</h2><p>${brief.callDecision.justification}</p>`
+    : "";
+  const questionsBlock = brief.discoveryQuestions?.length
+    ? `<h2>Questions to Ask</h2><ul>${brief.discoveryQuestions.map(q => `<li>${q.question}</li>`).join("")}</ul>`
+    : "";
+  const tipsBlock = brief.manualResearchTips?.length
+    ? `<h2>Check Manually</h2><ul>${brief.manualResearchTips.map(t => `<li>${t.tip}</li>`).join("")}</ul>`
+    : "";
+
   const html = `<!DOCTYPE html><html><head><title>GTM Brief — ${companyName}</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; color: #111; line-height: 1.5; }
@@ -83,19 +128,22 @@ export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrac
 </style></head><body>
 <h1>${companyName}</h1>
 <p class="meta">GTM Intelligence Brief · ${new Date().toLocaleDateString()}</p>
-<h2>Company Snapshot</h2>
+${callBlock}
+<h2>Opener</h2>
+<p><em>${brief.coldEmail.opener}</em></p>
+<h2>Why Now</h2>
+<ul>${(brief.recentTriggers?.items ?? []).map(t => `<li>${t.event} (${t.recency}) — ${t.significance}</li>`).join("")}</ul>
+<h2>Who to Call</h2>
+<ul>${(brief.buyingCommittee ?? []).map(p => `<li><strong>${buyerDisplayName(p)}</strong>: ${p.painPoint}</li>`).join("")}</ul>
+${questionsBlock}
+${tipsBlock}
+<h2>Background</h2>
 <p>${brief.companySnapshot.size} · ${brief.companySnapshot.industry} · ${brief.companySnapshot.location} · ${brief.companySnapshot.fundingStage}</p>
 ${brief.companySnapshot.techStack ? `<p><strong>Tech:</strong> ${brief.companySnapshot.techStack}</p>` : ""}
-${pains.length ? `<p><strong>Possible pain points</strong></p><ul>${pains.map(p => `<li>${p}</li>`).join("")}</ul>` : ""}
+${pains.length ? `<ul>${pains.map(p => `<li>${p}</li>`).join("")}</ul>` : ""}
 <h2>Account Fit — ${brief.icpFitScore.score}/10</h2>
 <ul>${fitHighlights(brief).map(h => `<li>${h}</li>`).join("")}</ul>
-<h2>Their World</h2>
-<ul>${worldBullets(brief).map(b => `<li>${b}</li>`).join("")}</ul>
-<h2>Buying Committee</h2>
-<ul>${(brief.buyingCommittee ?? []).map(p => `<li><strong>${p.title}</strong>: ${p.painPoint}</li>`).join("")}</ul>
-<h2>Recent Triggers</h2>
-<ul>${(brief.recentTriggers?.items ?? []).map(t => `<li>${t.event} (${t.recency}) — ${t.significance}</li>`).join("")}</ul>
-<h2>Cold Email</h2>
+<h2>Full Email</h2>
 <pre>${brief.coldEmail.fullEmail || brief.coldEmail.opener}</pre>
 ${talkTrack ? `<h2>Discovery Talk Track</h2><p>${talkTrack.opening}</p><ul>${talkTrack.discoveryQuestions.map(q => `<li>${q}</li>`).join("")}</ul>` : ""}
 </body></html>`;

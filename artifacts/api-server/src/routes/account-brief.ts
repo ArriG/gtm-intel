@@ -18,6 +18,7 @@ import {
 } from "../lib/brief-ai";
 import { handleSignalRadar } from "../lib/signal-radar-handler";
 import { composeAccountBriefPrompt } from "../prompts/compose-system-prompt";
+import { normalizeAccountBrief } from "../lib/brief-normalize";
 
 const router: IRouter = Router();
 
@@ -115,17 +116,19 @@ Return ONLY the JSON object. No markdown, no explanation.`,
       return;
     }
 
-    let brief: unknown;
+    let brief: Record<string, unknown>;
     try {
-      brief = parseJsonFromResponse(responseText);
+      brief = parseJsonFromResponse(responseText) as Record<string, unknown>;
     } catch (err) {
       req.log.error({ raw: responseText.slice(0, 500), err }, "Failed to parse Claude response as JSON");
       res.status(500).json({ error: "Failed to parse AI response. Please try again." });
       return;
     }
 
+    const normalized = normalizeAccountBrief(brief);
+
     res.json({
-      ...(brief as Record<string, unknown>),
+      ...normalized,
       researchPack: composed.researchPack,
     });
   } catch (err) {

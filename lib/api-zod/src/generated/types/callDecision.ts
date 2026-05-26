@@ -6,12 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BriefSource } from './briefSource';
+import type { CallPriority } from './callPriority';
 
-export interface BuyingCommitteeMember {
-  /** Person's name when found in research; omit if unknown */
-  name?: string;
-  title: string;
-  painPoint: string;
-  linkedinSignal?: string;
+export interface CallDecision {
+  priority: CallPriority;
+  /** One sentence — why call (or not) this week */
+  justification: string;
   sources?: BriefSource[];
 }

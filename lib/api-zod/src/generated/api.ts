@@ -64,6 +64,7 @@ export const GenerateAccountBriefResponse = zod.object({
 })).optional()
 }),
   "buyingCommittee": zod.array(zod.object({
+  "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
@@ -112,6 +113,26 @@ export const GenerateAccountBriefResponse = zod.object({
   "confidence": zod.enum(['verified', 'informed', 'assumed'])
 })).optional()
 }),
+  "callDecision": zod.object({
+  "priority": zod.enum(['hot', 'warm', 'watch', 'skip']),
+  "justification": zod.string().describe('One sentence — why call (or not) this week'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}).optional().describe('Should this account be called this week, and why'),
+  "discoveryQuestions": zod.array(zod.object({
+  "question": zod.string(),
+  "tiedToSignal": zod.string().optional().describe('The specific research finding this question references'),
+  "confidence": zod.enum(['verified', 'informed', 'assumed']).optional()
+})).optional().describe('Up to 3 discovery questions tied to specific found signals'),
+  "manualResearchTips": zod.array(zod.object({
+  "tip": zod.string(),
+  "reason": zod.string().optional()
+})).optional().describe('Sources the AE should check manually before calling'),
   "sourceSummary": zod.object({
   "totalSources": zod.number(),
   "sourceTypes": zod.array(zod.string()),
@@ -165,6 +186,7 @@ export const RegenerateColdEmailBody = zod.object({
 })).optional()
 }),
   "buyingCommittee": zod.array(zod.object({
+  "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
@@ -213,6 +235,26 @@ export const RegenerateColdEmailBody = zod.object({
   "confidence": zod.enum(['verified', 'informed', 'assumed'])
 })).optional()
 }),
+  "callDecision": zod.object({
+  "priority": zod.enum(['hot', 'warm', 'watch', 'skip']),
+  "justification": zod.string().describe('One sentence — why call (or not) this week'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}).optional().describe('Should this account be called this week, and why'),
+  "discoveryQuestions": zod.array(zod.object({
+  "question": zod.string(),
+  "tiedToSignal": zod.string().optional().describe('The specific research finding this question references'),
+  "confidence": zod.enum(['verified', 'informed', 'assumed']).optional()
+})).optional().describe('Up to 3 discovery questions tied to specific found signals'),
+  "manualResearchTips": zod.array(zod.object({
+  "tip": zod.string(),
+  "reason": zod.string().optional()
+})).optional().describe('Sources the AE should check manually before calling'),
   "sourceSummary": zod.object({
   "totalSources": zod.number(),
   "sourceTypes": zod.array(zod.string()),
@@ -299,6 +341,7 @@ export const GenerateTalkTrackBody = zod.object({
 })).optional()
 }),
   "buyingCommittee": zod.array(zod.object({
+  "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
@@ -347,6 +390,26 @@ export const GenerateTalkTrackBody = zod.object({
   "confidence": zod.enum(['verified', 'informed', 'assumed'])
 })).optional()
 }),
+  "callDecision": zod.object({
+  "priority": zod.enum(['hot', 'warm', 'watch', 'skip']),
+  "justification": zod.string().describe('One sentence — why call (or not) this week'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}).optional().describe('Should this account be called this week, and why'),
+  "discoveryQuestions": zod.array(zod.object({
+  "question": zod.string(),
+  "tiedToSignal": zod.string().optional().describe('The specific research finding this question references'),
+  "confidence": zod.enum(['verified', 'informed', 'assumed']).optional()
+})).optional().describe('Up to 3 discovery questions tied to specific found signals'),
+  "manualResearchTips": zod.array(zod.object({
+  "tip": zod.string(),
+  "reason": zod.string().optional()
+})).optional().describe('Sources the AE should check manually before calling'),
   "sourceSummary": zod.object({
   "totalSources": zod.number(),
   "sourceTypes": zod.array(zod.string()),
@@ -428,6 +491,7 @@ export const GenerateCallPrepBody = zod.object({
 })).optional()
 }),
   "buyingCommittee": zod.array(zod.object({
+  "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
   "title": zod.string(),
   "painPoint": zod.string(),
   "linkedinSignal": zod.string().optional(),
@@ -476,6 +540,26 @@ export const GenerateCallPrepBody = zod.object({
   "confidence": zod.enum(['verified', 'informed', 'assumed'])
 })).optional()
 }),
+  "callDecision": zod.object({
+  "priority": zod.enum(['hot', 'warm', 'watch', 'skip']),
+  "justification": zod.string().describe('One sentence — why call (or not) this week'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}).optional().describe('Should this account be called this week, and why'),
+  "discoveryQuestions": zod.array(zod.object({
+  "question": zod.string(),
+  "tiedToSignal": zod.string().optional().describe('The specific research finding this question references'),
+  "confidence": zod.enum(['verified', 'informed', 'assumed']).optional()
+})).optional().describe('Up to 3 discovery questions tied to specific found signals'),
+  "manualResearchTips": zod.array(zod.object({
+  "tip": zod.string(),
+  "reason": zod.string().optional()
+})).optional().describe('Sources the AE should check manually before calling'),
   "sourceSummary": zod.object({
   "totalSources": zod.number(),
   "sourceTypes": zod.array(zod.string()),
