@@ -93,7 +93,7 @@ export interface IcpUpdate {
 }
 
 /**
- * Typical deal size motion — SMB, mid-market, or enterprise
+ * Deal size motion — SMB, mid-market, or enterprise
  */
 export type DealSize = typeof DealSize[keyof typeof DealSize];
 
@@ -116,7 +116,11 @@ export interface YourCompany {
   industryServed: string;
   /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
   geographies: string[];
-  dealSize: DealSize;
+  /**
+     * Typical deal size motions the seller sells into — tick all that apply
+     * @minItems 1
+     */
+  dealSize: DealSize[];
   /** Typical decision-maker job titles */
   buyerTitles: string[];
   /** Pain points our product addresses */

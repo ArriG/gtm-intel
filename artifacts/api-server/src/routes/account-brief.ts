@@ -4,6 +4,7 @@ import { db } from "@workspace/db";
 import { icpsTable } from "@workspace/db/schema";
 import {
   buildEmailToneInstruction,
+  buildDealMotionInstruction,
   buildIcpScoringContext,
   buildLinkedinContext,
   buildOwnIntelContext,
@@ -84,7 +85,7 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   const systemPrompt = `${composed.systemPrompt}
 
 ICP SCORING INSTRUCTIONS:
-${icpContext}${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildEmailToneInstruction(tone)}`;
+${icpContext}${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildDealMotionInstruction(yourCompany)}${buildEmailToneInstruction(tone)}`;
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Research timed out — please try again")), composed.timeoutMs),

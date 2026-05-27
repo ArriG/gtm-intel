@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { BriefCard, BriefCardContent } from "@/components/brief-card";
 import {
   loadYourCompany,
@@ -17,7 +17,8 @@ import {
   listToLines,
   parseGeographies,
   formatGeographies,
-  formatDealSizeLabel,
+  formatDealSizeLabels,
+  toggleDealSize,
   DEAL_SIZE_OPTIONS,
   type YourCompany,
   type DealSize,
@@ -28,7 +29,7 @@ type FormState = {
   oneLineDescription: string;
   industryServed: string;
   geographiesText: string;
-  dealSize: DealSize;
+  dealSize: DealSize[];
   buyerTitlesText: string;
   painPointsText: string;
   customerOutcomes: string;
@@ -88,7 +89,7 @@ function ProfileSummary({ profile, onEdit }: { profile: YourCompany; onEdit: () 
             <SummaryField label="What you sell" value={profile.oneLineDescription} />
             <SummaryField label="Industry served" value={profile.industryServed} />
             <SummaryField label="Geographies" value={formatGeographies(profile.geographies)} />
-            <SummaryField label="Deal motion" value={formatDealSizeLabel(profile.dealSize)} />
+            <SummaryField label="Deal motion" value={formatDealSizeLabels(profile.dealSize)} />
           </div>
 
           <SummaryField label="Typical buyers" value={profile.buyerTitles.join(", ")} />
@@ -161,7 +162,7 @@ export default function YourCompanyPage() {
     if (!next.oneLineDescription.trim()) problems.push("Add a one-line description of what you sell.");
     if (!next.industryServed.trim()) problems.push("Describe the industry your customers are in.");
     if (next.geographies.length === 0) problems.push("Add at least one geography (e.g. UK or AU, NZ).");
-    if (!next.dealSize) problems.push("Choose a typical deal size.");
+    if (next.dealSize.length === 0) problems.push("Tick at least one typical deal size.");
     if (next.buyerTitles.length === 0) problems.push("Add at least one buyer job title.");
     if (next.painPointsSolved.length === 0) problems.push("Add at least one pain point you solve.");
     return problems;
@@ -261,20 +262,31 @@ export default function YourCompanyPage() {
                 <p className="text-xs text-muted-foreground">Where you sell today — briefs pick research sources from this automatically.</p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="dealSize">Typical deal size</Label>
-                <Select value={form.dealSize} onValueChange={value => handleChange("dealSize", value as DealSize)}>
-                  <SelectTrigger id="dealSize">
-                    <SelectValue placeholder="Choose deal motion" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEAL_SIZE_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label} — {option.hint}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3">
+                <Label>Typical deal sizes (tick all that apply)</Label>
+                <div className="space-y-3 rounded-xl border border-border bg-secondary/40 p-4">
+                  {DEAL_SIZE_OPTIONS.map(option => {
+                    const checked = form.dealSize.includes(option.value);
+                    return (
+                      <label
+                        key={option.value}
+                        htmlFor={`dealSize-${option.value}`}
+                        className="flex items-start gap-3 cursor-pointer"
+                      >
+                        <Checkbox
+                          id={`dealSize-${option.value}`}
+                          checked={checked}
+                          onCheckedChange={() => handleChange("dealSize", toggleDealSize(form.dealSize, option.value))}
+                          className="mt-0.5"
+                        />
+                        <span className="space-y-0.5">
+                          <span className="block text-sm font-medium text-foreground">{option.label}</span>
+                          <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="space-y-1.5">

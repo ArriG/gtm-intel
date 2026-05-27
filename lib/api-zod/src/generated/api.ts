@@ -11,6 +11,9 @@ import * as zod from 'zod';
 /**
  * @summary Generate an AI-powered account brief for a company URL
  */
+
+
+
 export const GenerateAccountBriefBody = zod.object({
   "url": zod.string(),
   "linkedinPosts": zod.array(zod.object({
@@ -23,7 +26,7 @@ export const GenerateAccountBriefBody = zod.object({
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
@@ -158,6 +161,9 @@ export const GenerateAccountBriefResponse = zod.object({
 /**
  * @summary Regenerate cold email with a different tone
  */
+
+
+
 export const RegenerateColdEmailBody = zod.object({
   "companyName": zod.string(),
   "brief": zod.object({
@@ -286,7 +292,7 @@ export const RegenerateColdEmailBody = zod.object({
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
@@ -317,6 +323,9 @@ export const RegenerateColdEmailResponse = zod.object({
 /**
  * @summary Generate discovery call talk track from a brief
  */
+
+
+
 export const GenerateTalkTrackBody = zod.object({
   "companyName": zod.string(),
   "brief": zod.object({
@@ -445,7 +454,7 @@ export const GenerateTalkTrackBody = zod.object({
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
@@ -471,6 +480,9 @@ export const GenerateTalkTrackResponse = zod.object({
 /**
  * @summary Generate a 1-page pre-call briefing card from an existing brief
  */
+
+
+
 export const GenerateCallPrepBody = zod.object({
   "companyName": zod.string(),
   "brief": zod.object({
@@ -599,7 +611,7 @@ export const GenerateCallPrepBody = zod.object({
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
@@ -651,13 +663,16 @@ export const ListSectorPacksResponse = zod.object({
 /**
  * @summary Preview the composed account brief system prompt for a seller profile
  */
+
+
+
 export const PreviewAccountBriefPromptBody = zod.object({
   "yourCompany": zod.object({
   "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
@@ -701,6 +716,9 @@ export const PreviewAccountBriefPromptResponse = zod.object({
 /**
  * @summary Find matching companies for a target market description
  */
+
+
+
 export const ProspectMarketBody = zod.object({
   "description": zod.string(),
   "yourCompany": zod.object({
@@ -708,7 +726,7 @@ export const ProspectMarketBody = zod.object({
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
@@ -880,13 +898,16 @@ export const ListSignalsResponse = zod.array(ListSignalsResponseItem)
 /**
  * @summary Scan the web for ICP-matching buying signals
  */
+
+
+
 export const RunSignalRadarBody = zod.object({
   "yourCompany": zod.object({
   "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
   "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
   "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.enum(['smb', 'mid-market', 'enterprise']).describe('Typical deal size motion — SMB, mid-market, or enterprise'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
   "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
   "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
   "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),

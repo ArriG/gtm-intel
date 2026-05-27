@@ -1,12 +1,14 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { icpsTable } from "@workspace/db/schema";
 
+export type DealSize = "smb" | "mid-market" | "enterprise";
+
 export type YourCompanyInput = {
   companyName?: string;
   oneLineDescription?: string;
   industryServed?: string;
   geographies?: string[];
-  dealSize?: "smb" | "mid-market" | "enterprise";
+  dealSize?: DealSize[];
   buyerTitles?: string[];
   painPointsSolved?: string[];
   /** Legacy fields — still accepted from older clients */
@@ -90,7 +92,7 @@ export function buildIcpScoringContext(
         product ? `What we sell: ${product}` : null,
         industry ? `Industry we serve: ${industry}` : null,
         geographies?.length ? `Geographies: ${geographies.join(", ")}` : null,
-        dealSize ? `Typical deal motion: ${dealSize}` : null,
+        dealSize ? `Typical deal sizes: ${dealSize}` : null,
         buyerTitles?.length ? `Typical buyers: ${buyerTitles.join(", ")}` : null,
         painPoints ? `Pains we solve: ${painPoints}` : null,
       ].filter(Boolean);
@@ -188,6 +190,15 @@ export function yourCompanyHasContext(yourCompany?: YourCompanyInput): boolean {
   return Boolean(yourCompany.companyName?.trim() && hasProduct && hasMarket);
 }
 
+export function formatDealSizeLabels(dealSizes: DealSize[]): string {
+  const labels: Record<DealSize, string> = {
+    smb: "SMB",
+    "mid-market": "mid-market",
+    enterprise: "enterprise",
+  };
+  return dealSizes.map(size => labels[size] ?? size.replace(/-/g, " ")).join(", ");
+}
+
 function describeYourCompany(yourCompany: YourCompanyInput) {
   const product = yourCompany.oneLineDescription?.trim() || yourCompany.whatYouSell?.trim();
   const industry = yourCompany.industryServed?.trim() || yourCompany.whoYouSellTo?.trim();
@@ -196,7 +207,8 @@ function describeYourCompany(yourCompany: YourCompanyInput) {
   const painPoints = yourCompany.painPointsSolved?.length
     ? yourCompany.painPointsSolved.map(p => p.trim()).filter(Boolean).join("; ")
     : yourCompany.painPoints?.trim();
-  const dealSize = yourCompany.dealSize?.replace("-", " ");
+  const dealSizes = yourCompany.dealSize?.filter(Boolean) ?? [];
+  const dealSize = dealSizes.length ? formatDealSizeLabels(dealSizes) : undefined;
 
   return {
     product,
@@ -206,6 +218,18 @@ function describeYourCompany(yourCompany: YourCompanyInput) {
     painPoints,
     dealSize,
   };
+}
+
+export function buildDealMotionInstruction(yourCompany?: YourCompanyInput): string {
+  const dealSizes = yourCompany?.dealSize?.filter(Boolean) ?? [];
+  if (dealSizes.length === 0) return "";
+
+  const segments = formatDealSizeLabels(dealSizes);
+
+  return `
+
+DEAL MOTION — pick one per target account:
+The seller sells to multiple deal segments: [${segments}]. For the company being researched, pick the most appropriate motion based on the company's actual size and structure. Use enterprise motion for global enterprises (e.g. listed reinsurers, multinational banks), mid-market for established but smaller firms, SMB for owner-operated businesses. Do not blend motions — pick one decisively and apply it consistently across buyer titles, tone, and brief shape.`;
 }
 
 export function buildYourCompanyRadarContext(yourCompany?: YourCompanyInput): string {
@@ -241,7 +265,7 @@ export function buildYourCompanyContext(yourCompany?: YourCompanyInput): string 
     product ? `What we sell: ${product}` : null,
     industry ? `Industry we serve: ${industry}` : null,
     geographies?.length ? `Geographies: ${geographies.join(", ")}` : null,
-    dealSize ? `Typical deal size: ${dealSize}` : null,
+    dealSize ? `Typical deal sizes: ${dealSize}` : null,
     buyerTitles?.length ? `Typical buyers: ${buyerTitles.join(", ")}` : null,
     painPoints ? `Problems we solve: ${painPoints}` : null,
     yourCompany.customerOutcomes?.trim() ? `Customer outcomes we deliver: ${yourCompany.customerOutcomes.trim()}` : null,

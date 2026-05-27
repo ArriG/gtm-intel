@@ -608,7 +608,7 @@ components:
     DealSize:
       type: string
       enum: [smb, mid-market, enterprise]
-      description: Typical deal size motion — SMB, mid-market, or enterprise
+      description: Deal size motion — SMB, mid-market, or enterprise
 
     YourCompany:
       type: object
@@ -637,7 +637,12 @@ components:
             type: string
           description: Markets we sell into, e.g. ["UK"], ["AU", "NZ"]
         dealSize:
-          $ref: "#/components/schemas/DealSize"
+          type: array
+          items:
+            $ref: "#/components/schemas/DealSize"
+          minItems: 1
+          uniqueItems: true
+          description: Typical deal size motions the seller sells into — tick all that apply
         buyerTitles:
           type: array
           items:

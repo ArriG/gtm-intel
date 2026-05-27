@@ -4,15 +4,17 @@ import type { DealSize, YourCompany as YourCompanyShape } from "@workspace/api-c
 export type YourCompany = YourCompanyShape;
 export type { DealSize };
 
-const STORAGE_KEY = "gtm_your_company_v2";
+const STORAGE_KEY = "gtm_your_company_v3";
 const CHANGE_EVENT = "gtm:your-company-changed";
+
+const VALID_DEAL_SIZES: DealSize[] = ["smb", "mid-market", "enterprise"];
 
 const EMPTY: YourCompany = {
   companyName: "",
   oneLineDescription: "",
   industryServed: "",
   geographies: [],
-  dealSize: "mid-market",
+  dealSize: ["mid-market"],
   buyerTitles: [],
   painPointsSolved: [],
   customerOutcomes: "",
@@ -21,9 +23,21 @@ const EMPTY: YourCompany = {
   sectorPackOverride: "",
 };
 
-/** Normalise free-text or saved data into the v2 shape (ignores v1 localStorage). */
+function normaliseDealSizes(raw: unknown): DealSize[] {
+  if (!Array.isArray(raw)) return [];
+
+  const sizes = raw
+    .map(value => (typeof value === "string" ? value.trim() : ""))
+    .filter((value): value is DealSize => VALID_DEAL_SIZES.includes(value as DealSize));
+
+  return [...new Set(sizes)];
+}
+
+/** Normalise free-text or saved data into the v3 shape (ignores v1/v2 localStorage). */
 function normaliseYourCompany(raw: Partial<YourCompany> | null | undefined): YourCompany {
   if (!raw) return { ...EMPTY };
+
+  const dealSize = normaliseDealSizes(raw.dealSize);
 
   return {
     companyName: raw.companyName?.trim() ?? "",
@@ -32,7 +46,7 @@ function normaliseYourCompany(raw: Partial<YourCompany> | null | undefined): You
     geographies: Array.isArray(raw.geographies)
       ? raw.geographies.map(g => g.trim()).filter(Boolean)
       : [],
-    dealSize: raw.dealSize ?? "mid-market",
+    dealSize: dealSize.length > 0 ? dealSize : ["mid-market"],
     buyerTitles: Array.isArray(raw.buyerTitles)
       ? raw.buyerTitles.map(t => t.trim()).filter(Boolean)
       : raw.painPoints?.trim()
@@ -64,6 +78,7 @@ function withLegacyFields(data: YourCompany): YourCompany {
     oneLineDescription: data.oneLineDescription.trim(),
     industryServed: data.industryServed.trim(),
     geographies,
+    dealSize: data.dealSize.filter(Boolean),
     buyerTitles: data.buyerTitles.map(t => t.trim()).filter(Boolean),
     painPointsSolved,
     customerOutcomes: data.customerOutcomes?.trim() || undefined,
@@ -100,7 +115,7 @@ export function isYourCompanyConfigured(yc: YourCompany): boolean {
     && yc.oneLineDescription.trim()
     && yc.industryServed.trim()
     && yc.geographies.length > 0
-    && yc.dealSize
+    && yc.dealSize.length > 0
     && yc.buyerTitles.length > 0
     && yc.painPointsSolved.length > 0,
   );
@@ -154,8 +169,16 @@ export const DEAL_SIZE_OPTIONS: { value: DealSize; label: string; hint: string }
   { value: "enterprise", label: "Enterprise", hint: "Large organisations — complex buying committees" },
 ];
 
-export function formatDealSizeLabel(dealSize: DealSize): string {
-  return DEAL_SIZE_OPTIONS.find(o => o.value === dealSize)?.label ?? dealSize;
+export function formatDealSizeLabels(dealSizes: DealSize[]): string {
+  return dealSizes
+    .map(dealSize => DEAL_SIZE_OPTIONS.find(o => o.value === dealSize)?.label ?? dealSize)
+    .join(", ");
+}
+
+export function toggleDealSize(current: DealSize[], value: DealSize): DealSize[] {
+  return current.includes(value)
+    ? current.filter(size => size !== value)
+    : [...current, value];
 }
 
 /** Hero subtitle on Search — reflects Your Company geographies and deal motion. */
@@ -163,17 +186,19 @@ export function researchHeroSubtitle(yc: YourCompany): string {
   const geos = yc.geographies.map(g => g.trim().toUpperCase());
   const isUk = geos.some(g => g === "UK" || g.includes("UNITED KINGDOM"));
   const isAu = geos.some(g => g === "AU" || g === "NZ" || g.includes("AUSTRALIA"));
+  const sellsEnterprise = yc.dealSize.includes("enterprise");
+  const sellsMidMarket = yc.dealSize.includes("mid-market");
 
-  if (isUk && yc.dealSize === "enterprise") {
+  if (isUk && sellsEnterprise) {
     return "Enterprise intel for UK accounts — leadership moves, hiring signals, and trade press. Brief ready to send.";
   }
-  if (isUk && yc.dealSize === "mid-market") {
+  if (isUk && sellsMidMarket) {
     return "Mid-market intel for UK accounts — hiring, leadership, and industry press. Brief ready to send.";
   }
   if (isUk) {
     return "UK-focused intel from public sources, LinkedIn, and press. Brief ready to send.";
   }
-  if (isAu && yc.dealSize === "enterprise") {
+  if (isAu && sellsEnterprise) {
     return "Enterprise intel for AU accounts — ASIC, Seek, LinkedIn, and press. Brief ready to send.";
   }
   if (isAu) {
