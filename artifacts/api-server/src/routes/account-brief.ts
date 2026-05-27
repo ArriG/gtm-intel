@@ -19,7 +19,7 @@ import {
 } from "../lib/brief-ai";
 import { handleSignalRadar } from "../lib/signal-radar-handler";
 import { composeAccountBriefPrompt } from "../prompts/compose-system-prompt";
-import { normalizeAccountBrief } from "../lib/brief-normalize";
+import { normalizeAccountBriefWithMeta, normalizeColdEmailOnly } from "../lib/brief-normalize";
 
 const router: IRouter = Router();
 
@@ -126,7 +126,14 @@ Return ONLY the JSON object. No markdown, no explanation.`,
       return;
     }
 
-    const normalized = normalizeAccountBrief(brief);
+    const { normalized, meta } = normalizeAccountBriefWithMeta(brief);
+
+    if (meta.derivedOpener) {
+      req.log.info({ hostname }, "Derived cold email opener after model omitted it");
+    }
+    if (meta.derivedCallDecision) {
+      req.log.info({ hostname }, "Derived call decision after model omitted it");
+    }
 
     res.json({
       ...normalized,
@@ -171,8 +178,14 @@ Reference specific signals from the research brief. Value outcomes, not features
       1500,
       30000,
       0.85,
-    );
-    res.json(result);
+    ) as Record<string, unknown>;
+
+    const { coldEmail, derivedOpener } = normalizeColdEmailOnly(result, brief);
+    if (derivedOpener) {
+      req.log.info({ companyName, tone }, "Derived cold email opener after regenerate omitted it");
+    }
+
+    res.json(coldEmail);
   } catch (err) {
     const message = err instanceof Error ? err.message : "AI request failed";
     req.log.error({ err }, message);
