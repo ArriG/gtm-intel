@@ -15,7 +15,7 @@ In the order the AE actually reads them:
 1. **callPriority** — `hot` / `warm` / `watch` / `skip` — with a one-sentence justification
 2. **Opener** — one sentence the AE can say in a cold call or email, referencing a verified signal
 3. **Why now** — 1–2 trigger events with dates and sources
-4. **Buyers** — 1–2 named people maximum (not generic titles); each with their recent public signal, or "no public signal found"
+4. **Buyers** — up to 3 relevant decision-makers (not generic titles). Named people with recent public signals when findable; honest gaps when not.
 5. **Three questions** — discovery questions tied to specific found signals, not generic scripts
 6. **What we couldn't reach** — manual research tips for the AE (forums, podcasts, communities)
 7. **Background** — company snapshot, industry context, full source list (collapsed by default in UI)

@@ -6,9 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BriefSource } from './briefSource';
+import type { BuyingRole } from './buyingRole';
 
 export interface BuyingCommitteeMember {
+  /** Person's name when found in research; omit if unknown */
+  name?: string;
   title: string;
+  buyingRole?: BuyingRole;
   painPoint: string;
   linkedinSignal?: string;
   sources?: BriefSource[];

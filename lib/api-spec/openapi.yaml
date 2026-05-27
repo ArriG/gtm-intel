@@ -18,6 +18,8 @@ tags:
     description: Dashboard summaries
   - name: account-brief
     description: AI-powered account brief generation
+  - name: your-company
+    description: Seller profile reasoning and prompt preview
 
 paths:
   /account-brief:
@@ -95,6 +97,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CallPrep"
+
+  /next-touch:
+    post:
+      operationId: generateNextTouch
+      tags: [account-brief]
+      summary: Generate a next-touch opener from a prospect reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NextTouchInput"
+      responses:
+        "200":
+          description: Generated next-touch opener and coaching suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NextTouchResponse"
+
+  /your-company/sector-packs:
+    get:
+      operationId: listSectorPacks
+      tags: [your-company]
+      summary: List available sector reasoning packs
+      responses:
+        "200":
+          description: Sector pack catalogue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectorPackListResponse"
+
+  /your-company/preview-prompt:
+    post:
+      operationId: previewAccountBriefPrompt
+      tags: [your-company]
+      summary: Preview the composed account brief system prompt for a seller profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewPromptInput"
+      responses:
+        "200":
+          description: Composed system prompt and sector pack detection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewPromptResponse"
 
   /market-prospect:
     post:
@@ -574,7 +627,7 @@ components:
     DealSize:
       type: string
       enum: [smb, mid-market, enterprise]
-      description: Typical deal size motion — SMB, mid-market, or enterprise
+      description: Deal size motion — SMB, mid-market, or enterprise
 
     YourCompany:
       type: object
@@ -603,7 +656,12 @@ components:
             type: string
           description: Markets we sell into, e.g. ["UK"], ["AU", "NZ"]
         dealSize:
-          $ref: "#/components/schemas/DealSize"
+          type: array
+          items:
+            $ref: "#/components/schemas/DealSize"
+          minItems: 1
+          uniqueItems: true
+          description: Typical deal size motions the seller sells into — tick all that apply
         buyerTitles:
           type: array
           items:
@@ -626,6 +684,99 @@ components:
         customerOutcomes:
           type: string
           description: Optional customer outcomes the AE can cite in outreach
+        whyNowPattern:
+          type: string
+          description: Patterns that make accounts worth calling now for this seller
+        reasoningOverrides:
+          type: string
+          description: Free-text reasoning rules appended to the system prompt
+        sectorPackOverride:
+          type: string
+          description: Sector pack id to use instead of auto-detect; omit or empty for automatic matching
+
+    SectorPackOption:
+      type: object
+      required:
+        - id
+        - name
+        - version
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: integer
+        geographies:
+          type: array
+          items:
+            type: string
+
+    SectorPackSelectionMeta:
+      type: object
+      required:
+        - mode
+        - matchScore
+        - matchedKeywords
+      properties:
+        mode:
+          type: string
+          enum: [auto, override, legacy]
+        packId:
+          type: string
+          nullable: true
+        packName:
+          type: string
+          nullable: true
+        autoDetectedId:
+          type: string
+          nullable: true
+          description: Auto-detected pack id when override is set
+        autoDetectedName:
+          type: string
+          nullable: true
+        matchScore:
+          type: integer
+        matchedKeywords:
+          type: array
+          items:
+            type: string
+
+    SectorPackListResponse:
+      type: object
+      required:
+        - packs
+      properties:
+        packs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorPackOption"
+
+    PreviewPromptInput:
+      type: object
+      required:
+        - yourCompany
+      properties:
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    PreviewPromptResponse:
+      type: object
+      required:
+        - systemPrompt
+        - sectorPackSelection
+        - availablePacks
+      properties:
+        systemPrompt:
+          type: string
+        sectorPackSelection:
+          $ref: "#/components/schemas/SectorPackSelectionMeta"
+        researchPack:
+          $ref: "#/components/schemas/ResearchPackMeta"
+        availablePacks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorPackOption"
 
     EmailTone:
       type: string
@@ -673,6 +824,40 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BriefSource"
+
+    NextTouchInput:
+      type: object
+      required:
+        - brief
+        - reply
+        - yourCompany
+      properties:
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
+        reply:
+          type: string
+          description: The prospect's reply text, pasted by the AE
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+        tone:
+          $ref: "#/components/schemas/EmailTone"
+
+    NextTouchResponse:
+      type: object
+      required:
+        - opener
+        - suggestion
+        - generatedAt
+      properties:
+        opener:
+          type: string
+          description: Regenerated opener responding to the reply
+        suggestion:
+          type: string
+          description: Short coaching note on what to do next
+        generatedAt:
+          type: string
+          format: date-time
 
     TalkTrack:
       type: object
@@ -801,14 +986,67 @@ components:
         emailTone:
           $ref: "#/components/schemas/EmailTone"
 
+    CallPriority:
+      type: string
+      enum: [hot, warm, watch, skip]
+
+    CallDecision:
+      type: object
+      required:
+        - priority
+        - justification
+      properties:
+        priority:
+          $ref: "#/components/schemas/CallPriority"
+        justification:
+          type: string
+          description: One sentence — why call (or not) this week
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    DiscoveryQuestion:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+        tiedToSignal:
+          type: string
+          description: The specific research finding this question references
+        confidence:
+          $ref: "#/components/schemas/BriefSourceConfidence"
+
+    ManualResearchTip:
+      type: object
+      required:
+        - tip
+      properties:
+        tip:
+          type: string
+        reason:
+          type: string
+
+    BuyingRole:
+      type: string
+      enum: [decision_maker, champion, economic_buyer, technical, influencer]
+      description: Optional role in the buying process when inferrable from research
+
     BuyingCommitteeMember:
       type: object
       required:
         - title
         - painPoint
       properties:
+        name:
+          type: string
+          description: Person's name when found in research; omit if unknown
         title:
           type: string
+        buyingRole:
+          $ref: "#/components/schemas/BuyingRole"
         painPoint:
           type: string
         linkedinSignal:
@@ -831,6 +1069,29 @@ components:
           type: string
         recency:
           type: string
+
+    ResearchPackMeta:
+      type: object
+      required:
+        - id
+        - name
+        - version
+        - loadingLabel
+        - expectedSeconds
+      properties:
+        id:
+          type: string
+          description: Sector pack identifier, e.g. uk-dental
+        name:
+          type: string
+        version:
+          type: integer
+        lastReviewed:
+          type: string
+        loadingLabel:
+          type: string
+        expectedSeconds:
+          type: integer
 
     AccountBrief:
       type: object
@@ -939,6 +1200,19 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/BriefSource"
+        callDecision:
+          $ref: "#/components/schemas/CallDecision"
+          description: Should this account be called this week, and why
+        discoveryQuestions:
+          type: array
+          description: Up to 3 discovery questions tied to specific found signals
+          items:
+            $ref: "#/components/schemas/DiscoveryQuestion"
+        manualResearchTips:
+          type: array
+          description: Sources the AE should check manually before calling
+          items:
+            $ref: "#/components/schemas/ManualResearchTip"
         sourceSummary:
           type: object
           required:
@@ -960,3 +1234,6 @@ components:
               type: string
             confidenceReason:
               type: string
+        researchPack:
+          $ref: "#/components/schemas/ResearchPackMeta"
+          description: Sector reasoning pack used to generate this brief

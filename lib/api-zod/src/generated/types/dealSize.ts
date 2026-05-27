@@ -7,7 +7,7 @@
  */
 
 /**
- * Typical deal size motion — SMB, mid-market, or enterprise
+ * Deal size motion — SMB, mid-market, or enterprise
  */
 export type DealSize = typeof DealSize[keyof typeof DealSize];
 

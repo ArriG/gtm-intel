@@ -19,7 +19,11 @@ export interface YourCompany {
   industryServed: string;
   /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
   geographies: string[];
-  dealSize: DealSize;
+  /**
+     * Typical deal size motions the seller sells into — tick all that apply
+     * @minItems 1
+     */
+  dealSize: DealSize[];
   /** Typical decision-maker job titles */
   buyerTitles: string[];
   /** Pain points our product addresses */
@@ -32,4 +36,10 @@ export interface YourCompany {
   painPoints?: string;
   /** Optional customer outcomes the AE can cite in outreach */
   customerOutcomes?: string;
+  /** Patterns that make accounts worth calling now for this seller */
+  whyNowPattern?: string;
+  /** Free-text reasoning rules appended to the system prompt */
+  reasoningOverrides?: string;
+  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
+  sectorPackOverride?: string;
 }

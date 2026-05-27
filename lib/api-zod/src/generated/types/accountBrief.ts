@@ -12,6 +12,10 @@ import type { AccountBriefRecentTriggers } from './accountBriefRecentTriggers';
 import type { AccountBriefSourceSummary } from './accountBriefSourceSummary';
 import type { AccountBriefTheirWorld } from './accountBriefTheirWorld';
 import type { BuyingCommitteeMember } from './buyingCommitteeMember';
+import type { CallDecision } from './callDecision';
+import type { DiscoveryQuestion } from './discoveryQuestion';
+import type { ManualResearchTip } from './manualResearchTip';
+import type { ResearchPackMeta } from './researchPackMeta';
 
 export interface AccountBrief {
   companySnapshot: AccountBriefCompanySnapshot;
@@ -20,5 +24,13 @@ export interface AccountBrief {
   theirWorld: AccountBriefTheirWorld;
   recentTriggers: AccountBriefRecentTriggers;
   coldEmail: AccountBriefColdEmailProperty;
+  /** Should this account be called this week, and why */
+  callDecision?: CallDecision;
+  /** Up to 3 discovery questions tied to specific found signals */
+  discoveryQuestions?: DiscoveryQuestion[];
+  /** Sources the AE should check manually before calling */
+  manualResearchTips?: ManualResearchTip[];
   sourceSummary?: AccountBriefSourceSummary;
+  /** Sector reasoning pack used to generate this brief */
+  researchPack?: ResearchPackMeta;
 }

@@ -12,18 +12,32 @@ import {
   Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
   Brain, BookOpen, AlertCircle, ExternalLink, Flag,
-  Download, FileText, MessageCircle, ClipboardList, ArrowRight
+  Download, FileText, MessageCircle, ClipboardList, ArrowRight, Phone, HelpCircle, Compass
 } from "lucide-react";
 import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
 import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
-import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
+import { loadHistory, saveToHistory, updateHistoryEntry, getHistoryEntry, type HistoryEntry } from "@/lib/history";
+import type { BriefStatus } from "@/lib/brief-status";
+import { BriefStatusSelect } from "@/components/brief-status-select";
+import { NextTouchSection } from "@/components/next-touch-section";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
+import { researchLoadingMessage } from "@/lib/research-loading";
 import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  buyerDisplayName,
+  callPriorityLabel,
+  callPriorityStyles,
+  fitHighlights,
+  MAX_BUYERS,
+  snapshotPainPoints,
+  worldBullets,
+} from "@/lib/brief-helpers";
 import { getValidTriggers } from "@/lib/brief-triggers";
 import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
 import { BearMark } from "@/components/bear-mark";
@@ -51,6 +65,304 @@ const SOURCE_CONFIG: Record<string, { color: string; bg: string; border: string;
   own_intel:      { color: "#085041", bg: "#E1F5EE", border: "#5DCAA5", label: "Your intel" },
   assumed:        { color: "var(--color-text-tertiary)", bg: "var(--color-background-secondary)", border: "var(--color-border-tertiary)", label: "Inferred" },
 };
+
+function ConfidencePill({ level }: { level?: string }) {
+  if (!level) return null;
+  const styles: Record<string, string> = {
+    verified: "text-green-700 bg-green-50 border-green-200",
+    informed: "text-amber-700 bg-amber-50 border-amber-200",
+    assumed: "text-muted-foreground bg-muted border-border",
+  };
+  return (
+    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${styles[level] ?? styles.informed}`}>
+      {level}
+    </span>
+  );
+}
+
+function CallDecisionCard({ brief }: { brief: AccountBrief }) {
+  const decision = brief.callDecision;
+  if (!decision) return null;
+  const styles = callPriorityStyles(decision.priority);
+
+  return (
+    <BriefCard className={`${styles.bg} ${styles.border}`}>
+      <BriefCardContent className="pt-5 pb-5">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/80 border border-border flex items-center justify-center shrink-0">
+            <Phone className={`w-4 h-4 ${styles.text}`} />
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className={`text-xs font-bold uppercase tracking-widest ${styles.text}`}>Call decision</p>
+              <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${styles.badge}`}>
+                {callPriorityLabel(decision.priority)}
+              </span>
+            </div>
+            <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{decision.justification}</p>
+            <SourceChips sources={decision.sources} sectionId="call-decision" />
+          </div>
+          <CopyButton getText={() => `${callPriorityLabel(decision.priority)}: ${decision.justification}`} />
+        </div>
+      </BriefCardContent>
+    </BriefCard>
+  );
+}
+
+function isBlankText(value: string | null | undefined): boolean {
+  return !value?.trim();
+}
+
+function ColdEmailMissingWarning({ kind }: { kind: "opener" | "fullEmail" }) {
+  const message = kind === "fullEmail"
+    ? "Full cold email not generated for this account — try regenerating, or check the call decision above."
+    : "Cold email opener not generated for this account — try regenerating, or check the call decision above.";
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/40 p-4 flex items-start gap-2.5">
+      <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+      <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+    </div>
+  );
+}
+
+function OpenerCard({ brief }: { brief: AccountBrief }) {
+  const opener = stripCitationTags(brief.coldEmail.opener);
+  const openerMissing = isBlankText(opener);
+
+  return (
+    <BriefCard className="bg-primary/[0.04] border-primary/30">
+      <BriefCardHeader>
+        <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Opener</BriefCardTitle>
+        {!openerMissing && <CopyButton getText={() => opener} />}
+      </BriefCardHeader>
+      <BriefCardContent>
+        {openerMissing ? (
+          <ColdEmailMissingWarning kind="opener" />
+        ) : (
+          <blockquote className="border-l-4 border-primary pl-4 italic text-sm sm:text-base text-foreground leading-relaxed">
+            "{opener}"
+          </blockquote>
+        )}
+        <SourceChips sources={brief.coldEmail.sources} sectionId="email-opener" />
+      </BriefCardContent>
+    </BriefCard>
+  );
+}
+
+function WhyNowCard({ items, sources }: { items: NonNullable<AccountBrief["recentTriggers"]>["items"]; sources?: BriefSource[] }) {
+  return (
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><Newspaper className="w-4 h-4 text-primary" />Why now</BriefCardTitle>
+        {items.length > 0 && (
+          <CopyButton getText={() => items.map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
+        )}
+      </BriefCardHeader>
+      <BriefCardContent>
+        {items.length === 0 ? (
+          <p className={briefCardBodyClass}>No recent triggers found — call decision is based on structural fit or hiring signals only.</p>
+        ) : (
+          <div className="space-y-3">
+            {items.slice(0, 2).map((item, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">{item.event}</p>
+                  <p className={`${briefCardBodyClass} mt-0.5`}>{item.significance}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">{item.recency}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <SourceChips sources={sources} sectionId="triggers" />
+      </BriefCardContent>
+    </BriefCard>
+  );
+}
+
+function BuyersCard({ committee }: { committee: BuyingCommitteeMember[] }) {
+  if (committee.length === 0) return null;
+
+  return (
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><Users className="w-4 h-4 text-primary" />Who to call</BriefCardTitle>
+        <CopyButton getText={() => committee.slice(0, MAX_BUYERS).map(p => `${buyerDisplayName(p)}: ${p.painPoint}`).join("\n")} />
+      </BriefCardHeader>
+      <BriefCardContent>
+        <div className="space-y-3">
+          {committee.slice(0, MAX_BUYERS).map((person, i) => (
+            <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-secondary border border-border">
+              <ContactAvatar title={person.name?.trim() || person.title} />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-foreground">{buyerDisplayName(person)}</p>
+                <p className={`${briefCardBodyClass} mt-0.5`}>{person.painPoint}</p>
+                {person.linkedinSignal ? (
+                  <p className="text-xs text-primary mt-1.5 flex items-start gap-1.5 italic">
+                    <span className="font-bold not-italic">in</span>"{person.linkedinSignal}"
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1.5">No public LinkedIn signal found</p>
+                )}
+                <SourceChips sources={person.sources} sectionId={`person-${i}`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </BriefCardContent>
+    </BriefCard>
+  );
+}
+
+function DiscoveryQuestionsCard({ questions }: { questions: NonNullable<AccountBrief["discoveryQuestions"]> }) {
+  if (!questions.length) return null;
+
+  return (
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><HelpCircle className="w-4 h-4 text-primary" />Questions to ask</BriefCardTitle>
+        <CopyButton getText={() => questions.map(q => `• ${q.question}`).join("\n")} />
+      </BriefCardHeader>
+      <BriefCardContent className="space-y-3">
+        {questions.map((q, i) => (
+          <div key={i} className="rounded-xl border border-border bg-secondary/60 p-4">
+            <p className="text-sm text-foreground leading-snug">{q.question}</p>
+            {q.tiedToSignal && (
+              <p className="text-xs text-muted-foreground mt-2">
+                <span className="font-medium text-foreground/70">Re:</span> {q.tiedToSignal}
+              </p>
+            )}
+            <div className="mt-2">
+              <ConfidencePill level={q.confidence} />
+            </div>
+          </div>
+        ))}
+      </BriefCardContent>
+    </BriefCard>
+  );
+}
+
+function ManualResearchTipsCard({ tips }: { tips: NonNullable<AccountBrief["manualResearchTips"]> }) {
+  if (!tips.length) return null;
+
+  return (
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><Compass className="w-4 h-4 text-primary" />Check manually before calling</BriefCardTitle>
+        <CopyButton getText={() => tips.map(t => `• ${t.tip}`).join("\n")} />
+      </BriefCardHeader>
+      <BriefCardContent>
+        <BriefBulletList items={tips.map(t => t.reason ? `${t.tip} — ${t.reason}` : t.tip)} />
+      </BriefCardContent>
+    </BriefCard>
+  );
+}
+
+function BackgroundSection({
+  brief,
+  hasTriggers,
+  validTriggers,
+  showFullEmail,
+  setShowFullEmail,
+  emailTone,
+  emailRegenerating,
+  regenerateColdEmail,
+}: {
+  brief: AccountBrief;
+  hasTriggers: boolean;
+  validTriggers: NonNullable<AccountBrief["recentTriggers"]>["items"];
+  showFullEmail: boolean;
+  setShowFullEmail: (value: boolean) => void;
+  emailTone: EmailTone;
+  emailRegenerating: boolean;
+  regenerateColdEmail: (tone: EmailTone) => void;
+}) {
+  return (
+    <Collapsible defaultOpen={false}>
+      <BriefCard>
+        <CollapsibleTrigger asChild>
+          <button type="button" className="w-full text-left px-6 py-4 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors rounded-2xl">
+            <div>
+              <p className="text-sm font-bold text-foreground">Background & sources</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Account fit, full email, and source audit</p>
+            </div>
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="px-6 pb-6 space-y-4 border-t border-border pt-4">
+            <SourceSummaryBar summary={brief.sourceSummary} triggersFound={hasTriggers} />
+
+            <div className="grid grid-cols-1 gap-4">
+              <BriefCard>
+                <BriefCardHeader>
+                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />Account Fit</BriefCardTitle>
+                </BriefCardHeader>
+                <BriefCardContent className="space-y-2">
+                  <IcpScoreDisplay score={brief.icpFitScore.score} highlights={fitHighlights(brief)} />
+                  <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
+                </BriefCardContent>
+              </BriefCard>
+            </div>
+
+            <BriefCard>
+              <BriefCardHeader>
+                <BriefCardTitle>
+                  <Globe className="w-4 h-4 text-primary" />Their world
+                  {brief.theirWorld?.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
+                </BriefCardTitle>
+              </BriefCardHeader>
+              <BriefCardContent>
+                <BriefBulletList items={worldBullets(brief)} />
+                <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
+              </BriefCardContent>
+            </BriefCard>
+
+            <BriefCard className="bg-primary/[0.04] border-primary/30">
+              <BriefCardHeader>
+                <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Full cold email</BriefCardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-muted-foreground">
+                    {showFullEmail ? "Show opener only" : "Show full email"}
+                  </Button>
+                </div>
+              </BriefCardHeader>
+              <BriefCardContent className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`${briefCardLabelClass}`}>Tone:</span>
+                  {TONE_OPTIONS.map(({ value, label }) => (
+                    <Button
+                      key={value}
+                      variant={emailTone === value ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs h-7 px-2.5 rounded-xl"
+                      disabled={emailRegenerating}
+                      onClick={() => regenerateColdEmail(value)}
+                    >
+                      {emailRegenerating && emailTone === value ? <Loader2 className="w-3 h-3 animate-spin" /> : label}
+                    </Button>
+                  ))}
+                </div>
+                {showFullEmail ? (
+                  isBlankText(stripCitationTags(brief.coldEmail.fullEmail ?? ""))
+                    ? <ColdEmailMissingWarning kind="fullEmail" />
+                    : <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail ?? "")}</pre>
+                ) : isBlankText(stripCitationTags(brief.coldEmail.opener)) ? (
+                  <ColdEmailMissingWarning kind="opener" />
+                ) : (
+                  <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>
+                )}
+                <SourceChips sources={brief.coldEmail.sources} sectionId="email-full" />
+              </BriefCardContent>
+            </BriefCard>
+          </div>
+        </CollapsibleContent>
+      </BriefCard>
+    </Collapsible>
+  );
+}
 
 // --- CopyButton ---
 function CopyButton({ getText }: { getText: () => string }) {
@@ -138,56 +450,55 @@ function BriefBulletList({ items, className }: { items: string[]; className?: st
   );
 }
 
-function fitHighlights(brief: AccountBrief): string[] {
-  if (brief.icpFitScore.highlights?.length) return brief.icpFitScore.highlights;
-  if (brief.icpFitScore.reason?.trim()) return [brief.icpFitScore.reason.trim()];
-  return [];
-}
-
-function worldBullets(brief: AccountBrief): string[] {
-  if (brief.theirWorld?.bullets?.length) return brief.theirWorld.bullets;
-  const narrative = brief.theirWorld?.narrative?.trim();
-  if (!narrative) return [];
-  return narrative.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 4);
-}
-
-function snapshotPainPoints(brief: AccountBrief): string[] {
-  return brief.companySnapshot.possiblePainPoints?.filter(Boolean) ?? [];
-}
-
-function CompactSnapshot({ brief }: { brief: AccountBrief }) {
+// --- Contact avatar ---
+function CompanySnapshotCard({ brief }: { brief: AccountBrief }) {
   const snap = brief.companySnapshot;
   const tech = snap.techStack?.trim();
   const showTech = tech && tech !== "Not detected";
   const pains = snapshotPainPoints(brief);
-  const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean);
+  const hasPains = pains.length > 0;
 
   return (
-    <div className="mt-4 pt-4 border-t border-border/60 space-y-3">
-      <p className="text-sm text-muted-foreground leading-snug">{meta.join(" · ")}</p>
+    <BriefCard>
+      <BriefCardHeader>
+        <BriefCardTitle><Globe className="w-4 h-4 text-primary" />Company snapshot</BriefCardTitle>
+        <CopyButton getText={() => {
+          const meta = [snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean).join(" · ");
+          const painLines = pains.map(p => `• ${p}`).join("\n");
+          return painLines ? `${meta}\n\nPossible pain points:\n${painLines}` : meta;
+        }} />
+      </BriefCardHeader>
+      <BriefCardContent>
+        <div className={`grid gap-5 ${hasPains ? "grid-cols-1 sm:grid-cols-2 sm:gap-6" : "grid-cols-1"}`}>
+          <div className="space-y-3 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Profile</p>
+            <p className="text-sm text-foreground leading-snug">
+              {[snap.size, snap.industry, snap.location, snap.fundingStage].filter(Boolean).join(" · ")}
+            </p>
+            {showTech && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Tech stack</p>
+                <p className="text-sm font-medium text-foreground leading-snug">{tech}</p>
+              </div>
+            )}
+          </div>
 
-      {showTech && (
-        <p className="text-sm leading-snug">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-2">Tech</span>
-          <span className="font-medium text-foreground">{tech}</span>
-        </p>
-      )}
-
-      {pains.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Possible pain points</p>
-          <ul className="space-y-1">
-            {pains.map((pain, i) => (
-              <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/30">
-                {pain}
-              </li>
-            ))}
-          </ul>
+          {hasPains && (
+            <div className="min-w-0 rounded-xl border border-border bg-secondary/50 p-4 sm:py-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Possible pain points</p>
+              <ul className="space-y-2">
+                {pains.map((pain, i) => (
+                  <li key={i} className="text-sm text-foreground leading-snug pl-3 border-l-2 border-primary/40">
+                    {pain}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-      )}
-
-      <SourceChips sources={snap.sources} sectionId="snapshot" />
-    </div>
+        <SourceChips sources={snap.sources} sectionId="snapshot" />
+      </BriefCardContent>
+    </BriefCard>
   );
 }
 
@@ -486,45 +797,6 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
   );
 }
 
-function RecentTriggersCard({ items, sources }: { items: NonNullable<AccountBrief["recentTriggers"]>["items"]; sources?: BriefSource[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? items : items.slice(0, 3);
-  const hiddenCount = items.length - 3;
-
-  return (
-    <BriefCard>
-      <BriefCardHeader>
-        <BriefCardTitle><Newspaper className="w-4 h-4 text-primary" />Recent Triggers & News</BriefCardTitle>
-        <CopyButton getText={() => items.map(t => `• ${t.event} — ${t.significance} (${t.recency})`).join("\n")} />
-      </BriefCardHeader>
-      <BriefCardContent>
-        <div className="space-y-3">
-          {visible.map((item, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">{item.event}</p>
-                <p className={`${briefCardBodyClass} mt-0.5`}>{item.significance}</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">{item.recency}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        {hiddenCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setExpanded(e => !e)}
-            className="mt-4 text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
-          >
-            {expanded ? <>Show less<ChevronDown className="w-4 h-4 rotate-180" /></> : <>+{hiddenCount} more<ChevronDown className="w-4 h-4" /></>}
-          </button>
-        )}
-        <SourceChips sources={sources} sectionId="triggers" />
-      </BriefCardContent>
-    </BriefCard>
-  );
-}
-
 function BriefSetupRequired() {
   return (
     <div className="min-h-screen">
@@ -709,6 +981,7 @@ export default function AccountBriefPage() {
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [showOptionalContext, setShowOptionalContext] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+  const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -718,6 +991,15 @@ export default function AccountBriefPage() {
     const id = setInterval(() => setCooldownSeconds(s => (s <= 1 ? 0 : s - 1)), 1000);
     return () => clearInterval(id);
   }, [cooldownSeconds]);
+
+  useEffect(() => {
+    if (!currentHistoryId) {
+      setBriefStatus("not_contacted");
+      return;
+    }
+    const entry = getHistoryEntry(currentHistoryId);
+    setBriefStatus(entry?.status ?? "not_contacted");
+  }, [currentHistoryId, brief]);
 
   useEffect(() => {
     if (historyParam) return;
@@ -783,10 +1065,18 @@ export default function AccountBriefPage() {
     } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
+  function handleBriefStatusChange(status: BriefStatus, lastTouchedAt?: string) {
+    if (!currentHistoryId) return;
+    const touched = lastTouchedAt ?? new Date().toISOString();
+    updateHistoryEntry(currentHistoryId, { status, lastTouchedAt: touched });
+    setBriefStatus(status);
+  }
+
   function handleHistorySelect(entry: HistoryEntry) {
     setLastLabel(entry.label); setLastUrl(entry.url); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
     setSearchQuery(entry.label);
     setCurrentHistoryId(entry.id);
+    setBriefStatus(entry.status ?? "not_contacted");
     saveBriefSession({
       label: entry.label,
       url: entry.url,
@@ -911,7 +1201,7 @@ export default function AccountBriefPage() {
             {loading && (
               <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin text-foreground" />
-                Searching ASIC, Seek, LinkedIn, and AU press — 30–60 seconds...
+                {researchLoadingMessage(yourCompany)}
               </p>
             )}
           </div>
@@ -950,7 +1240,16 @@ export default function AccountBriefPage() {
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium text-primary">Brief for</p>
                       <h2 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight text-foreground">{lastLabel}</h2>
-                      <CompactSnapshot brief={brief} />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {[brief.companySnapshot.industry, brief.companySnapshot.location].filter(Boolean).join(" · ")}
+                      </p>
+                      <div className="mt-3">
+                        <BriefStatusSelect
+                          status={briefStatus}
+                          onStatusChange={handleBriefStatusChange}
+                          disabled={!currentHistoryId}
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">
@@ -977,101 +1276,39 @@ export default function AccountBriefPage() {
               </BriefCardContent>
             </BriefCard>
 
-            <SourceSummaryBar summary={brief.sourceSummary} triggersFound={hasTriggers} />
+            {brief.researchPack && (
+              <p className="text-xs font-medium text-muted-foreground">
+                Reasoning pack: {brief.researchPack.name} v{brief.researchPack.version}
+              </p>
+            )}
 
-            {/* Account fit · Triggers (optional) */}
-            <div className={hasTriggers
-              ? "grid grid-cols-1 lg:grid-cols-2 gap-4"
-              : "grid grid-cols-1 gap-4"
-            }>
-              <BriefCard>
-                <BriefCardHeader>
-                  <BriefCardTitle><Star className="w-4 h-4 text-yellow-500" />Account Fit</BriefCardTitle>
-                  <CopyButton getText={() => `Account fit: ${brief.icpFitScore.score}/10\n${fitHighlights(brief).map(b => `• ${b}`).join("\n")}`} />
-                </BriefCardHeader>
-                <BriefCardContent className="space-y-2">
-                  <IcpScoreDisplay score={brief.icpFitScore.score} highlights={fitHighlights(brief)} />
-                  <SourceChips sources={brief.icpFitScore.sources} sectionId="icp" />
-                </BriefCardContent>
-              </BriefCard>
+            <CallDecisionCard brief={brief} />
+            <OpenerCard brief={brief} />
+            <NextTouchSection
+              brief={brief}
+              companyName={lastLabel}
+              historyId={currentHistoryId}
+              briefStatus={briefStatus}
+              onStatusChange={handleBriefStatusChange}
+              onError={message => setError(message || null)}
+            />
+            <WhyNowCard items={validTriggers} sources={brief.recentTriggers?.sources} />
+            <BuyersCard committee={brief.buyingCommittee ?? []} />
+            <DiscoveryQuestionsCard questions={brief.discoveryQuestions ?? []} />
+            <ManualResearchTipsCard tips={brief.manualResearchTips ?? []} />
 
-              {hasTriggers && (
-                <RecentTriggersCard items={validTriggers} sources={brief.recentTriggers?.sources} />
-              )}
-            </div>
+            <CompanySnapshotCard brief={brief} />
 
-            <BriefCard>
-              <BriefCardHeader>
-                <BriefCardTitle>
-                  <Globe className="w-4 h-4 text-primary" />What's Going On In Their World
-                  {brief.theirWorld?.confidence && <ConfidenceBadge level={brief.theirWorld.confidence} />}
-                </BriefCardTitle>
-                <CopyButton getText={() => worldBullets(brief).map(b => `• ${b}`).join("\n")} />
-              </BriefCardHeader>
-              <BriefCardContent>
-                <BriefBulletList items={worldBullets(brief)} />
-                <SourceChips sources={brief.theirWorld?.sources} sectionId="world" />
-              </BriefCardContent>
-            </BriefCard>
-
-            <BriefCard>
-              <BriefCardHeader>
-                <BriefCardTitle><Users className="w-4 h-4 text-primary" />Likely Buying Committee</BriefCardTitle>
-                <CopyButton getText={() => (brief.buyingCommittee ?? []).map(p => `${p.title}: ${p.painPoint}`).join("\n")} />
-              </BriefCardHeader>
-              <BriefCardContent>
-                <div className="space-y-3">
-                  {(brief.buyingCommittee ?? []).map((person, i) => (
-                    <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-secondary border border-border">
-                      <ContactAvatar title={person.title} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-foreground">{person.title}</p>
-                        <p className={`${briefCardBodyClass} mt-0.5`}>{person.painPoint}</p>
-                        {person.linkedinSignal && (
-                          <p className="text-xs text-primary mt-1.5 flex items-start gap-1.5 italic">
-                            <span className="font-bold not-italic">in</span>"{person.linkedinSignal}"
-                          </p>
-                        )}
-                        <SourceChips sources={person.sources} sectionId={`person-${i}`} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </BriefCardContent>
-            </BriefCard>
-
-            <BriefCard className="bg-primary/[0.04] border-primary/30">
-              <BriefCardHeader>
-                <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Cold Email</BriefCardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowFullEmail(!showFullEmail)} className="text-xs h-7 px-2 text-muted-foreground">
-                    {showFullEmail ? "Show opener" : "Show full email"}
-                  </Button>
-                  <CopyButton getText={() => showFullEmail && brief.coldEmail.fullEmail ? brief.coldEmail.fullEmail : brief.coldEmail.opener} />
-                </div>
-              </BriefCardHeader>
-              <BriefCardContent className="space-y-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`${briefCardLabelClass}`}>Tone:</span>
-                  {TONE_OPTIONS.map(({ value, label }) => (
-                    <Button
-                      key={value}
-                      variant={emailTone === value ? "default" : "outline"}
-                      size="sm"
-                      className="text-xs h-7 px-2.5 rounded-xl"
-                      disabled={emailRegenerating}
-                      onClick={() => regenerateColdEmail(value)}
-                    >
-                      {emailRegenerating && emailTone === value ? <Loader2 className="w-3 h-3 animate-spin" /> : label}
-                    </Button>
-                  ))}
-                </div>
-                {showFullEmail && brief.coldEmail.fullEmail
-                  ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
-                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
-                <SourceChips sources={brief.coldEmail.sources} sectionId="email" />
-              </BriefCardContent>
-            </BriefCard>
+            <BackgroundSection
+              brief={brief}
+              hasTriggers={hasTriggers}
+              validTriggers={validTriggers}
+              showFullEmail={showFullEmail}
+              setShowFullEmail={setShowFullEmail}
+              emailTone={emailTone}
+              emailRegenerating={emailRegenerating}
+              regenerateColdEmail={regenerateColdEmail}
+            />
 
             <BriefCard>
               <BriefCardHeader>

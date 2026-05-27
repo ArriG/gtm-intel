@@ -43,7 +43,7 @@ Full detail in [`docs/architecture.md`](docs/architecture.md).
 - `openapi.yaml` is the single source of truth. Never edit generated files directly.
 - Codegen: `/opt/homebrew/bin/node ./lib/api-spec/node_modules/orval/dist/bin/orval.mjs --config ./lib/api-spec/orval.config.ts`
 - **Postgres:** ICPs (drive brief scoring + signal radar), signals. **Not** briefs, Your Company, or history.
-- **localStorage:** Your Company (`gtm_your_company_v2`), brief history, recent searches.
+- **localStorage:** Your Company (`gtm_your_company_v3`), brief history, recent searches.
 - **Your Company** sent in POST body (`yourCompany`) → seller context in Claude prompt.
 - **LinkedIn posts + own intel** in POST body → highest-priority research context.
 - **Account brief AI routes:** `POST /account-brief` (web search), `/cold-email` and `/talk-track` (regenerate from brief JSON), `POST /market-prospect` (web search).
@@ -80,18 +80,26 @@ Account briefs derive research sources automatically from Your Company (geograph
 - **Your Company** is the first sidebar item (Setup section above Research)
 - First-run redirect: unconfigured users land on `/your-company`, not Search
 - Brief generation gated until Your Company is complete (empty state + CTA)
-- Expanded `YourCompany` schema: `companyName`, `oneLineDescription`, `industryServed`, `geographies`, `dealSize`, `buyerTitles`, `painPointsSolved` (+ optional `customerOutcomes`; legacy prompt fields derived on save)
-- localStorage bumped to `gtm_your_company_v2` — no migration from v1 (see `c39795a`)
+- Expanded `YourCompany` schema: `companyName`, `oneLineDescription`, `industryServed`, `geographies`, `dealSize` (array — tick all motions that apply), `buyerTitles`, `painPointsSolved` (+ optional `customerOutcomes`; legacy prompt fields derived on save)
+- localStorage bumped to `gtm_your_company_v3` — no migration from v2 (pre-launch; users re-fill Your Company)
 - Hero treatment on Your Company setup page
 
 ## Next milestones (not built yet)
 
-- **Milestone 3:** Flexible Brief schema — enterprise buying committee vs SMB single decision-maker based on `dealSize`
+- **Milestone 3:** Flexible Brief schema — up to 3 relevant decision-makers regardless of deal size *(shipped on branch)*
+
+## Milestone 4 — Reasoning UI *(shipped on branch)*
+
+- Auto-detect sector pack from Your Company profile (geographies + industry + what you sell + company name)
+- Optional manual pack override on `/reasoning`
+- `whyNowPattern` and `reasoningOverrides` fields wired into composed system prompt
+- `POST /api/your-company/preview-prompt` + Reasoning sidebar page with prompt preview
+- New sector pack: `uk-financial-services.md`
 
 ## Milestone 2 — Automatic research sources (commit `89acbcf`)
 
 - Account brief prompt derives UK/AU/NZ/US sources from Your Company — no separate source-plan step or UI
-- Driven by geographies, `dealSize`, and industry (e.g. UK enterprise + banks/insurers → Companies House, FCA, UK financial press)
+- Driven by geographies, `dealSize` (multi-select), and industry (e.g. UK enterprise + banks/insurers → Companies House, FCA, UK financial press)
 - Falls back to default AU five when geographies are missing
 
 ## Backlog (next ideas)

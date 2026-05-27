@@ -93,7 +93,7 @@ export interface IcpUpdate {
 }
 
 /**
- * Typical deal size motion — SMB, mid-market, or enterprise
+ * Deal size motion — SMB, mid-market, or enterprise
  */
 export type DealSize = typeof DealSize[keyof typeof DealSize];
 
@@ -116,7 +116,11 @@ export interface YourCompany {
   industryServed: string;
   /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
   geographies: string[];
-  dealSize: DealSize;
+  /**
+     * Typical deal size motions the seller sells into — tick all that apply
+     * @minItems 1
+     */
+  dealSize: DealSize[];
   /** Typical decision-maker job titles */
   buyerTitles: string[];
   /** Pain points our product addresses */
@@ -129,6 +133,12 @@ export interface YourCompany {
   painPoints?: string;
   /** Optional customer outcomes the AE can cite in outreach */
   customerOutcomes?: string;
+  /** Patterns that make accounts worth calling now for this seller */
+  whyNowPattern?: string;
+  /** Free-text reasoning rules appended to the system prompt */
+  reasoningOverrides?: string;
+  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
+  sectorPackOverride?: string;
 }
 
 export interface SignalScanInput {
@@ -215,6 +225,58 @@ export interface LinkedInPost {
   content: string;
 }
 
+export interface SectorPackOption {
+  id: string;
+  name: string;
+  version: number;
+  geographies?: string[];
+}
+
+export type SectorPackSelectionMetaMode = typeof SectorPackSelectionMetaMode[keyof typeof SectorPackSelectionMetaMode];
+
+
+export const SectorPackSelectionMetaMode = {
+  auto: 'auto',
+  override: 'override',
+  legacy: 'legacy',
+} as const;
+
+export interface SectorPackSelectionMeta {
+  mode: SectorPackSelectionMetaMode;
+  packId?: string | null;
+  packName?: string | null;
+  /** Auto-detected pack id when override is set */
+  autoDetectedId?: string | null;
+  autoDetectedName?: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
+}
+
+export interface SectorPackListResponse {
+  packs: SectorPackOption[];
+}
+
+export interface PreviewPromptInput {
+  yourCompany: YourCompany;
+}
+
+export interface ResearchPackMeta {
+  /** Sector pack identifier, e.g. uk-dental */
+  id: string;
+  name: string;
+  version: number;
+  lastReviewed?: string;
+  loadingLabel: string;
+  expectedSeconds: number;
+}
+
+export interface PreviewPromptResponse {
+  systemPrompt: string;
+  sectorPackSelection: SectorPackSelectionMeta;
+  researchPack?: ResearchPackMeta;
+  availablePacks: SectorPackOption[];
+}
+
 export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
 
 
@@ -224,8 +286,25 @@ export const EmailTone = {
   conversational: 'conversational',
 } as const;
 
+/**
+ * Optional role in the buying process when inferrable from research
+ */
+export type BuyingRole = typeof BuyingRole[keyof typeof BuyingRole];
+
+
+export const BuyingRole = {
+  decision_maker: 'decision_maker',
+  champion: 'champion',
+  economic_buyer: 'economic_buyer',
+  technical: 'technical',
+  influencer: 'influencer',
+} as const;
+
 export interface BuyingCommitteeMember {
+  /** Person's name when found in research; omit if unknown */
+  name?: string;
   title: string;
+  buyingRole?: BuyingRole;
   painPoint: string;
   linkedinSignal?: string;
   sources?: BriefSource[];
@@ -235,6 +314,35 @@ export interface AccountBriefRecentTriggerItem {
   event: string;
   significance: string;
   recency: string;
+}
+
+export type CallPriority = typeof CallPriority[keyof typeof CallPriority];
+
+
+export const CallPriority = {
+  hot: 'hot',
+  warm: 'warm',
+  watch: 'watch',
+  skip: 'skip',
+} as const;
+
+export interface CallDecision {
+  priority: CallPriority;
+  /** One sentence — why call (or not) this week */
+  justification: string;
+  sources?: BriefSource[];
+}
+
+export interface DiscoveryQuestion {
+  question: string;
+  /** The specific research finding this question references */
+  tiedToSignal?: string;
+  confidence?: BriefSourceConfidence;
+}
+
+export interface ManualResearchTip {
+  tip: string;
+  reason?: string;
 }
 
 export type AccountBriefCompanySnapshot = {
@@ -293,7 +401,15 @@ export interface AccountBrief {
   theirWorld: AccountBriefTheirWorld;
   recentTriggers: AccountBriefRecentTriggers;
   coldEmail: AccountBriefColdEmailProperty;
+  /** Should this account be called this week, and why */
+  callDecision?: CallDecision;
+  /** Up to 3 discovery questions tied to specific found signals */
+  discoveryQuestions?: DiscoveryQuestion[];
+  /** Sources the AE should check manually before calling */
+  manualResearchTips?: ManualResearchTip[];
   sourceSummary?: AccountBriefSourceSummary;
+  /** Sector reasoning pack used to generate this brief */
+  researchPack?: ResearchPackMeta;
 }
 
 export interface BriefActionInput {
@@ -312,6 +428,22 @@ export interface AccountBriefColdEmail {
   opener: string;
   fullEmail?: string;
   sources?: BriefSource[];
+}
+
+export interface NextTouchInput {
+  brief: AccountBrief;
+  /** The prospect's reply text, pasted by the AE */
+  reply: string;
+  yourCompany: YourCompany;
+  tone?: EmailTone;
+}
+
+export interface NextTouchResponse {
+  /** Regenerated opener responding to the reply */
+  opener: string;
+  /** Short coaching note on what to do next */
+  suggestion: string;
+  generatedAt: string;
 }
 
 export interface TalkTrack {

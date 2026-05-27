@@ -4,8 +4,10 @@ import icpsRouter from "./icps";
 import signalsRouter from "./signals";
 import dashboardRouter from "./dashboard";
 import accountBriefRouter from "./account-brief";
+import nextTouchRouter from "./next-touch";
 import marketProspectRouter from "./market-prospect";
 import signalRadarRouter from "./signal-radar";
+import yourCompanyRouter from "./your-company";
 
 const router: IRouter = Router();
 
@@ -14,7 +16,9 @@ router.use(dashboardRouter);
 router.use(icpsRouter);
 router.use(signalsRouter);
 router.use(signalRadarRouter);
+router.use(yourCompanyRouter);
 router.use(accountBriefRouter);
+router.use(nextTouchRouter);
 router.use(marketProspectRouter);
 
 export default router;

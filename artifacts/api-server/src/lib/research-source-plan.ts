@@ -1,4 +1,5 @@
 import type { YourCompanyInput } from "./brief-ai";
+import { formatDealSizeLabels } from "./brief-ai";
 
 type MarketRegion = "uk" | "au" | "nz" | "us" | "global";
 
@@ -60,11 +61,12 @@ function isHealthcare(text: string): boolean {
 }
 
 function isEnterprise(dealSize: YourCompanyInput["dealSize"]): boolean {
-  return dealSize === "enterprise";
+  return dealSize?.includes("enterprise") ?? false;
 }
 
 function isSmb(dealSize: YourCompanyInput["dealSize"]): boolean {
-  return dealSize === "smb";
+  const sizes = dealSize ?? [];
+  return sizes.length === 1 && sizes[0] === "smb";
 }
 
 function websiteSource(): SourceTemplate {
@@ -270,7 +272,7 @@ function buildSourcesForProfile(yourCompany: YourCompanyInput): SourceTemplate[]
 function sellerContextLine(yourCompany: YourCompanyInput): string {
   const geographies = yourCompany.geographies?.join(", ") ?? "your markets";
   const industry = yourCompany.industryServed ?? yourCompany.whoYouSellTo ?? "your target industry";
-  const motion = yourCompany.dealSize ?? "mid-market";
+  const motion = formatDealSizeLabels(yourCompany.dealSize?.length ? yourCompany.dealSize : ["mid-market"]);
   const product = yourCompany.oneLineDescription ?? yourCompany.whatYouSell ?? "your product";
 
   return `Seller context: you are researching target accounts for a ${motion} seller offering ${product} into ${industry} across ${geographies}. Prioritise sources and signals relevant to that motion.`;

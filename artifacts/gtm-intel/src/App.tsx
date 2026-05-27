@@ -1,30 +1,35 @@
 import { useEffect, useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Building2, Sparkles, Users, Newspaper, Radio, ChevronRight, ChevronDown, Target, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Users, Newspaper, Radio, ChevronRight, ChevronDown, Target, Brain, FolderOpen, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
+import { BriefStatusPill } from "@/components/brief-status-pill";
 import { useHistory, clearHistory } from "@/lib/history";
 import { useIsYourCompanyConfigured } from "@/lib/your-company";
 
 import AccountBriefPage from "./pages/account-brief";
 import YourCompany from "./pages/your-company";
+import ReasoningPage from "./pages/reasoning";
 import ICPs from "./pages/icps";
 import ICPDetail from "./pages/icp-detail";
 import Dashboard from "./pages/dashboard";
 import Signals from "./pages/signals";
 import MarketProspect from "./pages/market-prospect";
 import CallPrepPage from "./pages/call-prep";
+import MyBriefsPage from "./pages/my-briefs";
 import NotFound from "./pages/not-found";
 
 const queryClient = new QueryClient();
 
 const NAV_SETUP = [
   { href: "/your-company", label: "Your Company", icon: Building2 },
+  { href: "/reasoning", label: "Reasoning", icon: Brain },
 ];
 
 const NAV_RESEARCH = [
   { href: "/", label: "Search", icon: Sparkles },
+  { href: "/my-briefs", label: "My briefs", icon: FolderOpen },
   { href: "/prospect", label: "Prospect", icon: Target },
 ];
 
@@ -55,9 +60,10 @@ function RecentSearches() {
             <Link
               key={entry.id}
               href={`/?h=${entry.id}`}
-              className="block px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-md transition-colors truncate"
+              className="flex items-center gap-2 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-md transition-colors min-w-0"
             >
-              {entry.label}
+              <span className="truncate flex-1">{entry.label}</span>
+              <BriefStatusPill status={entry.status ?? "not_contacted"} className="shrink-0 scale-90 origin-right" />
             </Link>
           ))}
           <button
@@ -166,9 +172,11 @@ export default function App() {
         <main className="flex-1 min-w-0">
           <Switch>
             <Route path="/" component={AccountBriefPage} />
+            <Route path="/my-briefs" component={MyBriefsPage} />
             <Route path="/prep" component={CallPrepPage} />
             <Route path="/prospect" component={MarketProspect} />
             <Route path="/your-company" component={YourCompany} />
+            <Route path="/reasoning" component={ReasoningPage} />
             <Route path="/icps" component={ICPs} />
             <Route path="/icps/:id" component={ICPDetail} />
             <Route path="/dashboard" component={Dashboard} />
