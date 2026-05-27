@@ -97,7 +97,7 @@ Structure the brief as a CALL DECISION tool. Populate call-ready fields first in
 RULES — call-ready output:
 - callDecision.priority: use hot (2+ recent verified triggers), warm (1 trigger or strong fit + hiring), watch (structural fit only), skip (no fit + no signals). When in doubt, downgrade.
 - callDecision.justification: one sentence only. Must match the priority rubric in the constitution.
-- coldEmail.opener: reference a specific signal. Tag stale signals (6+ months) with the date inline.
+- coldEmail.opener: REQUIRED — never return an empty string. Reference a specific signal. Tag stale signals (6+ months) with the date inline.
 - recentTriggers.items: 0-2 items. Empty array is OK if nothing found — do not invent triggers.
 - buyingCommittee: up to 3 relevant decision-makers maximum — quality over count. Include name when found. Empty linkedinSignal is OK when no public post was found.
 - discoveryQuestions: exactly 3 when possible. Each must reference a specific finding — never generic discovery scripts.
