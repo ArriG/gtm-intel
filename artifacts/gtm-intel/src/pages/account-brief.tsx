@@ -106,17 +106,41 @@ function CallDecisionCard({ brief }: { brief: AccountBrief }) {
   );
 }
 
+function isBlankText(value: string | null | undefined): boolean {
+  return !value?.trim();
+}
+
+function ColdEmailMissingWarning({ kind }: { kind: "opener" | "fullEmail" }) {
+  const message = kind === "fullEmail"
+    ? "Full cold email not generated for this account — try regenerating, or check the call decision above."
+    : "Cold email opener not generated for this account — try regenerating, or check the call decision above.";
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/40 p-4 flex items-start gap-2.5">
+      <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+      <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+    </div>
+  );
+}
+
 function OpenerCard({ brief }: { brief: AccountBrief }) {
+  const opener = stripCitationTags(brief.coldEmail.opener);
+  const openerMissing = isBlankText(opener);
+
   return (
     <BriefCard className="bg-primary/[0.04] border-primary/30">
       <BriefCardHeader>
         <BriefCardTitle><Mail className="w-4 h-4 text-primary" />Opener</BriefCardTitle>
-        <CopyButton getText={() => stripCitationTags(brief.coldEmail.opener)} />
+        {!openerMissing && <CopyButton getText={() => opener} />}
       </BriefCardHeader>
       <BriefCardContent>
-        <blockquote className="border-l-4 border-primary pl-4 italic text-sm sm:text-base text-foreground leading-relaxed">
-          "{stripCitationTags(brief.coldEmail.opener)}"
-        </blockquote>
+        {openerMissing ? (
+          <ColdEmailMissingWarning kind="opener" />
+        ) : (
+          <blockquote className="border-l-4 border-primary pl-4 italic text-sm sm:text-base text-foreground leading-relaxed">
+            "{opener}"
+          </blockquote>
+        )}
         <SourceChips sources={brief.coldEmail.sources} sectionId="email-opener" />
       </BriefCardContent>
     </BriefCard>
@@ -318,9 +342,15 @@ function BackgroundSection({
                     </Button>
                   ))}
                 </div>
-                {showFullEmail && brief.coldEmail.fullEmail
-                  ? <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail)}</pre>
-                  : <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>}
+                {showFullEmail ? (
+                  isBlankText(stripCitationTags(brief.coldEmail.fullEmail ?? ""))
+                    ? <ColdEmailMissingWarning kind="fullEmail" />
+                    : <pre className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-sans">{stripCitationTags(brief.coldEmail.fullEmail ?? "")}</pre>
+                ) : isBlankText(stripCitationTags(brief.coldEmail.opener)) ? (
+                  <ColdEmailMissingWarning kind="opener" />
+                ) : (
+                  <blockquote className="border-l-4 border-primary pl-4 italic text-sm text-foreground leading-relaxed">"{stripCitationTags(brief.coldEmail.opener)}"</blockquote>
+                )}
                 <SourceChips sources={brief.coldEmail.sources} sectionId="email-full" />
               </BriefCardContent>
             </BriefCard>

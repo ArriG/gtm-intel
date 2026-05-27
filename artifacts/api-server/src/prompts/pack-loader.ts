@@ -210,11 +210,39 @@ export function loadSectorPacks(): SectorPack[] {
 }
 
 function normaliseGeo(value: string): string {
-  return value.trim().toLowerCase();
+  return normaliseMatchText(value);
+}
+
+/** Collapse odd whitespace so copy-pasted industry labels still match keywords. */
+function normaliseMatchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\u00a0/g, " ")
+    .replace(/[\s_-]+/g, " ")
+    .trim();
+}
+
+const UK_GEO_ALIASES = ["uk", "united kingdom", "great britain", "britain", "gb", "england", "scotland", "wales", "northern ireland"];
+const AU_GEO_ALIASES = ["au", "australia", "australian", "nz", "new zealand"];
+
+function expandGeoAliases(geographies: string[]): string[] {
+  const expanded = new Set<string>();
+
+  for (const geo of geographies.map(normaliseGeo).filter(Boolean)) {
+    expanded.add(geo);
+    if (UK_GEO_ALIASES.some(alias => geo === alias || geo.includes(alias) || alias.includes(geo))) {
+      UK_GEO_ALIASES.forEach(alias => expanded.add(alias));
+    }
+    if (AU_GEO_ALIASES.some(alias => geo === alias || geo.includes(alias) || alias.includes(geo))) {
+      AU_GEO_ALIASES.forEach(alias => expanded.add(alias));
+    }
+  }
+
+  return [...expanded];
 }
 
 function profileText(yourCompany: YourCompanyInput): string {
-  return [
+  return normaliseMatchText([
     yourCompany.companyName,
     yourCompany.industryServed,
     yourCompany.whoYouSellTo,
@@ -227,13 +255,12 @@ function profileText(yourCompany: YourCompanyInput): string {
     yourCompany.painPoints,
   ]
     .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+    .join(" "));
 }
 
 function geoMatches(packGeographies: string[], userGeographies: string[]): boolean {
-  const packGeos = packGeographies.map(normaliseGeo);
-  const userGeos = userGeographies.map(normaliseGeo);
+  const packGeos = expandGeoAliases(packGeographies);
+  const userGeos = expandGeoAliases(userGeographies);
 
   return userGeos.some(userGeo =>
     packGeos.some(packGeo =>
@@ -247,7 +274,8 @@ function geoMatches(packGeographies: string[], userGeographies: string[]): boole
 function keywordScore(packKeywords: string[], text: string): { score: number; matched: string[] } {
   const matched: string[] = [];
   const score = packKeywords.reduce((total, keyword) => {
-    if (text.includes(keyword.toLowerCase())) {
+    const needle = normaliseMatchText(keyword);
+    if (needle && text.includes(needle)) {
       matched.push(keyword);
       return total + 1;
     }
@@ -283,6 +311,16 @@ function detectBestPack(yourCompany: YourCompanyInput): {
 }
 
 export function resolveSectorPackSelection(yourCompany?: YourCompanyInput): SectorPackSelection {
+  const candidates = loadSectorPacks().map(pack => pack.id);
+
+  console.log("[Pack matcher] Input:", {
+    geographies: yourCompany?.geographies ?? [],
+    industryServed: yourCompany?.industryServed ?? "",
+    companyName: yourCompany?.companyName ?? "",
+    whatYouSell: yourCompany?.whatYouSell ?? yourCompany?.oneLineDescription ?? "",
+  });
+  console.log("[Pack matcher] Candidates:", candidates);
+
   const auto = yourCompany?.geographies?.length
     ? detectBestPack(yourCompany)
     : { pack: null as SectorPack | null, matchScore: 0, matchedKeywords: [] as string[] };
@@ -290,6 +328,7 @@ export function resolveSectorPackSelection(yourCompany?: YourCompanyInput): Sect
   const overrideId = yourCompany?.sectorPackOverride?.trim();
   if (overrideId) {
     const pack = loadSectorPacks().find(item => item.id === overrideId) ?? null;
+    console.log("[Pack matcher] Matched:", pack?.id ?? "fallback");
     return {
       pack,
       mode: "override",
@@ -301,6 +340,7 @@ export function resolveSectorPackSelection(yourCompany?: YourCompanyInput): Sect
   }
 
   if (auto.pack) {
+    console.log("[Pack matcher] Matched:", auto.pack.id);
     return {
       pack: auto.pack,
       mode: "auto",
@@ -311,6 +351,7 @@ export function resolveSectorPackSelection(yourCompany?: YourCompanyInput): Sect
     };
   }
 
+  console.log("[Pack matcher] Matched: fallback");
   return {
     pack: null,
     mode: "legacy",

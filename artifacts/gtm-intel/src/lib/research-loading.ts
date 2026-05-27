@@ -24,22 +24,50 @@ const PACK_RULES: Array<{
   },
   {
     id: "uk-financial-services",
-    geographies: ["uk", "united kingdom", "england", "scotland", "wales"],
+    geographies: ["uk", "united kingdom", "great britain", "britain", "gb", "england", "scotland", "wales", "northern ireland"],
     keywords: [
-      "insurance", "insurer", "reinsurance", "financial services", "banking", "bank",
-      "fintech", "underwriting", "wealth management", "asset management", "lender", "mortgage", "broking",
+      "insurance", "insurer", "reinsurance", "financial services", "financial service", "banking", "bank",
+      "fintech", "underwriting", "wealth management", "asset management", "lender", "mortgage", "broking", "finance",
     ],
   },
 ];
 
+function normaliseMatchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\u00a0/g, " ")
+    .replace(/[\s_-]+/g, " ")
+    .trim();
+}
+
 function normaliseGeo(value: string): string {
-  return value.trim().toLowerCase();
+  return normaliseMatchText(value);
+}
+
+const UK_GEO_ALIASES = ["uk", "united kingdom", "great britain", "britain", "gb", "england", "scotland", "wales", "northern ireland"];
+const AU_GEO_ALIASES = ["au", "australia", "australian", "nz", "new zealand"];
+
+function expandGeoAliases(geographies: string[]): string[] {
+  const expanded = new Set<string>();
+
+  for (const geo of geographies.map(normaliseGeo).filter(Boolean)) {
+    expanded.add(geo);
+    if (UK_GEO_ALIASES.some(alias => geo === alias || geo.includes(alias) || alias.includes(geo))) {
+      UK_GEO_ALIASES.forEach(alias => expanded.add(alias));
+    }
+    if (AU_GEO_ALIASES.some(alias => geo === alias || geo.includes(alias) || alias.includes(geo))) {
+      AU_GEO_ALIASES.forEach(alias => expanded.add(alias));
+    }
+  }
+
+  return [...expanded];
 }
 
 export function profileTextForPackMatch(yc: YourCompany): string {
-  return [
+  return normaliseMatchText([
     yc.companyName,
     yc.industryServed,
+    yc.whoYouSellTo,
     yc.oneLineDescription,
     yc.whatYouSell,
     yc.customerOutcomes,
@@ -49,13 +77,12 @@ export function profileTextForPackMatch(yc: YourCompany): string {
     yc.painPoints,
   ]
     .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+    .join(" "));
 }
 
 function geoMatches(packGeographies: string[], userGeographies: string[]): boolean {
-  const packGeos = packGeographies.map(normaliseGeo);
-  const userGeos = userGeographies.map(normaliseGeo);
+  const packGeos = expandGeoAliases(packGeographies);
+  const userGeos = expandGeoAliases(userGeographies);
 
   return userGeos.some(userGeo =>
     packGeos.some(packGeo =>
@@ -85,7 +112,7 @@ export function detectSectorPackClient(yc: YourCompany): {
   for (const rule of PACK_RULES) {
     if (!geoMatches(rule.geographies, yc.geographies)) continue;
 
-    const matched = rule.keywords.filter(keyword => text.includes(keyword));
+    const matched = rule.keywords.filter(keyword => text.includes(normaliseMatchText(keyword)));
     const score = matched.length;
     if (score <= 0) continue;
     if (!best || score > best.score) best = { id: rule.id, score, matched };

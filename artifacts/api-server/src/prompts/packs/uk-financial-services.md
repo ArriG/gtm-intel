@@ -3,12 +3,13 @@ name: UK Financial Services
 version: 1
 last_reviewed: 2026-05-26
 applies_when:
-  geographies: [UK, United Kingdom, England, Scotland, Wales]
+  geographies: [UK, United Kingdom, Great Britain, GB, England, Scotland, Wales]
   keywords:
     - insurance
     - insurer
     - reinsurance
     - financial services
+    - financial service
     - banking
     - bank
     - fintech
@@ -18,6 +19,7 @@ applies_when:
     - lender
     - mortgage
     - broking
+    - finance
 expected_seconds: 60
 ---
 
