@@ -40,6 +40,8 @@ export * from './manualResearchTip';
 export * from './marketProspectInput';
 export * from './marketProspectResponse';
 export * from './meetingType';
+export * from './nextTouchInput';
+export * from './nextTouchResponse';
 export * from './previewPromptInput';
 export * from './previewPromptResponse';
 export * from './prospectCompany';

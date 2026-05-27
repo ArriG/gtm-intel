@@ -34,6 +34,8 @@ import type {
   IcpUpdate,
   MarketProspectInput,
   MarketProspectResponse,
+  NextTouchInput,
+  NextTouchResponse,
   PreviewPromptInput,
   PreviewPromptResponse,
   SectorPackListResponse,
@@ -338,6 +340,77 @@ export const useGenerateCallPrep = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGenerateCallPrepMutationOptions(options));
+    }
+
+export const getGenerateNextTouchUrl = () => {
+
+
+
+
+  return `/api/next-touch`
+}
+
+/**
+ * @summary Generate a next-touch opener from a prospect reply
+ */
+export const generateNextTouch = async (nextTouchInput: NextTouchInput, options?: RequestInit): Promise<NextTouchResponse> => {
+
+  return customFetch<NextTouchResponse>(getGenerateNextTouchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      nextTouchInput,)
+  }
+);}
+
+
+
+
+export const getGenerateNextTouchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateNextTouch>>, TError,{data: BodyType<NextTouchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateNextTouch>>, TError,{data: BodyType<NextTouchInput>}, TContext> => {
+
+const mutationKey = ['generateNextTouch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateNextTouch>>, {data: BodyType<NextTouchInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateNextTouch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateNextTouchMutationResult = NonNullable<Awaited<ReturnType<typeof generateNextTouch>>>
+    export type GenerateNextTouchMutationBody = BodyType<NextTouchInput>
+    export type GenerateNextTouchMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate a next-touch opener from a prospect reply
+ */
+export const useGenerateNextTouch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateNextTouch>>, TError,{data: BodyType<NextTouchInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateNextTouch>>,
+        TError,
+        {data: BodyType<NextTouchInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateNextTouchMutationOptions(options));
     }
 
 export const getListSectorPacksUrl = () => {

@@ -98,6 +98,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/CallPrep"
 
+  /next-touch:
+    post:
+      operationId: generateNextTouch
+      tags: [account-brief]
+      summary: Generate a next-touch opener from a prospect reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NextTouchInput"
+      responses:
+        "200":
+          description: Generated next-touch opener and coaching suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NextTouchResponse"
+
   /your-company/sector-packs:
     get:
       operationId: listSectorPacks
@@ -805,6 +824,40 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BriefSource"
+
+    NextTouchInput:
+      type: object
+      required:
+        - brief
+        - reply
+        - yourCompany
+      properties:
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
+        reply:
+          type: string
+          description: The prospect's reply text, pasted by the AE
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+        tone:
+          $ref: "#/components/schemas/EmailTone"
+
+    NextTouchResponse:
+      type: object
+      required:
+        - opener
+        - suggestion
+        - generatedAt
+      properties:
+        opener:
+          type: string
+          description: Regenerated opener responding to the reply
+        suggestion:
+          type: string
+          description: Short coaching note on what to do next
+        generatedAt:
+          type: string
+          format: date-time
 
     TalkTrack:
       type: object

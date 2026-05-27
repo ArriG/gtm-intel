@@ -21,6 +21,7 @@ import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, updateHistoryEntry, getHistoryEntry, type HistoryEntry } from "@/lib/history";
 import type { BriefStatus } from "@/lib/brief-status";
 import { BriefStatusSelect } from "@/components/brief-status-select";
+import { NextTouchSection } from "@/components/next-touch-section";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { researchLoadingMessage } from "@/lib/research-loading";
 import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
@@ -1064,10 +1065,10 @@ export default function AccountBriefPage() {
     } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
-  function handleBriefStatusChange(status: BriefStatus) {
+  function handleBriefStatusChange(status: BriefStatus, lastTouchedAt?: string) {
     if (!currentHistoryId) return;
-    const lastTouchedAt = new Date().toISOString();
-    updateHistoryEntry(currentHistoryId, { status, lastTouchedAt });
+    const touched = lastTouchedAt ?? new Date().toISOString();
+    updateHistoryEntry(currentHistoryId, { status, lastTouchedAt: touched });
     setBriefStatus(status);
   }
 
@@ -1283,6 +1284,14 @@ export default function AccountBriefPage() {
 
             <CallDecisionCard brief={brief} />
             <OpenerCard brief={brief} />
+            <NextTouchSection
+              brief={brief}
+              companyName={lastLabel}
+              historyId={currentHistoryId}
+              briefStatus={briefStatus}
+              onStatusChange={handleBriefStatusChange}
+              onError={message => setError(message || null)}
+            />
             <WhyNowCard items={validTriggers} sources={brief.recentTriggers?.sources} />
             <BuyersCard committee={brief.buyingCommittee ?? []} />
             <DiscoveryQuestionsCard questions={brief.discoveryQuestions ?? []} />

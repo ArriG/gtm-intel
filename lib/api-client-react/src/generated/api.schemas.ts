@@ -430,6 +430,22 @@ export interface AccountBriefColdEmail {
   sources?: BriefSource[];
 }
 
+export interface NextTouchInput {
+  brief: AccountBrief;
+  /** The prospect's reply text, pasted by the AE */
+  reply: string;
+  yourCompany: YourCompany;
+  tone?: EmailTone;
+}
+
+export interface NextTouchResponse {
+  /** Regenerated opener responding to the reply */
+  opener: string;
+  /** Short coaching note on what to do next */
+  suggestion: string;
+  generatedAt: string;
+}
+
 export interface TalkTrack {
   /** One sentence call opener */
   opening: string;

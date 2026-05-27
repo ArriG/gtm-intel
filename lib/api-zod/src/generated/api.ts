@@ -648,6 +648,156 @@ export const GenerateCallPrepResponse = zod.object({
 
 
 /**
+ * @summary Generate a next-touch opener from a prospect reply
+ */
+
+
+
+export const GenerateNextTouchBody = zod.object({
+  "brief": zod.object({
+  "companySnapshot": zod.object({
+  "size": zod.string(),
+  "industry": zod.string(),
+  "location": zod.string(),
+  "fundingStage": zod.string(),
+  "abn": zod.string().optional(),
+  "techStack": zod.string().optional(),
+  "possiblePainPoints": zod.array(zod.string()).optional().describe('Likely operational pains inferred from research (job ads, press, positioning)'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "icpFitScore": zod.object({
+  "score": zod.number(),
+  "reason": zod.string().optional().describe('Legacy one-liner; prefer highlights when present'),
+  "highlights": zod.array(zod.string()).optional().describe('2-3 concise bullets on why this account fits (or does not)'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "buyingCommittee": zod.array(zod.object({
+  "name": zod.string().optional().describe('Person\'s name when found in research; omit if unknown'),
+  "title": zod.string(),
+  "buyingRole": zod.enum(['decision_maker', 'champion', 'economic_buyer', 'technical', 'influencer']).optional().describe('Optional role in the buying process when inferrable from research'),
+  "painPoint": zod.string(),
+  "linkedinSignal": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+})),
+  "theirWorld": zod.object({
+  "narrative": zod.string().optional().describe('Legacy prose summary; prefer bullets when present'),
+  "bullets": zod.array(zod.string()).optional().describe('3-4 tight bullets on pressures, priorities, and why they might buy now'),
+  "confidence": zod.string(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "recentTriggers": zod.object({
+  "items": zod.array(zod.object({
+  "event": zod.string(),
+  "significance": zod.string(),
+  "recency": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "coldEmail": zod.object({
+  "opener": zod.string(),
+  "fullEmail": zod.string().optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}),
+  "callDecision": zod.object({
+  "priority": zod.enum(['hot', 'warm', 'watch', 'skip']),
+  "justification": zod.string().describe('One sentence — why call (or not) this week'),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+})).optional()
+}).optional().describe('Should this account be called this week, and why'),
+  "discoveryQuestions": zod.array(zod.object({
+  "question": zod.string(),
+  "tiedToSignal": zod.string().optional().describe('The specific research finding this question references'),
+  "confidence": zod.enum(['verified', 'informed', 'assumed']).optional()
+})).optional().describe('Up to 3 discovery questions tied to specific found signals'),
+  "manualResearchTips": zod.array(zod.object({
+  "tip": zod.string(),
+  "reason": zod.string().optional()
+})).optional().describe('Sources the AE should check manually before calling'),
+  "sourceSummary": zod.object({
+  "totalSources": zod.number(),
+  "sourceTypes": zod.array(zod.string()),
+  "australianSources": zod.number(),
+  "overallConfidence": zod.string(),
+  "confidenceReason": zod.string()
+}).optional(),
+  "researchPack": zod.object({
+  "id": zod.string().describe('Sector pack identifier, e.g. uk-dental'),
+  "name": zod.string(),
+  "version": zod.number(),
+  "lastReviewed": zod.string().optional(),
+  "loadingLabel": zod.string(),
+  "expectedSeconds": zod.number()
+}).optional().describe('Sector reasoning pack used to generate this brief')
+}),
+  "reply": zod.string().describe('The prospect\'s reply text, pasted by the AE'),
+  "yourCompany": zod.object({
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
+}).describe('Seller profile stored client-side; sent per request for prompt context'),
+  "tone": zod.enum(['formal', 'direct', 'conversational']).optional()
+})
+
+export const GenerateNextTouchResponse = zod.object({
+  "opener": zod.string().describe('Regenerated opener responding to the reply'),
+  "suggestion": zod.string().describe('Short coaching note on what to do next'),
+  "generatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary List available sector reasoning packs
  */
 export const ListSectorPacksResponse = zod.object({

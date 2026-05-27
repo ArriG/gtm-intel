@@ -172,6 +172,11 @@ export default function MyBriefsPage() {
                             {entry.label}
                           </Link>
                           <BriefStatusPill status={entry.status ?? "not_contacted"} />
+                          {entry.nextTouch && (
+                            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                              Next touch ready
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           <span>{entry.icpScore}/10 fit</span>
