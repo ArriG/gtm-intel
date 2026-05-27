@@ -18,7 +18,9 @@ import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, Em
 import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
-import { loadHistory, saveToHistory, type HistoryEntry } from "@/lib/history";
+import { loadHistory, saveToHistory, updateHistoryEntry, getHistoryEntry, type HistoryEntry } from "@/lib/history";
+import type { BriefStatus } from "@/lib/brief-status";
+import { BriefStatusSelect } from "@/components/brief-status-select";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { researchLoadingMessage } from "@/lib/research-loading";
 import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
@@ -978,6 +980,7 @@ export default function AccountBriefPage() {
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [showOptionalContext, setShowOptionalContext] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+  const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -987,6 +990,15 @@ export default function AccountBriefPage() {
     const id = setInterval(() => setCooldownSeconds(s => (s <= 1 ? 0 : s - 1)), 1000);
     return () => clearInterval(id);
   }, [cooldownSeconds]);
+
+  useEffect(() => {
+    if (!currentHistoryId) {
+      setBriefStatus("not_contacted");
+      return;
+    }
+    const entry = getHistoryEntry(currentHistoryId);
+    setBriefStatus(entry?.status ?? "not_contacted");
+  }, [currentHistoryId, brief]);
 
   useEffect(() => {
     if (historyParam) return;
@@ -1052,10 +1064,18 @@ export default function AccountBriefPage() {
     } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
+  function handleBriefStatusChange(status: BriefStatus) {
+    if (!currentHistoryId) return;
+    const lastTouchedAt = new Date().toISOString();
+    updateHistoryEntry(currentHistoryId, { status, lastTouchedAt });
+    setBriefStatus(status);
+  }
+
   function handleHistorySelect(entry: HistoryEntry) {
     setLastLabel(entry.label); setLastUrl(entry.url); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
     setSearchQuery(entry.label);
     setCurrentHistoryId(entry.id);
+    setBriefStatus(entry.status ?? "not_contacted");
     saveBriefSession({
       label: entry.label,
       url: entry.url,
@@ -1222,6 +1242,13 @@ export default function AccountBriefPage() {
                       <p className="text-sm text-muted-foreground mt-1">
                         {[brief.companySnapshot.industry, brief.companySnapshot.location].filter(Boolean).join(" · ")}
                       </p>
+                      <div className="mt-3">
+                        <BriefStatusSelect
+                          status={briefStatus}
+                          onStatusChange={handleBriefStatusChange}
+                          disabled={!currentHistoryId}
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">
