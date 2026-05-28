@@ -77,6 +77,7 @@ function normaliseBuyers(raw: unknown): Array<Record<string, unknown>> {
     const sourceTitle = cleanString(buyer.sourceTitle);
     if (!name || !role || !sourceUrl || !sourceTitle) continue;
     if (!/^https?:\/\//i.test(sourceUrl)) continue;
+    if (/not publicly|not available|not identified|unknown|unidentified|n\/a|none listed|no name/i.test(name)) continue;
 
     buyers.push({
       name,

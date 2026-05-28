@@ -22,7 +22,7 @@ Return ONLY valid JSON with this exact shape:
       "buyers": [
         {
           "name": "Full name",
-          "role": "e.g. Chief Underwriting Officer",
+          "role": "e.g. Chief Actuary, COO, CTO, or Managing Director",
           "sourceUrl": "https://verifiable-source.example",
           "sourceTitle": "e.g. Zurich UK Annual Report 2024",
           "tenureNote": "appointed Jan 2024"
@@ -42,7 +42,7 @@ MAPPING RULES:
 - Up to 5 entities per region, maximum 12 entities total in entities[].
 - If more entities exist, list omitted names in unmappedEntities[].
 - Prefer strong fit entities, then moderate, then skip when selecting which to include.
-- Up to 3 buyers per entity aligned to seller buyer titles — omit any buyer without a verifiable sourceUrl.
+- Up to 3 buyers per entity — named executives only (Chief Actuary, Actuary, COO, CTO/CIO, CRO, CEO/MD, CUO when verified). Omit any buyer without a verifiable sourceUrl. NEVER use placeholder names like "not publicly identified" — return an empty buyers array instead.
 - fitTier is factual alignment (geography, industry, business line, buyer match) — NOT a sales heat score.
 - context must be factual recent events only — NO call decision, NO opener, NO why-now, NO discovery questions.
 - For non-European regions, note reduced regulator depth in entity sources[] and limitations.

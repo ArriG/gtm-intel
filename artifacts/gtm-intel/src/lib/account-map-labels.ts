@@ -55,3 +55,16 @@ export function groupEntitiesByRegion<T extends { region: MapRegion }>(entities:
   }
   return grouped;
 }
+
+const PLACEHOLDER_NAME = /not publicly|not available|not identified|unknown|unidentified|n\/a|none listed|no name/i;
+
+/** Drop model placeholders — only show verifiable named executives. */
+export function isVerifiedLeaderName(name: string): boolean {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length < 2) return false;
+  return !PLACEHOLDER_NAME.test(trimmed);
+}
+
+export function verifiedLeaders<T extends { name: string }>(leaders: T[]): T[] {
+  return leaders.filter(leader => isVerifiedLeaderName(leader.name));
+}

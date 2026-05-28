@@ -2,13 +2,7 @@ import type { AccountMapResponse } from "@workspace/api-client-react";
 import { EntityCardCompact } from "./entity-card-compact";
 import { groupEntitiesByRegion, REGION_LABELS, REGION_ORDER } from "@/lib/account-map-labels";
 
-export function AccountMapDiagram({
-  map,
-  onExpandEntity,
-}: {
-  map: AccountMapResponse;
-  onExpandEntity: (entityId: string) => void;
-}) {
+export function AccountMapDiagram({ map }: { map: AccountMapResponse }) {
   const grouped = groupEntitiesByRegion(map.entities);
   const regionsWithEntities = REGION_ORDER.filter(region => (grouped.get(region)?.length ?? 0) > 0);
 
@@ -22,16 +16,16 @@ export function AccountMapDiagram({
       </div>
 
       <div
-        className="regions-grid grid gap-4"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
+        className="regions-grid grid gap-4 min-w-0"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}
       >
         {regionsWithEntities.map(region => (
-          <div key={region} className="region-column space-y-3">
+          <div key={region} className="region-column space-y-3 min-w-0">
             <div className="region-header text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
               {REGION_LABELS[region]}
             </div>
             {(grouped.get(region) ?? []).map(entity => (
-              <EntityCardCompact key={entity.id} entity={entity} onExpand={onExpandEntity} />
+              <EntityCardCompact key={entity.id} entity={entity} />
             ))}
           </div>
         ))}
