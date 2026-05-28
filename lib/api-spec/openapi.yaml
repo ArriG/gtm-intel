@@ -319,6 +319,48 @@ paths:
         "400":
           description: No ICPs defined or invalid request
 
+  /signals/scan:
+    post:
+      operationId: scanAccountSignals
+      tags: [signals]
+      summary: Scan a researched account for Tier 1 and Tier 2 buying signals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanAccountSignalsInput"
+      responses:
+        "200":
+          description: Up to five account signals from the last 90 days
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanAccountSignalsResponse"
+        "400":
+          description: Invalid request
+
+  /signal-opener:
+    post:
+      operationId: generateSignalOpener
+      tags: [signals]
+      summary: Draft a cold email opener anchored on a buying signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalOpenerInput"
+      responses:
+        "200":
+          description: Generated opener
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalOpenerResponse"
+        "400":
+          description: Invalid request
+
   /signals/{id}:
     patch:
       operationId: updateSignal
@@ -543,6 +585,117 @@ components:
             $ref: "#/components/schemas/Signal"
         added:
           type: integer
+
+    AccountSignalType:
+      type: string
+      description: Tier 1 and Tier 2 buying signal categories for account scans
+      enum:
+        - leadership_hire
+        - job_posting
+        - exec_post
+        - funding
+        - regulation
+        - earnings
+        - expansion
+        - ma
+        - hiring_spike
+        - product_launch
+
+    AccountSignal:
+      type: object
+      required:
+        - id
+        - type
+        - tier
+        - headline
+        - summary
+        - whyItMatters
+        - sourceUrl
+        - sourceTitle
+        - scannedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/AccountSignalType"
+        tier:
+          type: integer
+          enum: [1, 2]
+        headline:
+          type: string
+        summary:
+          type: string
+        whyItMatters:
+          type: string
+        sourceUrl:
+          type: string
+        sourceTitle:
+          type: string
+        occurredAt:
+          type: ["string", "null"]
+          description: ISO date when the event happened, if extractable
+        scannedAt:
+          type: string
+          description: ISO date when the scan ran
+
+    ScanAccountSignalsInput:
+      type: object
+      required:
+        - company
+        - yourCompany
+      properties:
+        company:
+          type: string
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+        sectorPackOverride:
+          type: string
+          description: Optional sector pack id override — same pattern as Reasoning page
+
+    ScanAccountSignalsResponse:
+      type: object
+      required:
+        - signals
+        - scannedAt
+        - sectorPackUsed
+      properties:
+        signals:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountSignal"
+        scannedAt:
+          type: string
+        sectorPackUsed:
+          type: string
+
+    SignalOpenerInput:
+      type: object
+      required:
+        - signal
+        - yourCompany
+      properties:
+        signal:
+          $ref: "#/components/schemas/AccountSignal"
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+        tone:
+          $ref: "#/components/schemas/EmailTone"
+
+    SignalOpenerResponse:
+      type: object
+      required:
+        - opener
+        - generatedAt
+      properties:
+        opener:
+          type: string
+        generatedAt:
+          type: string
 
     SignalUpdate:
       type: object

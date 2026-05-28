@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
-import type { AccountBrief } from "@workspace/api-client-react";
+import type { AccountBrief, AccountSignal } from "@workspace/api-client-react";
 import { normaliseBriefStatus, type BriefStatus } from "./brief-status";
 
 export type { BriefStatus };
+
+export function signalDismissKey(type: string, headline: string): string {
+  return `${type}|${headline.trim().toLowerCase()}`;
+}
+
+export function visibleSignals(entry: HistoryEntry): AccountSignal[] {
+  const dismissed = new Set(entry.dismissedSignalKeys ?? []);
+  return (entry.signals ?? []).filter(
+    signal => !dismissed.has(signalDismissKey(signal.type, signal.headline)),
+  );
+}
 
 export type StoredReply = {
   text: string;
@@ -27,6 +38,10 @@ export interface HistoryEntry {
   lastTouchedAt?: string | null;
   latestReply?: StoredReply | null;
   nextTouch?: StoredNextTouch | null;
+  watched?: boolean;
+  signals?: AccountSignal[];
+  lastScannedAt?: string | null;
+  dismissedSignalKeys?: string[];
 }
 
 const HISTORY_KEY = "gtm_brief_history_v2";
@@ -52,6 +67,22 @@ function normaliseStoredNextTouch(raw: unknown): StoredNextTouch | null {
   };
 }
 
+function normaliseAccountSignals(raw: unknown): AccountSignal[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item): item is AccountSignal =>
+    Boolean(item)
+    && typeof item === "object"
+    && typeof (item as AccountSignal).id === "string"
+    && typeof (item as AccountSignal).headline === "string"
+    && typeof (item as AccountSignal).type === "string",
+  );
+}
+
+function normaliseDismissedKeys(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((key): key is string => typeof key === "string" && key.trim().length > 0);
+}
+
 function normaliseHistoryEntry(raw: Partial<HistoryEntry>): HistoryEntry | null {
   if (!raw.id || !raw.label || !raw.url || !raw.brief) return null;
 
@@ -66,6 +97,10 @@ function normaliseHistoryEntry(raw: Partial<HistoryEntry>): HistoryEntry | null 
     lastTouchedAt: raw.lastTouchedAt ?? null,
     latestReply: normaliseStoredReply(raw.latestReply),
     nextTouch: normaliseStoredNextTouch(raw.nextTouch),
+    watched: raw.watched !== false,
+    signals: normaliseAccountSignals(raw.signals),
+    lastScannedAt: raw.lastScannedAt ?? null,
+    dismissedSignalKeys: normaliseDismissedKeys(raw.dismissedSignalKeys),
   };
 }
 
@@ -96,6 +131,10 @@ export function saveToHistory(entry: HistoryEntry) {
           lastTouchedAt: previous.lastTouchedAt ?? entry.lastTouchedAt ?? null,
           latestReply: previous.latestReply ?? entry.latestReply ?? null,
           nextTouch: previous.nextTouch ?? entry.nextTouch ?? null,
+          watched: previous.watched ?? entry.watched ?? true,
+          signals: previous.signals ?? entry.signals ?? [],
+          lastScannedAt: previous.lastScannedAt ?? entry.lastScannedAt ?? null,
+          dismissedSignalKeys: previous.dismissedSignalKeys ?? entry.dismissedSignalKeys ?? [],
         }
       : {
           ...entry,
@@ -103,6 +142,10 @@ export function saveToHistory(entry: HistoryEntry) {
           lastTouchedAt: entry.lastTouchedAt ?? null,
           latestReply: entry.latestReply ?? null,
           nextTouch: entry.nextTouch ?? null,
+          watched: entry.watched ?? true,
+          signals: entry.signals ?? [],
+          lastScannedAt: entry.lastScannedAt ?? null,
+          dismissedSignalKeys: entry.dismissedSignalKeys ?? [],
         };
 
     const next = [merged, ...existing.filter(h => h.url !== entry.url)].slice(0, MAX_ENTRIES);
@@ -115,7 +158,16 @@ export function saveToHistory(entry: HistoryEntry) {
 
 export function updateHistoryEntry(
   id: string,
-  updates: Partial<Pick<HistoryEntry, "status" | "lastTouchedAt" | "latestReply" | "nextTouch">>,
+  updates: Partial<Pick<HistoryEntry,
+    | "status"
+    | "lastTouchedAt"
+    | "latestReply"
+    | "nextTouch"
+    | "watched"
+    | "signals"
+    | "lastScannedAt"
+    | "dismissedSignalKeys"
+  >>,
 ) {
   try {
     const next = loadHistory().map(entry =>
@@ -130,6 +182,19 @@ export function updateHistoryEntry(
 
 export function getHistoryEntry(id: string): HistoryEntry | undefined {
   return loadHistory().find(entry => entry.id === id);
+}
+
+export function getWatchedBriefs(): HistoryEntry[] {
+  return loadHistory().filter(entry => entry.watched !== false);
+}
+
+export function dismissBriefSignal(briefId: string, signal: AccountSignal) {
+  const entry = getHistoryEntry(briefId);
+  if (!entry) return;
+
+  const key = signalDismissKey(signal.type, signal.headline);
+  const dismissedSignalKeys = [...new Set([...(entry.dismissedSignalKeys ?? []), key])];
+  updateHistoryEntry(briefId, { dismissedSignalKeys });
 }
 
 export function clearHistory() {

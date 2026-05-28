@@ -38,8 +38,12 @@ import type {
   NextTouchResponse,
   PreviewPromptInput,
   PreviewPromptResponse,
+  ScanAccountSignalsInput,
+  ScanAccountSignalsResponse,
   SectorPackListResponse,
   Signal,
+  SignalOpenerInput,
+  SignalOpenerResponse,
   SignalScanInput,
   SignalScanResponse,
   SignalUpdate,
@@ -1300,6 +1304,148 @@ export const useRunSignalRadar = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRunSignalRadarMutationOptions(options));
+    }
+
+export const getScanAccountSignalsUrl = () => {
+
+
+
+
+  return `/api/signals/scan`
+}
+
+/**
+ * @summary Scan a researched account for Tier 1 and Tier 2 buying signals
+ */
+export const scanAccountSignals = async (scanAccountSignalsInput: ScanAccountSignalsInput, options?: RequestInit): Promise<ScanAccountSignalsResponse> => {
+
+  return customFetch<ScanAccountSignalsResponse>(getScanAccountSignalsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      scanAccountSignalsInput,)
+  }
+);}
+
+
+
+
+export const getScanAccountSignalsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scanAccountSignals>>, TError,{data: BodyType<ScanAccountSignalsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof scanAccountSignals>>, TError,{data: BodyType<ScanAccountSignalsInput>}, TContext> => {
+
+const mutationKey = ['scanAccountSignals'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof scanAccountSignals>>, {data: BodyType<ScanAccountSignalsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  scanAccountSignals(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ScanAccountSignalsMutationResult = NonNullable<Awaited<ReturnType<typeof scanAccountSignals>>>
+    export type ScanAccountSignalsMutationBody = BodyType<ScanAccountSignalsInput>
+    export type ScanAccountSignalsMutationError = ErrorType<void>
+
+    /**
+ * @summary Scan a researched account for Tier 1 and Tier 2 buying signals
+ */
+export const useScanAccountSignals = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof scanAccountSignals>>, TError,{data: BodyType<ScanAccountSignalsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof scanAccountSignals>>,
+        TError,
+        {data: BodyType<ScanAccountSignalsInput>},
+        TContext
+      > => {
+      return useMutation(getScanAccountSignalsMutationOptions(options));
+    }
+
+export const getGenerateSignalOpenerUrl = () => {
+
+
+
+
+  return `/api/signal-opener`
+}
+
+/**
+ * @summary Draft a cold email opener anchored on a buying signal
+ */
+export const generateSignalOpener = async (signalOpenerInput: SignalOpenerInput, options?: RequestInit): Promise<SignalOpenerResponse> => {
+
+  return customFetch<SignalOpenerResponse>(getGenerateSignalOpenerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signalOpenerInput,)
+  }
+);}
+
+
+
+
+export const getGenerateSignalOpenerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateSignalOpener>>, TError,{data: BodyType<SignalOpenerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateSignalOpener>>, TError,{data: BodyType<SignalOpenerInput>}, TContext> => {
+
+const mutationKey = ['generateSignalOpener'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateSignalOpener>>, {data: BodyType<SignalOpenerInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateSignalOpener(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateSignalOpenerMutationResult = NonNullable<Awaited<ReturnType<typeof generateSignalOpener>>>
+    export type GenerateSignalOpenerMutationBody = BodyType<SignalOpenerInput>
+    export type GenerateSignalOpenerMutationError = ErrorType<void>
+
+    /**
+ * @summary Draft a cold email opener anchored on a buying signal
+ */
+export const useGenerateSignalOpener = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateSignalOpener>>, TError,{data: BodyType<SignalOpenerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateSignalOpener>>,
+        TError,
+        {data: BodyType<SignalOpenerInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateSignalOpenerMutationOptions(options));
     }
 
 export const getUpdateSignalUrl = (id: number,) => {

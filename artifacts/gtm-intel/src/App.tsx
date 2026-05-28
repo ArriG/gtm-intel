@@ -30,13 +30,13 @@ const NAV_SETUP = [
 const NAV_RESEARCH_BASE = [
   { href: "/", label: "Search", icon: Sparkles },
   { href: "/my-briefs", label: "My briefs", icon: FolderOpen },
+  { href: "/signals", label: "Signals", icon: Radio },
 ] as const;
 
 const NAV_DISCOVER = { href: "/discover", label: "Discover", icon: Target } as const;
 
 const NAV_WORKSPACE = [
   { href: "/icps", label: "ICPs", icon: Users },
-  { href: "/signals", label: "Signals", icon: Radio },
   { href: "/dashboard", label: "Dashboard", icon: Newspaper },
 ];
 

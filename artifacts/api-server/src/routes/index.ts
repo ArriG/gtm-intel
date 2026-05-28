@@ -5,6 +5,7 @@ import signalsRouter from "./signals";
 import dashboardRouter from "./dashboard";
 import accountBriefRouter from "./account-brief";
 import nextTouchRouter from "./next-touch";
+import accountSignalsRouter from "./account-signals";
 import marketProspectRouter from "./market-prospect";
 import signalRadarRouter from "./signal-radar";
 import yourCompanyRouter from "./your-company";
@@ -19,6 +20,7 @@ router.use(signalRadarRouter);
 router.use(yourCompanyRouter);
 router.use(accountBriefRouter);
 router.use(nextTouchRouter);
+router.use(accountSignalsRouter);
 router.use(marketProspectRouter);
 
 export default router;

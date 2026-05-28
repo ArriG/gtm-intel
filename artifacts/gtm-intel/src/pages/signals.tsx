@@ -1,237 +1,188 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { useListSignals, useUpdateSignal, useDeleteSignal, getListSignalsQueryKey, useListIcps } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Loader2, Radio, Search } from "lucide-react";
+import { scanAccountSignals } from "@workspace/api-client-react";
+import { BearMark } from "@/components/bear-mark";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Check, Radio, Loader2, Radar, ExternalLink, AlertCircle } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
-import { loadYourCompany, useYourCompany, yourCompanyForRequest, yourCompanyHasRadarContext } from "@/lib/your-company";
-import { runSignalRadarScan } from "@/lib/run-signal-radar";
+import { BriefCard, BriefCardContent } from "@/components/brief-card";
+import { SignalCard } from "@/components/signal-card";
+import {
+  getWatchedBriefs,
+  updateHistoryEntry,
+  useHistory,
+  visibleSignals,
+} from "@/lib/history";
+import {
+  countReadyToReengage,
+  countSignalsThisWeek,
+  countWatchedAccounts,
+  formatRelativeScanTime,
+  sortWatchedBriefs,
+} from "@/lib/signal-tracking";
+import { loadYourCompany, yourCompanyForRequest } from "@/lib/your-company";
 
-const IMPORTANCE_COLORS: Record<string, string> = {
-  high: "bg-red-100 text-red-800 border-red-200",
-  medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  low: "bg-green-100 text-green-800 border-green-200",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  pricing_change: "Pricing Change",
-  product_launch: "Product Launch",
-  funding: "Funding",
-  hiring: "Hiring",
-  partnership: "Partnership",
-  other: "Other",
-};
-
-function signalCompanyName(signal: { companyName?: string | null; competitorName?: string | null; title: string }): string | null {
-  return signal.companyName?.trim() || signal.competitorName?.trim() || null;
+function SummaryTile({ label, value }: { label: string; value: number }) {
+  return (
+    <BriefCard>
+      <BriefCardContent className="pt-5">
+        <p className="text-3xl font-extrabold tracking-tight text-foreground">{value}</p>
+        <p className="text-xs text-muted-foreground mt-1">{label}</p>
+      </BriefCardContent>
+    </BriefCard>
+  );
 }
 
-export default function Signals() {
-  const { data: signals, isLoading } = useListSignals();
-  const { data: icps } = useListIcps();
-  const yourCompany = useYourCompany();
-  const updateSignal = useUpdateSignal();
-  const deleteSignal = useDeleteSignal();
-  const queryClient = useQueryClient();
-  const [filterType, setFilterType] = useState("all");
-  const [filterImportance, setFilterImportance] = useState("all");
-  const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
+export default function SignalsPage() {
+  const history = useHistory();
+  const [scanningId, setScanningId] = useState<string | null>(null);
+  const [scanErrors, setScanErrors] = useState<Record<string, string>>({});
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  async function handleScan() {
-    setScanError(null);
-    setScanning(true);
+  const watchedBriefs = useMemo(
+    () => sortWatchedBriefs(getWatchedBriefs()),
+    [history, refreshKey],
+  );
+
+  const watchedCount = countWatchedAccounts(history);
+  const signalsThisWeek = countSignalsThisWeek(history);
+  const readyToReengage = countReadyToReengage(history);
+
+  async function handleScan(briefId: string, company: string, brief: Parameters<typeof scanAccountSignals>[0]["brief"]) {
+    const yourCompany = yourCompanyForRequest(loadYourCompany());
+    if (!yourCompany) return;
+
+    setScanningId(briefId);
+    setScanErrors(current => {
+      const next = { ...current };
+      delete next[briefId];
+      return next;
+    });
+
     try {
-      await runSignalRadarScan(
-        yourCompanyForRequest(loadYourCompany()),
-        icps,
-      );
-      await queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
-      await queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      const result = await scanAccountSignals({
+        company,
+        brief,
+        yourCompany,
+        sectorPackOverride: yourCompany.sectorPackOverride,
+      });
+
+      updateHistoryEntry(briefId, {
+        signals: result.signals,
+        lastScannedAt: result.scannedAt,
+      });
+      setRefreshKey(key => key + 1);
     } catch (err) {
-      setScanError(err instanceof Error ? err.message : "Scan failed.");
+      setScanErrors(current => ({
+        ...current,
+        [briefId]: err instanceof Error ? err.message : "Couldn't scan right now — try again in a moment.",
+      }));
     } finally {
-      setScanning(false);
+      setScanningId(null);
     }
   }
 
-  function handleToggleReviewed(id: number, reviewed: boolean) {
-    updateSignal.mutate({ id, data: { reviewed: !reviewed } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-      },
-    });
-  }
-
-  function handleDelete(id: number) {
-    if (!confirm("Dismiss this signal?")) return;
-    deleteSignal.mutate({ id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListSignalsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-      },
-    });
-  }
-
-  const filtered = signals?.filter(s => {
-    if (filterType !== "all" && s.type !== filterType) return false;
-    if (filterImportance !== "all" && s.importance !== filterImportance) return false;
-    return true;
-  });
-
-  const hasIcps = (icps?.length ?? 0) > 0;
-  const hasSellerContext = yourCompanyHasRadarContext(yourCompany);
-  const canRunRadar = hasIcps || hasSellerContext;
-  const unreviewed = signals?.filter(s => !s.reviewed).length ?? 0;
-
   return (
-    <div className="p-8 space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-end justify-between gap-4 flex-wrap">
-        <PageHeader
-          title="Signal Radar"
-          subtitle="Your Company defines the industry to watch. ICPs refine who within it. The web tells you what's happening."
-        />
-        <Button
-          onClick={handleScan}
-          disabled={scanning || !canRunRadar}
-          className="gap-2 shrink-0"
-        >
-          {scanning
-            ? <><Loader2 className="w-4 h-4 animate-spin" />Scanning web...</>
-            : <><Radar className="w-4 h-4" />Run Radar</>}
-        </Button>
-      </div>
-
-      {!canRunRadar && (
-        <Card className="border-amber-200 bg-amber-50/50">
-          <CardContent className="p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-amber-900">Set up Your Company first</p>
-              <p className="text-amber-800/80 mt-0.5">
-                The radar searches for buying signals in your target industry.{" "}
-                <Link href="/your-company" className="underline font-medium">Fill in who you sell to</Link>{" "}
-                or <Link href="/icps" className="underline font-medium">define an ICP</Link>.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {canRunRadar && !hasSellerContext && (
-        <Card className="border-border bg-muted/30">
-          <CardContent className="p-4 text-sm text-muted-foreground">
-            Running on ICPs only.{" "}
-            <Link href="/your-company" className="underline text-foreground">Add Your Company</Link>{" "}
-            to anchor scans to your industry.
-          </CardContent>
-        </Card>
-      )}
-
-      {scanError && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="p-4 text-sm text-destructive">{scanError}</CardContent>
-        </Card>
-      )}
-
-      <div className="flex gap-3 flex-wrap items-center">
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="Filter by type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {Object.entries(TYPE_LABELS).map(([val, label]) => <SelectItem key={val} value={val}>{label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterImportance} onValueChange={setFilterImportance}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="Filter by importance" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Importance</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-          </SelectContent>
-        </Select>
-        {unreviewed > 0 && (
-          <Badge variant="secondary" className="ml-auto">{unreviewed} new</Badge>
-        )}
-      </div>
-
-      {isLoading ? (
-        <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
-      ) : filtered?.length === 0 ? (
-        <Card className="p-12 text-center bg-muted/30 border-dashed">
-          <Radio className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold mb-1">No signals yet</h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Set up <Link href="/your-company" className="underline">Your Company</Link> to define your industry, then hit Run Radar to scan Seek, AFR, LinkedIn, and company news for buying triggers.
+    <div className="min-h-screen">
+      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
+        <div className="max-w-4xl mx-auto">
+          <BearMark size={52} className="mb-6" />
+          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Research</p>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
+            Signals
+          </h1>
+          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
+            Watch accounts you have briefed and scan for fresh buying signals to re-open conversations with context.
           </p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {filtered?.map(signal => (
-            <Card key={signal.id} className={signal.reviewed ? "opacity-60" : ""}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`shrink-0 mt-0.5 ${signal.reviewed ? "text-green-600" : "text-muted-foreground"}`}
-                    onClick={() => handleToggleReviewed(signal.id, signal.reviewed)}
-                    title={signal.reviewed ? "Mark as new" : "Mark as reviewed"}
-                  >
-                    <Check className="w-4 h-4" />
+        </div>
+      </div>
+
+      <div className="bg-secondary px-8 py-10 sm:py-12">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <SummaryTile label="Accounts watched" value={watchedCount} />
+            <SummaryTile label="Signals this week" value={signalsThisWeek} />
+            <SummaryTile label="Briefs ready to re-engage" value={readyToReengage} />
+          </div>
+
+          {watchedCount === 0 ? (
+            <BriefCard className="border-dashed">
+              <BriefCardContent className="py-12 text-center space-y-4">
+                <Radio className="w-10 h-10 text-muted-foreground/40 mx-auto" />
+                <div className="space-y-2 max-w-md mx-auto">
+                  <h2 className="text-lg font-semibold">No accounts being watched yet</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Generate a brief on the Search page to start tracking signals.
+                  </p>
+                </div>
+                <Link href="/">
+                  <Button className="rounded-xl gap-2">
+                    <Search className="w-4 h-4" />
+                    Go to Search
                   </Button>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <div className="min-w-0">
-                        {signalCompanyName(signal) && (
-                          <p className="text-xs font-medium text-primary mb-0.5">{signalCompanyName(signal)}</p>
-                        )}
-                        <p className={`font-semibold ${signal.reviewed ? "line-through text-muted-foreground" : ""}`}>
-                          {signal.title}
+                </Link>
+              </BriefCardContent>
+            </BriefCard>
+          ) : (
+            <div className="space-y-6">
+              {watchedBriefs.map(entry => {
+                const signals = visibleSignals(entry);
+                const scanning = scanningId === entry.id;
+                const scanError = scanErrors[entry.id];
+
+                return (
+                  <section key={entry.id} className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div>
+                        <Link href={`/?h=${entry.id}`} className="text-lg font-semibold hover:text-primary transition-colors">
+                          {entry.label}
+                        </Link>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Last scanned: {formatRelativeScanTime(entry.lastScannedAt)}
                         </p>
                       </div>
-                      <div className="flex gap-2 shrink-0 flex-wrap">
-                        {signal.icpName && (
-                          <Badge variant="secondary" className="text-xs">{signal.icpName}</Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs font-mono">{TYPE_LABELS[signal.type] || signal.type}</Badge>
-                        <Badge className={`text-xs border ${IMPORTANCE_COLORS[signal.importance] || ""}`}>{signal.importance}</Badge>
+                      <Button
+                        size="sm"
+                        className="rounded-xl gap-2 shrink-0"
+                        disabled={scanning || !yourCompanyForRequest(loadYourCompany())}
+                        onClick={() => handleScan(entry.id, entry.label, entry.brief)}
+                      >
+                        {scanning
+                          ? <><Loader2 className="w-4 h-4 animate-spin" />Scanning...</>
+                          : "Scan now"}
+                      </Button>
+                    </div>
+
+                    {scanError && (
+                      <p className="text-sm text-destructive">{scanError}</p>
+                    )}
+
+                    {signals.length === 0 && !scanning ? (
+                      <BriefCard className="border-dashed bg-muted/20">
+                        <BriefCardContent className="py-6 text-sm text-muted-foreground">
+                          No signals in the last 90 days — try again next week.
+                        </BriefCardContent>
+                      </BriefCard>
+                    ) : (
+                      <div className="space-y-3">
+                        {signals.map(signal => (
+                          <SignalCard
+                            key={signal.id}
+                            signal={signal}
+                            briefId={entry.id}
+                            briefHref={`/?h=${entry.id}`}
+                            brief={entry.brief}
+                            onDismiss={() => setRefreshKey(key => key + 1)}
+                          />
+                        ))}
                       </div>
-                    </div>
-                    {signal.description && <p className="text-sm text-muted-foreground mt-1.5">{signal.description}</p>}
-                    <div className="flex gap-3 mt-2 text-xs text-muted-foreground flex-wrap items-center">
-                      <span>via {signal.source}</span>
-                      <span>•</span>
-                      <span>{new Date(signal.createdAt).toLocaleDateString()}</span>
-                      {signal.companyDomain && (
-                        <>
-                          <span>•</span>
-                          <Link
-                            href={`/?q=${encodeURIComponent(signal.companyDomain)}`}
-                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
-                          >
-                            Research brief <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0" onClick={() => handleDelete(signal.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

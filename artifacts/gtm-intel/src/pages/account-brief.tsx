@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
@@ -982,6 +983,7 @@ export default function AccountBriefPage() {
   const [showOptionalContext, setShowOptionalContext] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
+  const [watchingSignals, setWatchingSignals] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -1050,7 +1052,16 @@ export default function AccountBriefPage() {
       const data = await res.json() as AccountBrief;
       setBrief(data);
       const id = Date.now().toString();
-      saveToHistory({ id, label, url, icpScore: data.icpFitScore?.score ?? 0, savedAt: new Date().toISOString(), brief: data });
+      saveToHistory({
+        id,
+        label,
+        url,
+        icpScore: data.icpFitScore?.score ?? 0,
+        savedAt: new Date().toISOString(),
+        brief: data,
+        watched: true,
+      });
+      setWatchingSignals(true);
       setCurrentHistoryId(id);
       saveBriefSession({
         label,
@@ -1077,6 +1088,7 @@ export default function AccountBriefPage() {
     setSearchQuery(entry.label);
     setCurrentHistoryId(entry.id);
     setBriefStatus(entry.status ?? "not_contacted");
+    setWatchingSignals(entry.watched !== false);
     saveBriefSession({
       label: entry.label,
       url: entry.url,
@@ -1250,6 +1262,22 @@ export default function AccountBriefPage() {
                           disabled={!currentHistoryId}
                         />
                       </div>
+                      {currentHistoryId && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <Switch
+                            id="watching-signals"
+                            checked={watchingSignals}
+                            onCheckedChange={checked => {
+                              const watched = checked === true;
+                              setWatchingSignals(watched);
+                              updateHistoryEntry(currentHistoryId, { watched });
+                            }}
+                          />
+                          <Label htmlFor="watching-signals" className="text-xs text-muted-foreground cursor-pointer">
+                            Watching for signals: {watchingSignals ? "ON" : "OFF"}
+                          </Label>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">

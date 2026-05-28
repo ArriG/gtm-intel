@@ -150,38 +150,49 @@ export interface SignalScanResponse {
   added: number;
 }
 
-export type SignalUpdateType = typeof SignalUpdateType[keyof typeof SignalUpdateType];
+/**
+ * Tier 1 and Tier 2 buying signal categories for account scans
+ */
+export type AccountSignalType = typeof AccountSignalType[keyof typeof AccountSignalType];
 
 
-export const SignalUpdateType = {
-  pricing_change: 'pricing_change',
-  product_launch: 'product_launch',
+export const AccountSignalType = {
+  leadership_hire: 'leadership_hire',
+  job_posting: 'job_posting',
+  exec_post: 'exec_post',
   funding: 'funding',
-  hiring: 'hiring',
-  partnership: 'partnership',
-  other: 'other',
+  regulation: 'regulation',
+  earnings: 'earnings',
+  expansion: 'expansion',
+  ma: 'ma',
+  hiring_spike: 'hiring_spike',
+  product_launch: 'product_launch',
 } as const;
 
-export type SignalUpdateImportance = typeof SignalUpdateImportance[keyof typeof SignalUpdateImportance];
+export type AccountSignalTier = typeof AccountSignalTier[keyof typeof AccountSignalTier];
 
 
-export const SignalUpdateImportance = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
+export const AccountSignalTier = {
+  NUMBER_1: 1,
+  NUMBER_2: 2,
 } as const;
 
-export interface SignalUpdate {
-  title?: string;
-  description?: string;
-  type?: SignalUpdateType;
-  source?: string;
-  importance?: SignalUpdateImportance;
-  companyName?: string;
-  companyDomain?: string;
-  icpName?: string;
-  icpId?: number;
-  reviewed?: boolean;
+export interface AccountSignal {
+  id: string;
+  type: AccountSignalType;
+  tier: AccountSignalTier;
+  headline: string;
+  summary: string;
+  whyItMatters: string;
+  sourceUrl: string;
+  sourceTitle: string;
+  /**
+     * ISO date when the event happened, if extractable
+     * @nullable
+     */
+  occurredAt?: string | null;
+  /** ISO date when the scan ran */
+  scannedAt: string;
 }
 
 export type BriefSourceType = typeof BriefSourceType[keyof typeof BriefSourceType];
@@ -219,72 +230,6 @@ export interface BriefSource {
   url?: string;
   confidence: BriefSourceConfidence;
 }
-
-export interface LinkedInPost {
-  role: string;
-  content: string;
-}
-
-export interface SectorPackOption {
-  id: string;
-  name: string;
-  version: number;
-  geographies?: string[];
-}
-
-export type SectorPackSelectionMetaMode = typeof SectorPackSelectionMetaMode[keyof typeof SectorPackSelectionMetaMode];
-
-
-export const SectorPackSelectionMetaMode = {
-  auto: 'auto',
-  override: 'override',
-  legacy: 'legacy',
-} as const;
-
-export interface SectorPackSelectionMeta {
-  mode: SectorPackSelectionMetaMode;
-  packId?: string | null;
-  packName?: string | null;
-  /** Auto-detected pack id when override is set */
-  autoDetectedId?: string | null;
-  autoDetectedName?: string | null;
-  matchScore: number;
-  matchedKeywords: string[];
-}
-
-export interface SectorPackListResponse {
-  packs: SectorPackOption[];
-}
-
-export interface PreviewPromptInput {
-  yourCompany: YourCompany;
-}
-
-export interface ResearchPackMeta {
-  /** Sector pack identifier, e.g. uk-dental */
-  id: string;
-  name: string;
-  version: number;
-  lastReviewed?: string;
-  loadingLabel: string;
-  expectedSeconds: number;
-}
-
-export interface PreviewPromptResponse {
-  systemPrompt: string;
-  sectorPackSelection: SectorPackSelectionMeta;
-  researchPack?: ResearchPackMeta;
-  availablePacks: SectorPackOption[];
-}
-
-export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
-
-
-export const EmailTone = {
-  formal: 'formal',
-  direct: 'direct',
-  conversational: 'conversational',
-} as const;
 
 /**
  * Optional role in the buying process when inferrable from research
@@ -343,6 +288,16 @@ export interface DiscoveryQuestion {
 export interface ManualResearchTip {
   tip: string;
   reason?: string;
+}
+
+export interface ResearchPackMeta {
+  /** Sector pack identifier, e.g. uk-dental */
+  id: string;
+  name: string;
+  version: number;
+  lastReviewed?: string;
+  loadingLabel: string;
+  expectedSeconds: number;
 }
 
 export type AccountBriefCompanySnapshot = {
@@ -410,6 +365,122 @@ export interface AccountBrief {
   sourceSummary?: AccountBriefSourceSummary;
   /** Sector reasoning pack used to generate this brief */
   researchPack?: ResearchPackMeta;
+}
+
+export interface ScanAccountSignalsInput {
+  company: string;
+  brief?: AccountBrief;
+  yourCompany: YourCompany;
+  /** Optional sector pack id override — same pattern as Reasoning page */
+  sectorPackOverride?: string;
+}
+
+export interface ScanAccountSignalsResponse {
+  signals: AccountSignal[];
+  scannedAt: string;
+  sectorPackUsed: string;
+}
+
+export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
+
+
+export const EmailTone = {
+  formal: 'formal',
+  direct: 'direct',
+  conversational: 'conversational',
+} as const;
+
+export interface SignalOpenerInput {
+  signal: AccountSignal;
+  brief?: AccountBrief;
+  yourCompany: YourCompany;
+  tone?: EmailTone;
+}
+
+export interface SignalOpenerResponse {
+  opener: string;
+  generatedAt: string;
+}
+
+export type SignalUpdateType = typeof SignalUpdateType[keyof typeof SignalUpdateType];
+
+
+export const SignalUpdateType = {
+  pricing_change: 'pricing_change',
+  product_launch: 'product_launch',
+  funding: 'funding',
+  hiring: 'hiring',
+  partnership: 'partnership',
+  other: 'other',
+} as const;
+
+export type SignalUpdateImportance = typeof SignalUpdateImportance[keyof typeof SignalUpdateImportance];
+
+
+export const SignalUpdateImportance = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface SignalUpdate {
+  title?: string;
+  description?: string;
+  type?: SignalUpdateType;
+  source?: string;
+  importance?: SignalUpdateImportance;
+  companyName?: string;
+  companyDomain?: string;
+  icpName?: string;
+  icpId?: number;
+  reviewed?: boolean;
+}
+
+export interface LinkedInPost {
+  role: string;
+  content: string;
+}
+
+export interface SectorPackOption {
+  id: string;
+  name: string;
+  version: number;
+  geographies?: string[];
+}
+
+export type SectorPackSelectionMetaMode = typeof SectorPackSelectionMetaMode[keyof typeof SectorPackSelectionMetaMode];
+
+
+export const SectorPackSelectionMetaMode = {
+  auto: 'auto',
+  override: 'override',
+  legacy: 'legacy',
+} as const;
+
+export interface SectorPackSelectionMeta {
+  mode: SectorPackSelectionMetaMode;
+  packId?: string | null;
+  packName?: string | null;
+  /** Auto-detected pack id when override is set */
+  autoDetectedId?: string | null;
+  autoDetectedName?: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
+}
+
+export interface SectorPackListResponse {
+  packs: SectorPackOption[];
+}
+
+export interface PreviewPromptInput {
+  yourCompany: YourCompany;
+}
+
+export interface PreviewPromptResponse {
+  systemPrompt: string;
+  sectorPackSelection: SectorPackSelectionMeta;
+  researchPack?: ResearchPackMeta;
+  availablePacks: SectorPackOption[];
 }
 
 export interface BriefActionInput {
