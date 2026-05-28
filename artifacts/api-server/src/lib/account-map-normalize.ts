@@ -21,9 +21,11 @@ const PARENT_RELATIONSHIPS = new Set([
 const BUYING_AUTONOMY = new Set(["independent", "group_gated", "mixed", "unknown"]);
 const FIT_TIERS = new Set(["strong", "moderate", "skip"]);
 const FIT_RANK: Record<string, number> = { strong: 0, moderate: 1, skip: 2 };
+const SOURCE_CONFIDENCE = new Set(["verified", "informed", "assumed"]);
+const BACKGROUND_CONFIDENCE = new Set(["high", "medium", "low", "assumed"]);
 
-const MAX_PER_REGION = 5;
-const MAX_TOTAL = 12;
+const MAX_PER_REGION = 8;
+const MAX_TOTAL = 20;
 const MAX_BUYERS = 3;
 
 type RawBuyer = {
@@ -49,6 +51,14 @@ type RawEntity = {
   sources?: unknown;
 };
 
+type RawBriefSource = {
+  type?: string;
+  label?: string;
+  detail?: string;
+  url?: string;
+  confidence?: string;
+};
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? value as Record<string, unknown> : null;
 }
@@ -62,6 +72,90 @@ function normaliseRegion(value: unknown): typeof REGIONS[number] {
   return (REGIONS as readonly string[]).includes(region)
     ? region as typeof REGIONS[number]
     : "group_unallocated";
+}
+
+function normaliseBriefSources(raw: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(raw)) return [];
+
+  const sources: Array<Record<string, unknown>> = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const source = item as RawBriefSource;
+    const label = cleanString(source.label);
+    const detail = cleanString(source.detail);
+    if (!label || !detail) continue;
+
+    const confidence = cleanString(source.confidence);
+    sources.push({
+      type: cleanString(source.type) || "web",
+      label,
+      detail,
+      url: cleanString(source.url) || undefined,
+      confidence: SOURCE_CONFIDENCE.has(confidence) ? confidence : "informed",
+    });
+  }
+
+  return sources;
+}
+
+function normaliseOutreachSources(raw: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(raw)) return [];
+
+  const items: Array<Record<string, unknown>> = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const source = entry as { label?: string; detail?: string; url?: string; relatedEntity?: string };
+    const label = cleanString(source.label);
+    const detail = cleanString(source.detail);
+    if (!label || !detail) continue;
+
+    items.push({
+      label,
+      detail,
+      ...(cleanString(source.url) ? { url: cleanString(source.url) } : {}),
+      ...(cleanString(source.relatedEntity) ? { relatedEntity: cleanString(source.relatedEntity) } : {}),
+    });
+    if (items.length >= 8) break;
+  }
+
+  return items;
+}
+
+function normaliseCompanySnapshot(raw: unknown, parent: Record<string, unknown>) {
+  const existing = asRecord(raw);
+  const pains = Array.isArray(existing?.possiblePainPoints)
+    ? existing!.possiblePainPoints!.map(item => cleanString(item)).filter(Boolean)
+    : [];
+
+  return {
+    size: cleanString(existing?.size) || "Unknown",
+    industry: cleanString(existing?.industry) || String(parent.industry ?? "Unknown"),
+    location: cleanString(existing?.location) || String(parent.headquartersCountry ?? "Unknown"),
+    fundingStage: cleanString(existing?.fundingStage) || "Unknown",
+    ...(cleanString(existing?.techStack) ? { techStack: cleanString(existing?.techStack) } : {}),
+    possiblePainPoints: pains,
+    sources: normaliseBriefSources(existing?.sources),
+  };
+}
+
+function normaliseGroupBackground(raw: unknown, parent: Record<string, unknown>) {
+  const existing = asRecord(raw);
+  const bullets = Array.isArray(existing?.bullets)
+    ? existing!.bullets!.map(item => cleanString(item)).filter(Boolean)
+    : [];
+
+  const confidence = cleanString(existing?.confidence);
+  const description = cleanString(parent.description);
+
+  return {
+    confidence: BACKGROUND_CONFIDENCE.has(confidence) ? confidence : "assumed",
+    bullets: bullets.length > 0
+      ? bullets
+      : description
+        ? [description]
+        : ["Limited group-level context available from this mapping pass."],
+    sources: normaliseBriefSources(existing?.sources),
+  };
 }
 
 function normaliseBuyers(raw: unknown): Array<Record<string, unknown>> {
@@ -202,6 +296,9 @@ export function normalizeAccountMap(
     unmappedEntities,
     limitations,
     isSingleEntity: raw.isSingleEntity === true,
+    companySnapshot: normaliseCompanySnapshot(raw.companySnapshot, parent),
+    groupBackground: normaliseGroupBackground(raw.groupBackground, parent),
+    outreachSources: normaliseOutreachSources(raw.outreachSources),
     generatedAt,
     sectorPackUsed,
   };

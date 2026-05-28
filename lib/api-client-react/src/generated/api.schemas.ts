@@ -652,6 +652,39 @@ export interface AccountMapRequest {
   yourCompany: YourCompany;
 }
 
+export interface MapCompanySnapshot {
+  size: string;
+  industry: string;
+  location: string;
+  fundingStage: string;
+  techStack?: string;
+  possiblePainPoints?: string[];
+  sources: BriefSource[];
+}
+
+export type MapGroupBackgroundConfidence = typeof MapGroupBackgroundConfidence[keyof typeof MapGroupBackgroundConfidence];
+
+
+export const MapGroupBackgroundConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+  assumed: 'assumed',
+} as const;
+
+export interface MapGroupBackground {
+  confidence?: MapGroupBackgroundConfidence;
+  bullets: string[];
+  sources: BriefSource[];
+}
+
+export interface MapOutreachSource {
+  label: string;
+  detail: string;
+  url?: string;
+  relatedEntity?: string;
+}
+
 export interface AccountMapResponse {
   parent: AccountMapParent;
   entities: MapEntity[];
@@ -660,6 +693,9 @@ export interface AccountMapResponse {
   isSingleEntity: boolean;
   generatedAt: string;
   sectorPackUsed: string;
+  companySnapshot: MapCompanySnapshot;
+  groupBackground: MapGroupBackground;
+  outreachSources: MapOutreachSource[];
 }
 
 export interface AccountBriefInput {

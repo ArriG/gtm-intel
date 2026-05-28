@@ -41,7 +41,7 @@ When mapping a global enterprise, follow the European Financial Services sector 
     sourceBlock,
     buildYourCompanyContext(yourCompany),
     "",
-    "SPEED INSTRUCTION: Complete mapping within 120 seconds using at most 7 web searches total. Move on if a source returns nothing useful after one attempt.",
+    "SPEED INSTRUCTION: Complete mapping within 120 seconds using at most 10 web searches total. Move on if a source returns nothing useful after one attempt.",
     ACCOUNT_MAP_RESPONSE_FORMAT,
   ].filter(Boolean).join("\n\n");
 
@@ -89,7 +89,7 @@ router.post("/account-map", async (req, res): Promise<void> => {
     const message = await Promise.race([
       client.messages.create({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 6000,
+        max_tokens: 8000,
         tools: [{ type: "web_search_20250305", name: "web_search" } as any],
         system: composed.systemPrompt,
         messages: [{

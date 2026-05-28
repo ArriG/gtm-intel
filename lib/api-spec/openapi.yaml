@@ -1279,6 +1279,9 @@ components:
         - isSingleEntity
         - generatedAt
         - sectorPackUsed
+        - companySnapshot
+        - groupBackground
+        - outreachSources
       properties:
         parent:
           $ref: "#/components/schemas/AccountMapParent"
@@ -1297,6 +1300,75 @@ components:
         generatedAt:
           type: string
         sectorPackUsed:
+          type: string
+        companySnapshot:
+          $ref: "#/components/schemas/MapCompanySnapshot"
+        groupBackground:
+          $ref: "#/components/schemas/MapGroupBackground"
+        outreachSources:
+          type: array
+          items:
+            $ref: "#/components/schemas/MapOutreachSource"
+
+    MapCompanySnapshot:
+      type: object
+      required:
+        - size
+        - industry
+        - location
+        - fundingStage
+        - sources
+      properties:
+        size:
+          type: string
+        industry:
+          type: string
+        location:
+          type: string
+        fundingStage:
+          type: string
+        techStack:
+          type: string
+        possiblePainPoints:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    MapGroupBackground:
+      type: object
+      required:
+        - bullets
+        - sources
+      properties:
+        confidence:
+          type: string
+          enum: [high, medium, low, assumed]
+        bullets:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    MapOutreachSource:
+      type: object
+      required:
+        - label
+        - detail
+      properties:
+        label:
+          type: string
+        detail:
+          type: string
+        url:
+          type: string
+        relatedEntity:
           type: string
 
     AccountBriefInput:

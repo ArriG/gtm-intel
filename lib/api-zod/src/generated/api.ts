@@ -704,7 +704,39 @@ export const GenerateAccountMapResponse = zod.object({
   "limitations": zod.string(),
   "isSingleEntity": zod.boolean(),
   "generatedAt": zod.string(),
-  "sectorPackUsed": zod.string()
+  "sectorPackUsed": zod.string(),
+  "companySnapshot": zod.object({
+  "size": zod.string(),
+  "industry": zod.string(),
+  "location": zod.string(),
+  "fundingStage": zod.string(),
+  "techStack": zod.string().optional(),
+  "possiblePainPoints": zod.array(zod.string()).optional(),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+}))
+}),
+  "groupBackground": zod.object({
+  "confidence": zod.enum(['high', 'medium', 'low', 'assumed']).optional(),
+  "bullets": zod.array(zod.string()),
+  "sources": zod.array(zod.object({
+  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "confidence": zod.enum(['verified', 'informed', 'assumed'])
+}))
+}),
+  "outreachSources": zod.array(zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "url": zod.string().optional(),
+  "relatedEntity": zod.string().optional()
+}))
 })
 
 

@@ -1,6 +1,9 @@
 import type { AccountMapResponse } from "@workspace/api-client-react";
 import { AccountMapDiagram } from "./account-map-diagram";
 import { LimitationsCard } from "./limitations-card";
+import { MapBackgroundSection } from "./map-background-section";
+import { MapCompanySnapshotCard } from "./map-company-snapshot";
+import { MapUnmappedSection } from "./map-unmapped-section";
 import { ParentSummaryCard } from "./parent-summary-card";
 import { SingleEntityFallback } from "./single-entity-fallback";
 
@@ -24,7 +27,10 @@ export function AccountMapResult({
         Expand any entity card to see verified leadership, context, and sources.
       </p>
       <AccountMapDiagram map={map} />
+      <MapUnmappedSection map={map} />
       <LimitationsCard limitations={map.limitations} />
+      <MapCompanySnapshotCard snapshot={map.companySnapshot} />
+      <MapBackgroundSection map={map} />
       <p className="text-xs text-muted-foreground">
         Generated {new Date(map.generatedAt).toLocaleString("en-GB")} · Sector pack: {map.sectorPackUsed}
       </p>

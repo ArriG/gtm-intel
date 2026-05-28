@@ -8,6 +8,28 @@ Return ONLY valid JSON with this exact shape:
     "headquartersCountry": "e.g. Switzerland",
     "industry": "e.g. Insurance"
   },
+  "companySnapshot": {
+    "size": "e.g. 50,000+ employees globally",
+    "industry": "e.g. Insurance",
+    "location": "e.g. Zurich, Switzerland (global operations)",
+    "fundingStage": "Public (SIX: ZURN) or Private — factual only",
+    "techStack": "Optional — only if verified from public sources",
+    "possiblePainPoints": ["Factual operational themes from filings or press — not sales advice"],
+    "sources": [{ "type": "web", "label": "Source name", "detail": "What was found", "url": "https://...", "confidence": "verified" }]
+  },
+  "groupBackground": {
+    "confidence": "high | medium | low | assumed",
+    "bullets": ["3-4 factual bullets on group-level pressures, priorities, and recent context"],
+    "sources": [{ "type": "web", "label": "...", "detail": "...", "url": "https://...", "confidence": "verified" }]
+  },
+  "outreachSources": [
+    {
+      "label": "e.g. Group annual report — subsidiary list",
+      "detail": "Why this source is worth checking before outreach to unmapped entities",
+      "url": "https://...",
+      "relatedEntity": "Optional entity name"
+    }
+  ],
   "entities": [
     {
       "name": "Operating entity legal name",
@@ -32,20 +54,21 @@ Return ONLY valid JSON with this exact shape:
     }
   ],
   "unmappedEntities": ["Names of real entities omitted due to caps"],
-  "limitations": "Honest caveats on coverage depth.",
+  "limitations": "Honest caveats on coverage depth — especially non-European sourcing.",
   "isSingleEntity": false
 }
 
 MAPPING RULES:
 - Map the company GLOBALLY into the fixed region buckets above.
 - Identify only real, publicly verifiable entities and named executives.
-- Up to 5 entities per region, maximum 12 entities total in entities[].
-- If more entities exist, list omitted names in unmappedEntities[].
-- Prefer strong fit entities, then moderate, then skip when selecting which to include.
-- Up to 3 buyers per entity — named executives only (Chief Actuary, Actuary, COO, CTO/CIO, CRO, CEO/MD, CUO when verified). Omit any buyer without a verifiable sourceUrl. NEVER use placeholder names like "not publicly identified" — return an empty buyers array instead.
+- Up to 8 entities per region, maximum 20 entities total in entities[].
+- If more entities exist, list ALL omitted names in unmappedEntities[].
+- Populate outreachSources[] with 3-6 public sources worth checking next (annual reports, regulator registers, IR pages, trade press) — especially for unmapped entities.
+- Prefer strong fit entities, then moderate, then skip when selecting which to include in entities[].
+- Up to 3 buyers per entity — named executives only (Chief Actuary, Actuary, COO, CTO/CIO, CRO, CEO/MD, CUO when verified). Omit any buyer without a verifiable sourceUrl. NEVER use placeholder names — return an empty buyers array instead.
+- companySnapshot and groupBackground must be factual group-level intelligence — NO call decision, NO opener, NO ICP score, NO discovery questions.
 - fitTier is factual alignment (geography, industry, business line, buyer match) — NOT a sales heat score.
-- context must be factual recent events only — NO call decision, NO opener, NO why-now, NO discovery questions.
 - For non-European regions, note reduced regulator depth in entity sources[] and limitations.
 - Set isSingleEntity=true if the target is not a federated multi-entity enterprise.
-- Use at most 7 web searches total for the entire mapping pass.
+- Use at most 10 web searches total for the entire mapping pass.
 - CRITICAL: no markdown, no preamble — raw JSON only.`;
