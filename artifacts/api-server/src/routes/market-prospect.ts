@@ -34,7 +34,9 @@ router.post("/market-prospect", async (req, res): Promise<void> => {
 
   const system = `You are a GTM prospecting analyst specialising in Australian B2B markets.
 
-Search the web to find 8-10 REAL companies that match the user's target market description. Focus on Australia unless the description specifies otherwise.
+Use public web search to find REAL companies that match the user's target market description. Sources: company websites and other publicly indexed pages. Default focus: Australian B2B unless the description specifies otherwise.
+
+Return no more than 20 companies per run.
 
 Return ONLY valid JSON:
 {
@@ -49,9 +51,9 @@ Return ONLY valid JSON:
 }
 
 Rules:
+- Return a maximum of 20 companies — never exceed this limit.
 - Prefer companies with verifiable websites — no made-up names.
-- Include a mix of well-known and mid-market if possible.
-- If you cannot find 8, return as many real matches as you found (minimum 3).
+- If you cannot find many matches, return as many real ones as you found (minimum 3 when possible).
 - Domains must be real — use web search to verify.
 - CRITICAL: Do not write any preamble, explanation, or markdown. Your entire response must be the raw JSON object only.${buildYourCompanyContext(yourCompany)}`;
 

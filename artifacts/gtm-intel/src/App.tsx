@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { BriefStatusPill } from "@/components/brief-status-pill";
 import { useHistory, clearHistory } from "@/lib/history";
-import { useIsYourCompanyConfigured } from "@/lib/your-company";
+import { useDiscoverEnabled, useIsYourCompanyConfigured } from "@/lib/your-company";
 
 import AccountBriefPage from "./pages/account-brief";
 import YourCompany from "./pages/your-company";
@@ -27,11 +27,12 @@ const NAV_SETUP = [
   { href: "/reasoning", label: "Reasoning", icon: Brain },
 ];
 
-const NAV_RESEARCH = [
+const NAV_RESEARCH_BASE = [
   { href: "/", label: "Search", icon: Sparkles },
   { href: "/my-briefs", label: "My briefs", icon: FolderOpen },
-  { href: "/prospect", label: "Prospect", icon: Target },
-];
+] as const;
+
+const NAV_DISCOVER = { href: "/discover", label: "Discover", icon: Target } as const;
 
 const NAV_WORKSPACE = [
   { href: "/icps", label: "ICPs", icon: Users },
@@ -104,9 +105,23 @@ function SidebarNavLink({ href, label, icon: Icon, active }: { href: string; lab
   );
 }
 
+function LegacyProspectRedirect() {
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    setLocation("/discover");
+  }, [setLocation]);
+
+  return null;
+}
+
 function Sidebar() {
   const [location] = useLocation();
+  const discoverEnabled = useDiscoverEnabled();
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
+  const researchNav = discoverEnabled
+    ? [...NAV_RESEARCH_BASE, NAV_DISCOVER]
+    : [...NAV_RESEARCH_BASE];
 
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-sidebar flex flex-col">
@@ -128,7 +143,7 @@ function Sidebar() {
 
         <NavSectionLabel>Research</NavSectionLabel>
         <div className="space-y-0.5">
-          {NAV_RESEARCH.map(({ href, label, icon }) => (
+          {researchNav.map(({ href, label, icon }) => (
             <div key={href}>
               <SidebarNavLink href={href} label={label} icon={icon} active={isActive(href)} />
               {href === "/" && <RecentSearches />}
@@ -174,7 +189,8 @@ export default function App() {
             <Route path="/" component={AccountBriefPage} />
             <Route path="/my-briefs" component={MyBriefsPage} />
             <Route path="/prep" component={CallPrepPage} />
-            <Route path="/prospect" component={MarketProspect} />
+            <Route path="/prospect" component={LegacyProspectRedirect} />
+            <Route path="/discover" component={MarketProspect} />
             <Route path="/your-company" component={YourCompany} />
             <Route path="/reasoning" component={ReasoningPage} />
             <Route path="/icps" component={ICPs} />
