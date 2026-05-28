@@ -46,13 +46,37 @@ FT, Reuters, Bloomberg. Insurance Insider, Insurance Times, Post, Reinsurance Ne
 
 Search `[entity name] CEO OR CUO OR Chief Actuary OR CRO site:linkedin.com OR annual report` for named heads. Only include names with a verifiable source URL.
 
+For non-CEO roles, prefer these targeted queries:
+
+- Chief Actuary (UK): `[entity] SMF20 site:fca.org.uk` or `[entity] SFCR chief actuary`
+- Chief Actuary (CH): `[entity] Verantwortlicher Aktuar site:finma.ch` or `responsible actuary`
+- Chief Actuary (DE): `[entity] Verantwortlicher Aktuar site:bafin.de`
+- Vorstand / board members (DE): `[entity] Vorstand site:bafin.de` or Handelsregister filing
+- COO / CRO (any): annual report executive committee page or `[entity] [role] site:linkedin.com`
+
 ### 7. Group structure and subsidiaries
 
 Search `[parent group name] subsidiaries OR group structure site:gleif.org OR annual report` to place entities in the correct region bucket. Prefer official filings over press summaries.
 
-## Common European insurance buyer titles
+## Common European insurance buyer titles (with local aliases)
 
-Chief Underwriting Officer, Chief Actuary, Chief Risk Officer, Chief Operating Officer (Insurance), Chief Data / Analytics Officer, Head of Pricing, Chief Information / Technology Officer.
+- Chief Executive Officer / Managing Director — also: Vorstandsvorsitzender (DE), Directeur Général (FR), Amministratore Delegato (IT).
+- Chief Underwriting Officer (CUO).
+- Chief Actuary — also: Responsible Actuary (CH FINMA), Verantwortlicher Aktuar (DE BaFin), Appointed Actuary (IE Central Bank), Actuarial Function Holder (UK SMF20 under SMCR).
+- Chief Risk Officer (CRO) — also: SMF4 Chief Risk Function (UK).
+- Chief Operating Officer (Insurance) — also: Directeur des Opérations (FR), Chief Operations Officer.
+- Chief Data / Analytics Officer, Head of Pricing.
+- Chief Information / Technology Officer — also: DSI (FR Directeur des Systèmes d'Information).
+
+## Role diversity guidance
+
+When returning up to 3 buyers per entity, **prefer role diversity over seniority duplicates**:
+
+1. One executive lead (CEO / MD / Country Head).
+2. One operations / risk role (COO, CRO, CUO).
+3. One technical / actuarial role (Chief Actuary, CTO/CIO, Head of Pricing).
+
+Don't return three similar senior managers. If only the CEO is verifiable, return just the CEO and explain the gap in `leadershipNote`.
 
 ## Avoidance rules
 

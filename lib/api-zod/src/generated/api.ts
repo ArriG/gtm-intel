@@ -698,6 +698,7 @@ export const GenerateAccountMapResponse = zod.object({
   "sourceTitle": zod.string(),
   "tenureNote": zod.string().optional()
 })),
+  "leadershipNote": zod.string().optional().describe('Honest one-liner explaining what was searched for leadership and what gaps remain.\nPopulated when the model could not surface a full executive committee for this entity.\nFormat: \"Searched [sources] — [what was found \/ what to check next]\".\n'),
   "sources": zod.array(zod.string())
 })),
   "unmappedEntities": zod.array(zod.string()),

@@ -23,5 +23,10 @@ export interface MapEntity {
   fitTier: EntityFitTier;
   fitReason: string;
   buyers: EntityBuyer[];
+  /** Honest one-liner explaining what was searched for leadership and what gaps remain.
+  Populated when the model could not surface a full executive committee for this entity.
+  Format: "Searched [sources] — [what was found / what to check next]".
+   */
+  leadershipNote?: string;
   sources: string[];
 }

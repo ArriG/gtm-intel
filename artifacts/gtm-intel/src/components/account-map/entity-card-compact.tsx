@@ -51,8 +51,8 @@ export function EntityCardCompact({ entity }: { entity: MapEntity }) {
               )}
 
               {!open && leaders.length === 0 && (
-                <p className="text-[11px] text-muted-foreground italic">
-                  No named executives verified
+                <p className="text-[11px] text-muted-foreground italic break-words">
+                  {entity.leadershipNote || "No named executives verified \u2014 expand for sourcing notes"}
                 </p>
               )}
 
@@ -93,8 +93,14 @@ export function EntityCardCompact({ entity }: { entity: MapEntity }) {
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-muted-foreground italic">
+                <p className="text-xs text-muted-foreground italic break-words">
                   No named executives verified from public sources for this entity.
+                </p>
+              )}
+              {entity.leadershipNote && (
+                <p className="text-[11px] text-muted-foreground bg-muted/40 rounded-md px-2 py-1.5 leading-snug break-words">
+                  <span className="font-medium text-foreground">Sourcing note: </span>
+                  {entity.leadershipNote}
                 </p>
               )}
             </div>

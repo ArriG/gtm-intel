@@ -48,6 +48,7 @@ type RawEntity = {
   fitTier?: string;
   fitReason?: string;
   buyers?: unknown;
+  leadershipNote?: string;
   sources?: unknown;
 };
 
@@ -205,6 +206,7 @@ function normaliseEntity(raw: RawEntity): Record<string, unknown> | null {
     : [];
 
   const buyers = normaliseBuyers(raw.buyers);
+  const leadershipNote = cleanString(raw.leadershipNote);
 
   return {
     id: cleanString(raw.id) || randomUUID(),
@@ -218,6 +220,7 @@ function normaliseEntity(raw: RawEntity): Record<string, unknown> | null {
     fitTier: FIT_TIERS.has(fitTier) ? fitTier : "moderate",
     fitReason,
     buyers,
+    ...(leadershipNote ? { leadershipNote } : {}),
     sources,
   };
 }
@@ -288,7 +291,10 @@ export function normalizeAccountMap(
   const unmappedEntities = [...new Set([...modelUnmapped, ...omittedNames])];
 
   const limitations = cleanString(raw.limitations)
-    || "European entities use regulator and filing sources in depth. Other regions rely on web search and public sources — verify before outreach.";
+    || [
+      "European entities use regulator and filing sources in depth. Non-European regions rely on web search and public sources — verify before outreach.",
+      "Subsidiary-level Chief Actuary, CRO, and COO names often sit only in deeper filings (UK FCA SMCR register, EU SFCR PDFs, BaFin Vorstand, FINMA registers). When web search only surfaces the CEO, this mapping shows the CEO and notes the gap per entity — drill into the SFCR or regulator register directly for the wider executive committee before outreach.",
+    ].join(" ");
 
   return {
     parent,

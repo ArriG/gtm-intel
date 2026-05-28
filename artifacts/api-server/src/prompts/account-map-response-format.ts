@@ -50,6 +50,7 @@ Return ONLY valid JSON with this exact shape:
           "tenureNote": "appointed Jan 2024"
         }
       ],
+      "leadershipNote": "Optional — honest one-liner like 'Searched FCA SMCR register and 2024 annual report — only CEO publicly disclosed; check SFCR PDF for Chief Actuary.' Required when buyers is empty or has fewer than 2 entries.",
       "sources": ["https://...", "https://..."]
     }
   ],
@@ -66,6 +67,9 @@ MAPPING RULES:
 - Populate outreachSources[] with 3-6 public sources worth checking next (annual reports, regulator registers, IR pages, trade press) — especially for unmapped entities.
 - Prefer strong fit entities, then moderate, then skip when selecting which to include in entities[].
 - Up to 3 buyers per entity — named executives only (Chief Actuary, Actuary, COO, CTO/CIO, CRO, CEO/MD, CUO when verified). Omit any buyer without a verifiable sourceUrl. NEVER use placeholder names — return an empty buyers array instead.
+- Prefer ROLE DIVERSITY over seniority duplicates: 1 executive lead (CEO/MD), 1 operations/risk role (COO/CRO/CUO), 1 technical/actuarial role (Chief Actuary/CTO/CIO). Don't return three near-duplicate senior managers.
+- Use local title aliases when verifying: Chief Actuary = Responsible Actuary (CH FINMA), Verantwortlicher Aktuar (DE BaFin), Appointed Actuary (IE), SMF20 (UK SMCR). CRO = SMF4 (UK). Search regulator filings, not just press releases.
+- Populate leadershipNote when buyers is empty or has fewer than 2 named executives — explain WHAT you searched and WHERE the user should look next (e.g. "Searched SFCR and BaFin Vorstand register — only Group CEO disclosed publicly; UK Chief Actuary likely listed in SMF20 register.").
 - companySnapshot and groupBackground must be factual group-level intelligence — NO call decision, NO opener, NO ICP score, NO discovery questions.
 - fitTier is factual alignment (geography, industry, business line, buyer match) — NOT a sales heat score.
 - For non-European regions, note reduced regulator depth in entity sources[] and limitations.
