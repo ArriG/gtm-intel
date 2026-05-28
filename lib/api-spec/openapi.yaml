@@ -98,6 +98,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/CallPrep"
 
+  /account-map:
+    post:
+      operationId: generateAccountMap
+      tags: [account-brief]
+      summary: Map a global enterprise structure by geographic region
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountMapRequest"
+      responses:
+        "200":
+          description: Enterprise account map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountMapResponse"
+        "400":
+          description: Invalid request
+
   /next-touch:
     post:
       operationId: generateNextTouch
@@ -1120,6 +1141,163 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProspectCompany"
+
+    MapRegion:
+      type: string
+      enum:
+        - europe
+        - north_america
+        - asia_pacific
+        - latin_america
+        - middle_east_africa
+        - group_unallocated
+
+    EntityParentRelationship:
+      type: string
+      enum:
+        - subsidiary
+        - branch
+        - affiliate
+        - division
+        - joint_venture
+
+    EntityBuyingAutonomy:
+      type: string
+      enum:
+        - independent
+        - group_gated
+        - mixed
+        - unknown
+
+    EntityFitTier:
+      type: string
+      enum:
+        - strong
+        - moderate
+        - skip
+
+    EntityBuyer:
+      type: object
+      required:
+        - name
+        - role
+        - sourceUrl
+        - sourceTitle
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        sourceUrl:
+          type: string
+        sourceTitle:
+          type: string
+        tenureNote:
+          type: string
+
+    MapEntity:
+      type: object
+      required:
+        - id
+        - name
+        - country
+        - region
+        - businessLine
+        - parentRelationship
+        - context
+        - buyingAutonomy
+        - fitTier
+        - fitReason
+        - buyers
+        - sources
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        country:
+          type: string
+        region:
+          $ref: "#/components/schemas/MapRegion"
+        businessLine:
+          type: string
+        parentRelationship:
+          $ref: "#/components/schemas/EntityParentRelationship"
+        context:
+          type: string
+        buyingAutonomy:
+          $ref: "#/components/schemas/EntityBuyingAutonomy"
+        fitTier:
+          $ref: "#/components/schemas/EntityFitTier"
+        fitReason:
+          type: string
+        buyers:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntityBuyer"
+        sources:
+          type: array
+          items:
+            type: string
+
+    AccountMapParent:
+      type: object
+      required:
+        - name
+        - description
+        - headquartersCountry
+        - industry
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        headquartersCountry:
+          type: string
+        industry:
+          type: string
+
+    AccountMapRequest:
+      type: object
+      required:
+        - company
+        - yourCompany
+      properties:
+        company:
+          type: string
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    AccountMapResponse:
+      type: object
+      required:
+        - parent
+        - entities
+        - unmappedEntities
+        - limitations
+        - isSingleEntity
+        - generatedAt
+        - sectorPackUsed
+      properties:
+        parent:
+          $ref: "#/components/schemas/AccountMapParent"
+        entities:
+          type: array
+          items:
+            $ref: "#/components/schemas/MapEntity"
+        unmappedEntities:
+          type: array
+          items:
+            type: string
+        limitations:
+          type: string
+        isSingleEntity:
+          type: boolean
+        generatedAt:
+          type: string
+        sectorPackUsed:
+          type: string
 
     AccountBriefInput:
       type: object

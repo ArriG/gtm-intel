@@ -23,6 +23,8 @@ import type {
   AccountBrief,
   AccountBriefColdEmail,
   AccountBriefInput,
+  AccountMapRequest,
+  AccountMapResponse,
   BriefActionInput,
   CallPrep,
   CallPrepInput,
@@ -344,6 +346,77 @@ export const useGenerateCallPrep = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGenerateCallPrepMutationOptions(options));
+    }
+
+export const getGenerateAccountMapUrl = () => {
+
+
+
+
+  return `/api/account-map`
+}
+
+/**
+ * @summary Map a global enterprise structure by geographic region
+ */
+export const generateAccountMap = async (accountMapRequest: AccountMapRequest, options?: RequestInit): Promise<AccountMapResponse> => {
+
+  return customFetch<AccountMapResponse>(getGenerateAccountMapUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      accountMapRequest,)
+  }
+);}
+
+
+
+
+export const getGenerateAccountMapMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateAccountMap>>, TError,{data: BodyType<AccountMapRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateAccountMap>>, TError,{data: BodyType<AccountMapRequest>}, TContext> => {
+
+const mutationKey = ['generateAccountMap'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateAccountMap>>, {data: BodyType<AccountMapRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateAccountMap(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateAccountMapMutationResult = NonNullable<Awaited<ReturnType<typeof generateAccountMap>>>
+    export type GenerateAccountMapMutationBody = BodyType<AccountMapRequest>
+    export type GenerateAccountMapMutationError = ErrorType<void>
+
+    /**
+ * @summary Map a global enterprise structure by geographic region
+ */
+export const useGenerateAccountMap = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateAccountMap>>, TError,{data: BodyType<AccountMapRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateAccountMap>>,
+        TError,
+        {data: BodyType<AccountMapRequest>},
+        TContext
+      > => {
+      return useMutation(getGenerateAccountMapMutationOptions(options));
     }
 
 export const getGenerateNextTouchUrl = () => {

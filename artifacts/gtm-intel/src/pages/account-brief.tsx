@@ -15,8 +15,8 @@ import {
   Brain, BookOpen, AlertCircle, ExternalLink, Flag,
   Download, FileText, MessageCircle, ClipboardList, ArrowRight, Phone, HelpCircle, Compass
 } from "lucide-react";
-import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
-import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
+import type { AccountBrief, AccountMapResponse, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
+import { EmailTone as EmailToneValues, generateAccountMap, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, updateHistoryEntry, getHistoryEntry, type HistoryEntry } from "@/lib/history";
@@ -25,6 +25,9 @@ import { BriefStatusSelect } from "@/components/brief-status-select";
 import { NextTouchSection } from "@/components/next-touch-section";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { researchLoadingMessage } from "@/lib/research-loading";
+import { mappingLoadingMessage } from "@/lib/mapping-loading-messages";
+import { AccountMapResult } from "@/components/account-map/account-map-result";
+import { SearchModeToggle, type SearchMode } from "@/components/search-mode-toggle";
 import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
@@ -984,6 +987,10 @@ export default function AccountBriefPage() {
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
   const [watchingSignals, setWatchingSignals] = useState(true);
+  const [searchMode, setSearchMode] = useState<SearchMode>("brief");
+  const [mapLoading, setMapLoading] = useState(false);
+  const [mapLoadingSeconds, setMapLoadingSeconds] = useState(0);
+  const [accountMap, setAccountMap] = useState<AccountMapResponse | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -993,6 +1000,15 @@ export default function AccountBriefPage() {
     const id = setInterval(() => setCooldownSeconds(s => (s <= 1 ? 0 : s - 1)), 1000);
     return () => clearInterval(id);
   }, [cooldownSeconds]);
+
+  useEffect(() => {
+    if (!mapLoading) {
+      setMapLoadingSeconds(0);
+      return;
+    }
+    const id = setInterval(() => setMapLoadingSeconds(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [mapLoading]);
 
   useEffect(() => {
     if (!currentHistoryId) {
@@ -1029,7 +1045,7 @@ export default function AccountBriefPage() {
   }, [historyParam]);
 
   async function handleSearch(url: string, label: string) {
-    setLoading(true); setError(null); setBrief(null); setLastLabel(label); setLastUrl(url); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
+    setLoading(true); setError(null); setBrief(null); setAccountMap(null); setLastLabel(label); setLastUrl(url); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
     setSearchQuery(label);
     setTalkTrack(null);
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
@@ -1076,6 +1092,54 @@ export default function AccountBriefPage() {
     } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
+  async function handleMapSearch(company: string) {
+    const yourCompany = yourCompanyForRequest(loadYourCompany());
+    if (!yourCompany) {
+      setError("Complete Your Company setup before running a map.");
+      return;
+    }
+
+    setMapLoading(true);
+    setError(null);
+    setAccountMap(null);
+    setBrief(null);
+    setLastLabel(company.trim());
+    setSearchQuery(company.trim());
+    const mapUrl = company.trim().startsWith("http") ? company.trim() : `https://${company.trim()}`;
+    setLastUrl(mapUrl);
+    setLastDomain(domainFromUrl(mapUrl));
+    if (historyParam || queryParam) setSearchParams(new URLSearchParams());
+
+    try {
+      const result = await generateAccountMap({
+        company: company.trim(),
+        yourCompany,
+      });
+      setAccountMap(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setMapLoading(false);
+    }
+  }
+
+  function handleCompanySubmit(url: string, label: string) {
+    if (searchMode === "mapping") {
+      void handleMapSearch(label);
+      return;
+    }
+    void handleSearch(url, label);
+  }
+
+  async function switchToBriefAndSearch() {
+    setSearchMode("brief");
+    setAccountMap(null);
+    if (lastLabel.trim()) {
+      const url = lastUrl || (lastLabel.startsWith("http") ? lastLabel : `https://${lastLabel}`);
+      await handleSearch(url, lastLabel);
+    }
+  }
+
   function handleBriefStatusChange(status: BriefStatus, lastTouchedAt?: string) {
     if (!currentHistoryId) return;
     const touched = lastTouchedAt ?? new Date().toISOString();
@@ -1084,6 +1148,8 @@ export default function AccountBriefPage() {
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
+    setSearchMode("brief");
+    setAccountMap(null);
     setLastLabel(entry.label); setLastUrl(entry.url); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
     setSearchQuery(entry.label);
     setCurrentHistoryId(entry.id);
@@ -1181,14 +1247,24 @@ export default function AccountBriefPage() {
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-2xl mb-8">
               Finally, GTM research that works for you.
             </h2>
+            <SearchModeToggle
+              mode={searchMode}
+              disabled={loading || mapLoading}
+              onChange={mode => {
+                setSearchMode(mode);
+                setError(null);
+                if (mode === "brief") setAccountMap(null);
+                else setBrief(null);
+              }}
+            />
             <CompanySearchInput
               query={searchQuery}
               onQueryChange={setSearchQuery}
-              onSearch={handleSearch}
-              loading={loading}
-              cooldownSeconds={cooldownSeconds}
+              onSearch={handleCompanySubmit}
+              loading={loading || mapLoading}
+              cooldownSeconds={searchMode === "brief" ? cooldownSeconds : 0}
             />
-            {!brief && !showOptionalContext && (
+            {!brief && !accountMap && !showOptionalContext && searchMode === "brief" && (
               <button
                 type="button"
                 onClick={() => setShowOptionalContext(true)}
@@ -1198,7 +1274,7 @@ export default function AccountBriefPage() {
                 Add LinkedIn signals or your intel <span className="text-muted-foreground/70">(optional)</span>
               </button>
             )}
-            {!brief && showOptionalContext && (
+            {!brief && !accountMap && showOptionalContext && searchMode === "brief" && (
               <div className="mt-5 space-y-3">
                 <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
                 <button
@@ -1210,10 +1286,16 @@ export default function AccountBriefPage() {
                 </button>
               </div>
             )}
-            {loading && (
+            {loading && searchMode === "brief" && (
               <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin text-foreground" />
                 {researchLoadingMessage(yourCompany)}
+              </p>
+            )}
+            {mapLoading && searchMode === "mapping" && (
+              <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin text-foreground" />
+                {mappingLoadingMessage(mapLoadingSeconds)}
               </p>
             )}
           </div>
@@ -1222,10 +1304,28 @@ export default function AccountBriefPage() {
 
       {/* Results */}
       <div className="px-8 py-8 max-w-5xl mx-auto space-y-4">
-        {error && <Card className="border-destructive bg-destructive/5"><CardContent className="p-4 text-sm text-destructive flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{error}</CardContent></Card>}
-        {loading && !brief && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
+        {error && (
+          <Card className="border-destructive bg-destructive/5">
+            <CardContent className="p-4 text-sm text-destructive space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+              </div>
+              {searchMode === "mapping" && (
+                <p className="text-xs text-destructive/80">
+                  If the company is small or single-entity, switch to Brief mode.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        {loading && !brief && searchMode === "brief" && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
+        {mapLoading && !accountMap && searchMode === "mapping" && <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
 
-        {brief && (() => {
+        {accountMap && searchMode === "mapping" && (
+          <AccountMapResult map={accountMap} onSwitchToBrief={() => { void switchToBriefAndSearch(); }} />
+        )}
+
+        {brief && searchMode === "brief" && (() => {
           const validTriggers = getValidTriggers(brief.recentTriggers?.items);
           const hasTriggers = validTriggers.length > 0;
           const companyLogo = lastDomain ? clearbitLogoUrl(lastDomain) : "";

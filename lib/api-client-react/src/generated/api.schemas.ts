@@ -575,6 +575,93 @@ export interface MarketProspectResponse {
   companies: ProspectCompany[];
 }
 
+export type MapRegion = typeof MapRegion[keyof typeof MapRegion];
+
+
+export const MapRegion = {
+  europe: 'europe',
+  north_america: 'north_america',
+  asia_pacific: 'asia_pacific',
+  latin_america: 'latin_america',
+  middle_east_africa: 'middle_east_africa',
+  group_unallocated: 'group_unallocated',
+} as const;
+
+export type EntityParentRelationship = typeof EntityParentRelationship[keyof typeof EntityParentRelationship];
+
+
+export const EntityParentRelationship = {
+  subsidiary: 'subsidiary',
+  branch: 'branch',
+  affiliate: 'affiliate',
+  division: 'division',
+  joint_venture: 'joint_venture',
+} as const;
+
+export type EntityBuyingAutonomy = typeof EntityBuyingAutonomy[keyof typeof EntityBuyingAutonomy];
+
+
+export const EntityBuyingAutonomy = {
+  independent: 'independent',
+  group_gated: 'group_gated',
+  mixed: 'mixed',
+  unknown: 'unknown',
+} as const;
+
+export type EntityFitTier = typeof EntityFitTier[keyof typeof EntityFitTier];
+
+
+export const EntityFitTier = {
+  strong: 'strong',
+  moderate: 'moderate',
+  skip: 'skip',
+} as const;
+
+export interface EntityBuyer {
+  name: string;
+  role: string;
+  sourceUrl: string;
+  sourceTitle: string;
+  tenureNote?: string;
+}
+
+export interface MapEntity {
+  id: string;
+  name: string;
+  country: string;
+  region: MapRegion;
+  businessLine: string;
+  parentRelationship: EntityParentRelationship;
+  context: string;
+  buyingAutonomy: EntityBuyingAutonomy;
+  fitTier: EntityFitTier;
+  fitReason: string;
+  buyers: EntityBuyer[];
+  sources: string[];
+}
+
+export interface AccountMapParent {
+  name: string;
+  description: string;
+  headquartersCountry: string;
+  industry: string;
+}
+
+export interface AccountMapRequest {
+  company: string;
+  yourCompany: YourCompany;
+}
+
+export interface AccountMapResponse {
+  parent: AccountMapParent;
+  entities: MapEntity[];
+  unmappedEntities: string[];
+  limitations: string;
+  isSingleEntity: boolean;
+  generatedAt: string;
+  sectorPackUsed: string;
+}
+
 export interface AccountBriefInput {
   url: string;
   linkedinPosts?: LinkedInPost[];

@@ -648,6 +648,67 @@ export const GenerateCallPrepResponse = zod.object({
 
 
 /**
+ * @summary Map a global enterprise structure by geographic region
+ */
+
+
+
+export const GenerateAccountMapBody = zod.object({
+  "company": zod.string(),
+  "yourCompany": zod.object({
+  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
+  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
+  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
+  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
+  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
+  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
+  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
+  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
+  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
+  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
+  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
+  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
+  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
+  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
+}).describe('Seller profile stored client-side; sent per request for prompt context')
+})
+
+export const GenerateAccountMapResponse = zod.object({
+  "parent": zod.object({
+  "name": zod.string(),
+  "description": zod.string(),
+  "headquartersCountry": zod.string(),
+  "industry": zod.string()
+}),
+  "entities": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "country": zod.string(),
+  "region": zod.enum(['europe', 'north_america', 'asia_pacific', 'latin_america', 'middle_east_africa', 'group_unallocated']),
+  "businessLine": zod.string(),
+  "parentRelationship": zod.enum(['subsidiary', 'branch', 'affiliate', 'division', 'joint_venture']),
+  "context": zod.string(),
+  "buyingAutonomy": zod.enum(['independent', 'group_gated', 'mixed', 'unknown']),
+  "fitTier": zod.enum(['strong', 'moderate', 'skip']),
+  "fitReason": zod.string(),
+  "buyers": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "sourceUrl": zod.string(),
+  "sourceTitle": zod.string(),
+  "tenureNote": zod.string().optional()
+})),
+  "sources": zod.array(zod.string())
+})),
+  "unmappedEntities": zod.array(zod.string()),
+  "limitations": zod.string(),
+  "isSingleEntity": zod.boolean(),
+  "generatedAt": zod.string(),
+  "sectorPackUsed": zod.string()
+})
+
+
+/**
  * @summary Generate a next-touch opener from a prospect reply
  */
 

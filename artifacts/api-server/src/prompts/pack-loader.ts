@@ -34,6 +34,7 @@ const DEFAULT_LOADING_LABELS: Record<string, string> = {
   "uk-dental": "Searching CQC, Companies House, Google reviews, and dental trade press — about 60 seconds...",
   "au-dental": "Searching AHPRA, ASIC, Seek, Google reviews, and dental trade press — about 60 seconds...",
   "uk-financial-services": "Searching Companies House, FCA, UK jobs, and financial trade press — about 60 seconds...",
+  "european-financial-services": "Searching European regulators, filings, and trade press — about 2 minutes...",
 };
 
 export type SectorPackSelection = {
@@ -81,6 +82,29 @@ function resolvePacksDir(): string {
   }
 
   throw new Error("Sector pack directory not found");
+}
+
+function resolveExtraPacksDir(): string | null {
+  const here = moduleDir();
+  const candidates = [
+    path.join(here, "../packs"),
+    path.resolve(process.cwd(), "artifacts/api-server/src/packs"),
+    path.resolve(process.cwd(), "dist/packs"),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  return null;
+}
+
+function readPacksFromDir(dir: string): SectorPack[] {
+  if (!existsSync(dir)) return [];
+
+  return readdirSync(dir)
+    .filter(file => file.endsWith(".md"))
+    .map(file => parsePackFile(file.replace(/\.md$/, ""), readFileSync(path.join(dir, file), "utf8")));
 }
 
 function parseInlineArray(value: string): string[] {
@@ -201,12 +225,25 @@ export function loadConstitution(): string {
 export function loadSectorPacks(): SectorPack[] {
   if (cachedPacks) return cachedPacks;
 
-  const packsDir = resolvePacksDir();
-  cachedPacks = readdirSync(packsDir)
-    .filter(file => file.endsWith(".md"))
-    .map(file => parsePackFile(file.replace(/\.md$/, ""), readFileSync(path.join(packsDir, file), "utf8")));
+  const byId = new Map<string, SectorPack>();
+  for (const pack of readPacksFromDir(resolvePacksDir())) {
+    byId.set(pack.id, pack);
+  }
 
+  const extraDir = resolveExtraPacksDir();
+  if (extraDir) {
+    for (const pack of readPacksFromDir(extraDir)) {
+      byId.set(pack.id, pack);
+    }
+  }
+
+  cachedPacks = [...byId.values()];
   return cachedPacks;
+}
+
+/** Load a sector pack by id — used by Mapping mode (explicit pack, no auto-detect). */
+export function loadPackByName(packId: string): SectorPack | null {
+  return loadSectorPacks().find(pack => pack.id === packId) ?? null;
 }
 
 function normaliseGeo(value: string): string {

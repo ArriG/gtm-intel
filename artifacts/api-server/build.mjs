@@ -19,6 +19,13 @@ async function buildAll() {
     path.resolve(distDir, "prompts/packs"),
     { recursive: true },
   );
+  const extraPacksDir = path.resolve(artifactDir, "src/packs");
+  try {
+    await cp(extraPacksDir, path.resolve(distDir, "packs"), { recursive: true });
+    await cp(extraPacksDir, path.resolve(distDir, "prompts/packs"), { recursive: true, force: true });
+  } catch {
+    /* src/packs optional until first mapping deploy */
+  }
   await cp(
     path.resolve(artifactDir, "../../GTM-INTEL.md"),
     path.resolve(distDir, "GTM-INTEL.md"),
