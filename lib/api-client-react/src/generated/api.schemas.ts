@@ -653,22 +653,21 @@ export interface AccountMapParent {
 }
 
 /**
- * Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global.
+ * Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA.
  */
 export type AccountMapRequestRegion = typeof AccountMapRequestRegion[keyof typeof AccountMapRequestRegion];
 
 
 export const AccountMapRequestRegion = {
-  uk_ireland: 'uk_ireland',
-  europe: 'europe',
-  north_america: 'north_america',
+  emea: 'emea',
   apac: 'apac',
-  global: 'global',
+  north_america: 'north_america',
+  latam: 'latam',
 } as const;
 
 export interface AccountMapRequest {
   company: string;
-  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global. */
+  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA. */
   region?: AccountMapRequestRegion;
   yourCompany: YourCompany;
 }

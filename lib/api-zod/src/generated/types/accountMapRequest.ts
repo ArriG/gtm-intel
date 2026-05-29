@@ -10,7 +10,7 @@ import type { YourCompany } from './yourCompany';
 
 export interface AccountMapRequest {
   company: string;
-  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global. */
+  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA. */
   region?: AccountMapRequestRegion;
   yourCompany: YourCompany;
 }

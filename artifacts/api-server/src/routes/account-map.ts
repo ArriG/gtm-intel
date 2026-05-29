@@ -28,7 +28,9 @@ const client = new Anthropic({
 const MAPPING_PACK_ID = "european-financial-services";
 const MAPPING_MODEL = "claude-haiku-4-5-20251001";
 
-export type MapRegion = "uk_ireland" | "europe" | "north_america" | "apac" | "global";
+export type MapRegion = "emea" | "apac" | "north_america" | "latam";
+
+const DEFAULT_REGION: MapRegion = "emea";
 
 type RegionScope = {
   label: string;
@@ -36,42 +38,39 @@ type RegionScope = {
 };
 
 /** Region scopes narrow the search target — the AE picks one per map. */
-const REGION_SCOPES: Record<Exclude<MapRegion, "global">, RegionScope> = {
-  uk_ireland: {
-    label: "UK & Ireland",
+const REGION_SCOPES: Record<MapRegion, RegionScope> = {
+  emea: {
+    label: "EMEA (Europe, Middle East & Africa)",
     sourceHint:
-      "Prioritise UK & Irish sources: Companies House, FCA, PRA registers, Irish CRO, Central Bank of Ireland, and UK/IE annual reports.",
-  },
-  europe: {
-    label: "Continental Europe / EEA",
-    sourceHint:
-      "Prioritise continental European regulators and filings: BaFin/Handelsregister (DE), FINMA/Zefix (CH), ACPR/AMF (FR), DNB/AFM (NL), IVASS (IT), DGSFP (ES), plus EIOPA and local annual reports.",
-  },
-  north_america: {
-    label: "North America (US & Canada)",
-    sourceHint:
-      "Prioritise North American sources: SEC EDGAR, NAIC, US state insurance department filings, OSFI (Canada), and US/CA annual reports and investor relations pages.",
+      "Prioritise EMEA regulators and filings: Companies House/FCA/PRA (UK), BaFin/Handelsregister (DE), FINMA/Zefix (CH), ACPR/AMF (FR), DNB/AFM (NL), IVASS (IT), DGSFP (ES), Irish CRO, EIOPA, DFSA (Dubai), FSCA (South Africa), plus local annual reports.",
   },
   apac: {
     label: "Asia-Pacific",
     sourceHint:
       "Prioritise Asia-Pacific regulators and filings: APRA (AU), MAS (SG), FSA (JP), HKIA (HK), IRDAI (IN), and local annual reports and investor relations pages.",
   },
+  north_america: {
+    label: "North America (US & Canada)",
+    sourceHint:
+      "Prioritise North American sources: SEC EDGAR, NAIC, US state insurance department filings, OSFI (Canada), and US/CA annual reports and investor relations pages.",
+  },
+  latam: {
+    label: "Latin America",
+    sourceHint:
+      "Prioritise Latin American regulators and filings: SUSEP (Brazil), CNSF (Mexico), CMF (Chile), SBS (Peru), Superintendencia Financiera (Colombia), and local annual reports and investor relations pages.",
+  },
 };
 
 function normalizeRegion(value: unknown): MapRegion {
-  return value === "uk_ireland" ||
-    value === "europe" ||
+  return value === "emea" ||
+    value === "apac" ||
     value === "north_america" ||
-    value === "apac"
+    value === "latam"
     ? value
-    : "global";
+    : DEFAULT_REGION;
 }
 
 function regionScopeInstruction(region: MapRegion): string {
-  if (region === "global") {
-    return "REGION SCOPE: Global — map the enterprise across all regions into the fixed region buckets.";
-  }
   const scope = REGION_SCOPES[region];
   return [
     `REGION SCOPE: ${scope.label}.`,
@@ -293,9 +292,7 @@ router.post("/account-map", async (req, res): Promise<void> => {
 
   try {
     const pass1Timeout = Math.min(PASS_1_TIMEOUT_MS, deadline - Date.now());
-    const scopeLine = region === "global"
-      ? "Organise operating entities by geographic region."
-      : `Focus the full-depth map on ${REGION_SCOPES[region].label}. List other-region entities by name only in unmappedEntities[].`;
+    const scopeLine = `Focus the full-depth map on ${REGION_SCOPES[region].label}. List other-region entities by name only in unmappedEntities[].`;
     const structureRaw = await callMappingPass(
       MAPPING_MODEL,
       composed.systemPrompt,

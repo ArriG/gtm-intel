@@ -1274,13 +1274,12 @@ components:
           type: string
         region:
           type: string
-          description: Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global.
+          description: Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA.
           enum:
-            - uk_ireland
-            - europe
-            - north_america
+            - emea
             - apac
-            - global
+            - north_america
+            - latam
         yourCompany:
           $ref: "#/components/schemas/YourCompany"
 

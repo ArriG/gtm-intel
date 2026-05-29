@@ -193,7 +193,7 @@ Whole-request budget: 185s server; client abort 195s. Pass 2 skipped if &lt;15s 
 
 **Smoke test:** `MAP_STRUCTURE_ONLY=1` skips Pass 2 (structure-only, cheapest run).
 
-**Region scope (`region` in request):** AE manually picks a region (`uk_ireland`, `europe`, `north_america`, `apac`, `global`; default `global`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are listed **name-only** in `unmappedEntities[]`. This narrows the search target so the same 4 + 3 search budget goes deep on one region (big groups like Zurich finish inside the timeouts). Default is derived from Your Company geographies on the client, overridable per search. `REGION_SCOPES` in `account-map.ts` injects region-specific regulator source hints.
+**Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are listed **name-only** in `unmappedEntities[]`. This narrows the search target so the same 4 + 3 search budget goes deep on one region (big groups like Zurich finish inside the timeouts). Default is derived from Your Company geographies on the client, overridable per search. `REGION_SCOPES` in `account-map.ts` injects region-specific regulator source hints.
 
 Cost safeguards: `maxRetries: 0`, SDK `timeout` in RequestOptions (2nd arg), not in body. See `docs/anthropic-sdk-bug-report.md`.
 
