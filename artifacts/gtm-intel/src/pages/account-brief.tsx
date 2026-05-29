@@ -992,7 +992,7 @@ export default function AccountBriefPage() {
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
   const [watchingSignals, setWatchingSignals] = useState(true);
-  const [searchMode, setSearchMode] = useState<SearchMode>("brief");
+  const [searchMode, setSearchMode] = useState<SearchMode>("mapping");
   const [mapLoading, setMapLoading] = useState(false);
   const [mapLoadingSeconds, setMapLoadingSeconds] = useState(0);
   const [accountMap, setAccountMap] = useState<AccountMapResponse | null>(null);
@@ -1035,6 +1035,7 @@ export default function AccountBriefPage() {
     }
     const session = loadBriefSession();
     if (session) {
+      setSearchMode("brief");
       setLastLabel(session.label);
       setLastUrl(session.url);
       setLastDomain(domainFromUrl(session.url));
@@ -1263,7 +1264,7 @@ export default function AccountBriefPage() {
             <BearMark size={52} className="mb-6" />
             <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">GTM research</p>
             <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.05] max-w-3xl">
-              Research any company in 30 seconds
+              Company snapshots, buying committees, and triggers from public sources
             </h1>
             <p className="mt-4 text-lg sm:text-xl font-medium text-foreground/85 leading-snug max-w-2xl">
               {isYourCompanyConfigured(yourCompany)
@@ -1276,9 +1277,6 @@ export default function AccountBriefPage() {
         {/* Bottom half — cream */}
         <div className="relative bg-secondary px-8 py-10 sm:py-12 border-b border-border">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-2xl mb-8">
-              Finally, GTM research that works for you.
-            </h2>
             <SearchModeToggle
               mode={searchMode}
               disabled={loading || mapLoading}
