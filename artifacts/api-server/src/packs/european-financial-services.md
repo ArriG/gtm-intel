@@ -10,8 +10,8 @@ applies_when:
     - financial services
     - banking
     - asset management
-expected_seconds: 120
-loading_label: Searching European regulators, filings, and trade press — about 2 minutes...
+expected_seconds: 150
+loading_label: Mapping structure and leadership — about 2–3 minutes...
 ---
 
 # European Financial Services — Sector Pack

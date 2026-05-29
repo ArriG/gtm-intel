@@ -34,7 +34,7 @@ const DEFAULT_LOADING_LABELS: Record<string, string> = {
   "uk-dental": "Searching CQC, Companies House, Google reviews, and dental trade press — about 60 seconds...",
   "au-dental": "Searching AHPRA, ASIC, Seek, Google reviews, and dental trade press — about 60 seconds...",
   "uk-financial-services": "Searching Companies House, FCA, UK jobs, and financial trade press — about 60 seconds...",
-  "european-financial-services": "Searching European regulators, filings, and trade press — about 2 minutes...",
+  "european-financial-services": "Mapping structure and leadership — about 2–3 minutes...",
 };
 
 export type SectorPackSelection = {
