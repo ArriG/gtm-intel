@@ -1,5 +1,5 @@
 const FIT_RANK: Record<string, number> = { strong: 0, moderate: 1, skip: 2 };
-export const LEADERSHIP_ENRICH_CAP = 8;
+export const LEADERSHIP_ENRICH_CAP = 5;
 
 function entityNameKey(name: string): string {
   return name.trim().toLowerCase();

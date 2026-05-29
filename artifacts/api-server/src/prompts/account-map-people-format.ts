@@ -30,6 +30,6 @@ Other rules:
 - Prefer ROLE DIVERSITY over seniority duplicates: 1 executive lead (CEO/MD), 1 operations/risk role (COO/CRO/CUO), 1 technical/actuarial role (Chief Actuary/CTO/CIO).
 - Use local title aliases: Chief Actuary = Responsible Actuary (CH FINMA), Verantwortlicher Aktuar (DE BaFin), Appointed Actuary (IE), SMF20 (UK SMCR). CRO = SMF4 (UK).
 - Search regulator filings and annual report executive committee pages — not only press releases.
-- Use at most 3 web searches total for this entire pass — focus searches on entities where actuarial/ops/tech roles are most likely public.
+- Use roughly one focused web search per entity in the list — spend it on the entity's most likely public source (regulator register, SFCR/statutory filing, annual report exec page).
 - Return one object per entity in the user list — same count, same names.
 - CRITICAL: no markdown, no preamble — raw JSON only.`;

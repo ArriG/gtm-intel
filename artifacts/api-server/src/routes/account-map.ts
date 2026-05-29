@@ -92,7 +92,9 @@ const PASS_1_MAX_TOKENS = 8000;
 const PASS_2_MAX_TOKENS = 4000;
 /** Hard server-side cap on web searches per pass — fewer searches = faster finish inside timeout. */
 const PASS_1_MAX_SEARCHES = 4;
-const PASS_2_MAX_SEARCHES = 3;
+/** Pass 2: ~1 focused search per enriched entity, clamped to keep cost tight. */
+const PASS_2_MIN_SEARCHES = 3;
+const PASS_2_MAX_SEARCHES = 5;
 /**
  * Safety switch: set MAP_STRUCTURE_ONLY=1 (or true) to skip the Pass 2 leadership
  * enrichment entirely. Pass 1 alone is the cheapest possible map — use this for a
@@ -106,7 +108,12 @@ const STRUCTURE_ONLY =
 export const ACCOUNT_MAP_RUNTIME_CONFIG = {
   mappingTimeoutMs: MAPPING_TIMEOUT_MS,
   pass1: { timeoutMs: PASS_1_TIMEOUT_MS, maxSearches: PASS_1_MAX_SEARCHES },
-  pass2: { timeoutMs: PASS_2_TIMEOUT_MS, maxSearches: PASS_2_MAX_SEARCHES },
+  pass2: {
+    timeoutMs: PASS_2_TIMEOUT_MS,
+    minSearches: PASS_2_MIN_SEARCHES,
+    maxSearches: PASS_2_MAX_SEARCHES,
+    searchesPerEntity: true,
+  },
   leadershipEnrichCap: LEADERSHIP_ENRICH_CAP,
   structureOnly: STRUCTURE_ONLY,
   model: MAPPING_MODEL,
@@ -171,7 +178,7 @@ When mapping a global enterprise, follow the European Financial Services sector 
   };
 }
 
-function composePeoplePrompt(yourCompany: YourCompanyInput): string {
+function composePeoplePrompt(yourCompany: YourCompanyInput, maxSearches: number): string {
   const pack = loadPackByName(MAPPING_PACK_ID);
   const leadershipBlock = pack
     ? `Apply the sector pack leadership guidance and role aliases below.\n\n${pack.body}`
@@ -183,7 +190,7 @@ function composePeoplePrompt(yourCompany: YourCompanyInput): string {
     buildYourCompanyContext(yourCompany),
     "",
     "PASS 2 — LEADERSHIP ONLY: Find named, sourced executives per entity. Never invent names.",
-    `SPEED INSTRUCTION: Complete within 50 seconds using at most ${PASS_2_MAX_SEARCHES} web searches across all entities in this batch.`,
+    `SPEED INSTRUCTION: Complete within 50 seconds using at most ${maxSearches} web searches — roughly one focused search per entity in this batch.`,
     ACCOUNT_MAP_PEOPLE_FORMAT,
   ].filter(Boolean).join("\n\n");
 }
@@ -324,18 +331,22 @@ Return ONLY the JSON object — no other text.`,
     const remainingMs = deadline - Date.now();
     if (enrichTargets.length > 0 && remainingMs > PASS_2_MIN_REMAINING_MS) {
       const pass2Timeout = Math.min(PASS_2_TIMEOUT_MS, remainingMs);
+      const pass2Searches = Math.min(
+        Math.max(enrichTargets.length, PASS_2_MIN_SEARCHES),
+        PASS_2_MAX_SEARCHES,
+      );
       try {
         const peopleRaw = await callMappingPass(
           PASS_2_MODEL,
-          composePeoplePrompt(yourCompany!),
+          composePeoplePrompt(yourCompany!, pass2Searches),
           buildPeopleUserMessage(companyName, enrichTargets),
           PASS_2_MAX_TOKENS,
-          PASS_2_MAX_SEARCHES,
+          pass2Searches,
           pass2Timeout,
         );
         merged = mergeLeadershipOntoStructure(structureRaw, peopleRaw);
         req.log.info(
-          { company: companyName, enriched: enrichTargets.length },
+          { company: companyName, enriched: enrichTargets.length, pass2Searches },
           "Account map pass 2 leadership merge complete",
         );
       } catch (pass2Err) {

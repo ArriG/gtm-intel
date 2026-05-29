@@ -180,20 +180,20 @@ Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy
 
 ## Account Map (Mapping mode)
 
-`POST /api/account-map` — two-pass Haiku + `web_search` for global enterprise structure, then leadership on top 8 fit-tier entities.
+`POST /api/account-map` — two-pass Haiku + `web_search` for global enterprise structure, then leadership on top 5 fit-tier entities.
 
 | Pass | Purpose | Timeout | `max_uses` |
 |------|---------|---------|------------|
 | 1 | Structure only (`buyers: []`) | 120s | 4 |
-| 2 | Leadership (`buyers`, `leadershipNote`) | 60s | 3 |
+| 2 | Leadership (`buyers`, `leadershipNote`) | 60s | ~1 per enriched entity (3–5, dynamic) |
 
 Whole-request budget: 185s server; client abort 195s. Pass 2 skipped if &lt;15s remains after Pass 1.
 
-**Replit deploy check:** After `git pull`, restart the server. Console must show `[account-map] runtime config` with `pass1.maxSearches: 4`. If you still see `6`, old code is running.
+**Replit deploy check:** After `git pull`, restart the server. Console must show `[account-map] runtime config` with `pass1.maxSearches: 4`, `leadershipEnrichCap: 5`, and `pass2.searchesPerEntity: true` with `pass2.maxSearches: 5`. If you still see `leadershipEnrichCap: 8` or a flat `pass2.maxSearches: 3`, old code is running.
 
 **Smoke test:** `MAP_STRUCTURE_ONLY=1` skips Pass 2 (structure-only, cheapest run).
 
-**Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are listed **name-only** in `unmappedEntities[]`. This narrows the search target so the same 4 + 3 search budget goes deep on one region (big groups like Zurich finish inside the timeouts). Default is derived from Your Company geographies on the client, overridable per search. `REGION_SCOPES` in `account-map.ts` injects region-specific regulator source hints.
+**Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are listed **name-only** in `unmappedEntities[]`. This narrows the search target so Pass 1 (4 searches) goes deep on one region; Pass 2 spends ~1 search each on the top 5 fit-tier entities (3–5 searches total). Default is derived from Your Company geographies on the client, overridable per search. `REGION_SCOPES` in `account-map.ts` injects region-specific regulator source hints.
 
 Cost safeguards: `maxRetries: 0`, SDK `timeout` in RequestOptions (2nd arg), not in body. See `docs/anthropic-sdk-bug-report.md`.
 
