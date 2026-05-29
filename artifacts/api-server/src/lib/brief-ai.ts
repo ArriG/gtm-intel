@@ -367,6 +367,23 @@ export function parseJsonFromResponse(text: string): unknown {
   }
 }
 
+/** Default hard cap on web searches per call — the real cost lever for search tools. */
+export const DEFAULT_SEARCH_MAX_USES = 6;
+
+/** Turn SDK timeout/abort errors into a friendly, user-facing message. */
+function friendlyAiError(err: unknown): Error {
+  const name = (err as { name?: string })?.name ?? "";
+  const message = err instanceof Error ? err.message : String(err);
+  if (
+    name === "APIConnectionTimeoutError" ||
+    name === "APIUserAbortError" ||
+    /timed?\s?out|aborted/i.test(message)
+  ) {
+    return new Error("Request timed out — please try again");
+  }
+  return err instanceof Error ? err : new Error(message);
+}
+
 export async function callClaudeJson(
   client: Anthropic,
   system: string,
@@ -375,20 +392,27 @@ export async function callClaudeJson(
   timeoutMs = 30000,
   temperature?: number,
 ): Promise<unknown> {
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Request timed out — please try again")), timeoutMs),
-  );
-
-  const message = await Promise.race([
-    client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: maxTokens,
-      ...(temperature !== undefined ? { temperature } : {}),
-      system,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-    timeoutPromise,
-  ]) as Anthropic.Message;
+  let message: Anthropic.Message;
+  try {
+    // RequestOptions (timeout/maxRetries) MUST be the second arg. Passing them in
+    // the body is silently ignored, so the request keeps running (and billing) past
+    // any client-side timeout. maxRetries: 0 stops a failed call retrying as full cost.
+    message = await client.messages.create(
+      {
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: maxTokens,
+        ...(temperature !== undefined ? { temperature } : {}),
+        system,
+        messages: [{ role: "user", content: userMessage }],
+      },
+      {
+        timeout: timeoutMs,
+        maxRetries: 0,
+      },
+    );
+  } catch (err) {
+    throw friendlyAiError(err);
+  }
 
   const text = textFromMessageContent(message.content);
   if (!text) {
@@ -404,21 +428,29 @@ export async function callClaudeJsonWithSearch(
   userMessage: string,
   maxTokens = 2000,
   timeoutMs = 45000,
+  maxSearches = DEFAULT_SEARCH_MAX_USES,
 ): Promise<unknown> {
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Request timed out — please try again")), timeoutMs),
-  );
-
-  const message = await Promise.race([
-    client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: maxTokens,
-      tools: [{ type: "web_search_20250305", name: "web_search" } as any],
-      system,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-    timeoutPromise,
-  ]) as Anthropic.Message;
+  let message: Anthropic.Message;
+  try {
+    // See callClaudeJson — RequestOptions go in the second arg so the request is
+    // actually aborted on timeout. max_uses caps web searches so a single call can't
+    // run unlimited (expensive) searches.
+    message = await client.messages.create(
+      {
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: maxTokens,
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: maxSearches } as any],
+        system,
+        messages: [{ role: "user", content: userMessage }],
+      },
+      {
+        timeout: timeoutMs,
+        maxRetries: 0,
+      },
+    );
+  } catch (err) {
+    throw friendlyAiError(err);
+  }
 
   const text = textFromMessageContent(message.content);
   if (!text) {

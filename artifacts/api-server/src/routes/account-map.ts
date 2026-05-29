@@ -21,6 +21,8 @@ const router: IRouter = Router();
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  // Never auto-retry mapping calls — each retry is a full, expensive web-search run.
+  maxRetries: 0,
 });
 
 const MAPPING_PACK_ID = "european-financial-services";
@@ -36,6 +38,17 @@ const PASS_2_TIMEOUT_MS = 45_000;
 const PASS_2_MIN_REMAINING_MS = 20_000;
 const PASS_1_MAX_TOKENS = 8000;
 const PASS_2_MAX_TOKENS = 4000;
+/** Hard server-side cap on web searches per pass — the real cost lever. */
+const PASS_1_MAX_SEARCHES = 6;
+const PASS_2_MAX_SEARCHES = 5;
+/**
+ * Safety switch: set MAP_STRUCTURE_ONLY=1 (or true) to skip the Pass 2 leadership
+ * enrichment entirely. Pass 1 alone is the cheapest possible map — use this for a
+ * low-cost smoke test before re-enabling the full two-pass run.
+ */
+const STRUCTURE_ONLY =
+  process.env.MAP_STRUCTURE_ONLY === "1" ||
+  process.env.MAP_STRUCTURE_ONLY?.toLowerCase() === "true";
 
 function composeStructurePrompt(yourCompany: YourCompanyInput): { systemPrompt: string; sectorPackUsed: string } {
   const constitution = loadConstitution();
@@ -90,38 +103,24 @@ async function callMappingPass(
   system: string,
   userMessage: string,
   maxTokens: number,
+  maxSearches: number,
   timeoutMs: number,
 ): Promise<Record<string, unknown>> {
-  const controller = new AbortController();
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      controller.abort();
-      reject(new Error("Mapping timed out — please try again"));
-    }, timeoutMs);
-  });
-
-  let message: Anthropic.Message;
-  try {
-    message = await Promise.race([
-      client.messages.create({
-        model,
-        max_tokens: maxTokens,
-        tools: [{ type: "web_search_20250305", name: "web_search" } as any],
-        system,
-        messages: [{ role: "user", content: userMessage }],
-        signal: controller.signal,
-      }),
-      timeoutPromise,
-    ]) as Anthropic.Message;
-  } catch (err) {
-    if (controller.signal.aborted) {
-      throw new Error("Mapping timed out — please try again");
-    }
-    throw err;
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
+  // RequestOptions (signal/timeout/maxRetries) MUST be the second arg — passing
+  // them in the body is silently ignored and leaves the request running (and billing).
+  const message = await client.messages.create(
+    {
+      model,
+      max_tokens: maxTokens,
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: maxSearches } as any],
+      system,
+      messages: [{ role: "user", content: userMessage }],
+    },
+    {
+      timeout: timeoutMs,
+      maxRetries: 0,
+    },
+  );
 
   const responseText = textFromMessageContent(message.content);
   if (!responseText) {
@@ -198,6 +197,7 @@ router.post("/account-map", async (req, res): Promise<void> => {
 Organise operating entities by geographic region. Do NOT return named executives — buyers must be [] on every entity.
 Return ONLY the JSON object — no other text.`,
       PASS_1_MAX_TOKENS,
+      PASS_1_MAX_SEARCHES,
       pass1Timeout,
     );
 
@@ -205,8 +205,17 @@ Return ONLY the JSON object — no other text.`,
       ? structureRaw.entities as Array<Record<string, unknown>>
       : [];
 
-    const enrichTargets = selectEntitiesForLeadership(rawEntities, LEADERSHIP_ENRICH_CAP);
+    const enrichTargets = STRUCTURE_ONLY
+      ? []
+      : selectEntitiesForLeadership(rawEntities, LEADERSHIP_ENRICH_CAP);
     let merged = structureRaw;
+
+    if (STRUCTURE_ONLY) {
+      req.log.info(
+        { company: companyName },
+        "MAP_STRUCTURE_ONLY enabled — skipping pass 2 leadership enrichment",
+      );
+    }
 
     const remainingMs = deadline - Date.now();
     if (enrichTargets.length > 0 && remainingMs > PASS_2_MIN_REMAINING_MS) {
@@ -217,6 +226,7 @@ Return ONLY the JSON object — no other text.`,
           composePeoplePrompt(yourCompany!),
           buildPeopleUserMessage(companyName, enrichTargets),
           PASS_2_MAX_TOKENS,
+          PASS_2_MAX_SEARCHES,
           pass2Timeout,
         );
         merged = mergeLeadershipOntoStructure(structureRaw, peopleRaw);
