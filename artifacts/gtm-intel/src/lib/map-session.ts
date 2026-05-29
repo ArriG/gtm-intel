@@ -1,10 +1,12 @@
 import type { AccountMapResponse } from "@workspace/api-client-react";
+import type { MapRegion } from "@/lib/map-region";
 
 const STORAGE_KEY = "gtm_map_session_v1";
 
 export type MapSession = {
   label: string;
   url: string;
+  region?: MapRegion;
   accountMap: AccountMapResponse;
 };
 

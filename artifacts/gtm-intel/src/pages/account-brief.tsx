@@ -28,6 +28,8 @@ import { researchLoadingMessage } from "@/lib/research-loading";
 import { mappingLoadingMessage } from "@/lib/mapping-loading-messages";
 import { AccountMapResult } from "@/components/account-map/account-map-result";
 import { SearchModeToggle, type SearchMode } from "@/components/search-mode-toggle";
+import { RegionSelect } from "@/components/region-select";
+import { defaultRegionFromGeographies, type MapRegion } from "@/lib/map-region";
 import { saveBriefSession, loadBriefSession, clearBriefSession } from "@/lib/brief-session";
 import { saveMapSession, loadMapSession, clearMapSession } from "@/lib/map-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
@@ -994,6 +996,9 @@ export default function AccountBriefPage() {
   const [mapLoading, setMapLoading] = useState(false);
   const [mapLoadingSeconds, setMapLoadingSeconds] = useState(0);
   const [accountMap, setAccountMap] = useState<AccountMapResponse | null>(null);
+  const [mapRegion, setMapRegion] = useState<MapRegion>(() =>
+    defaultRegionFromGeographies(loadYourCompany()?.geographies),
+  );
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -1047,6 +1052,7 @@ export default function AccountBriefPage() {
       setLastUrl(mapSession.url);
       setLastDomain(domainFromUrl(mapSession.url));
       setSearchQuery(mapSession.label);
+      if (mapSession.region) setMapRegion(mapSession.region);
       setAccountMap(mapSession.accountMap);
     }
   }, []);
@@ -1127,15 +1133,16 @@ export default function AccountBriefPage() {
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
 
     const controller = new AbortController();
-    const clientTimeout = setTimeout(() => controller.abort(), 165_000);
+    // Slightly above server MAPPING_TIMEOUT_MS (185s) so the API error surfaces before client abort.
+    const clientTimeout = setTimeout(() => controller.abort(), 195_000);
 
     try {
       const result = await generateAccountMap(
-        { company: label, yourCompany },
+        { company: label, region: mapRegion, yourCompany },
         { signal: controller.signal },
       );
       setAccountMap(result);
-      saveMapSession({ label, url: mapUrl, accountMap: result });
+      saveMapSession({ label, url: mapUrl, region: mapRegion, accountMap: result });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         setError("Mapping took too long and was stopped. Try again — or switch to Brief mode for a faster single-company brief.");
@@ -1287,6 +1294,13 @@ export default function AccountBriefPage() {
                 }
               }}
             />
+            {searchMode === "mapping" && (
+              <RegionSelect
+                region={mapRegion}
+                onChange={setMapRegion}
+                disabled={mapLoading}
+              />
+            )}
             <CompanySearchInput
               query={searchQuery}
               onQueryChange={setSearchQuery}

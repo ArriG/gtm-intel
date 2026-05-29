@@ -27,20 +27,73 @@ const client = new Anthropic({
 
 const MAPPING_PACK_ID = "european-financial-services";
 const MAPPING_MODEL = "claude-haiku-4-5-20251001";
+
+export type MapRegion = "uk_ireland" | "europe" | "north_america" | "apac" | "global";
+
+type RegionScope = {
+  label: string;
+  sourceHint: string;
+};
+
+/** Region scopes narrow the search target — the AE picks one per map. */
+const REGION_SCOPES: Record<Exclude<MapRegion, "global">, RegionScope> = {
+  uk_ireland: {
+    label: "UK & Ireland",
+    sourceHint:
+      "Prioritise UK & Irish sources: Companies House, FCA, PRA registers, Irish CRO, Central Bank of Ireland, and UK/IE annual reports.",
+  },
+  europe: {
+    label: "Continental Europe / EEA",
+    sourceHint:
+      "Prioritise continental European regulators and filings: BaFin/Handelsregister (DE), FINMA/Zefix (CH), ACPR/AMF (FR), DNB/AFM (NL), IVASS (IT), DGSFP (ES), plus EIOPA and local annual reports.",
+  },
+  north_america: {
+    label: "North America (US & Canada)",
+    sourceHint:
+      "Prioritise North American sources: SEC EDGAR, NAIC, US state insurance department filings, OSFI (Canada), and US/CA annual reports and investor relations pages.",
+  },
+  apac: {
+    label: "Asia-Pacific",
+    sourceHint:
+      "Prioritise Asia-Pacific regulators and filings: APRA (AU), MAS (SG), FSA (JP), HKIA (HK), IRDAI (IN), and local annual reports and investor relations pages.",
+  },
+};
+
+function normalizeRegion(value: unknown): MapRegion {
+  return value === "uk_ireland" ||
+    value === "europe" ||
+    value === "north_america" ||
+    value === "apac"
+    ? value
+    : "global";
+}
+
+function regionScopeInstruction(region: MapRegion): string {
+  if (region === "global") {
+    return "REGION SCOPE: Global — map the enterprise across all regions into the fixed region buckets.";
+  }
+  const scope = REGION_SCOPES[region];
+  return [
+    `REGION SCOPE: ${scope.label}.`,
+    `Map ONLY ${scope.label} operating entities in full depth in entities[].`,
+    `For entities in OTHER regions, list their NAMES ONLY in unmappedEntities[] — no detail, no leaders.`,
+    scope.sourceHint,
+  ].join("\n");
+}
 /** Flip to Sonnet when ready — Pass 2 leadership enrichment only */
 const PASS_2_MODEL = MAPPING_MODEL;
 
-/** Hard cap for the whole request (Replit + browser should not hang past this). */
-const MAPPING_TIMEOUT_MS = 150_000;
-const PASS_1_TIMEOUT_MS = 90_000;
-const PASS_2_TIMEOUT_MS = 45_000;
+/** Hard cap for the whole request — must stay under client abort (see account-brief.tsx). */
+const MAPPING_TIMEOUT_MS = 185_000;
+const PASS_1_TIMEOUT_MS = 120_000;
+const PASS_2_TIMEOUT_MS = 60_000;
 /** Need at least this much left on the clock before starting pass 2. */
-const PASS_2_MIN_REMAINING_MS = 20_000;
+const PASS_2_MIN_REMAINING_MS = 15_000;
 const PASS_1_MAX_TOKENS = 8000;
 const PASS_2_MAX_TOKENS = 4000;
-/** Hard server-side cap on web searches per pass — the real cost lever. */
-const PASS_1_MAX_SEARCHES = 6;
-const PASS_2_MAX_SEARCHES = 5;
+/** Hard server-side cap on web searches per pass — fewer searches = faster finish inside timeout. */
+const PASS_1_MAX_SEARCHES = 4;
+const PASS_2_MAX_SEARCHES = 3;
 /**
  * Safety switch: set MAP_STRUCTURE_ONLY=1 (or true) to skip the Pass 2 leadership
  * enrichment entirely. Pass 1 alone is the cheapest possible map — use this for a
@@ -50,7 +103,44 @@ const STRUCTURE_ONLY =
   process.env.MAP_STRUCTURE_ONLY === "1" ||
   process.env.MAP_STRUCTURE_ONLY?.toLowerCase() === "true";
 
-function composeStructurePrompt(yourCompany: YourCompanyInput): { systemPrompt: string; sectorPackUsed: string } {
+/** Logged once at server boot — confirm Replit pulled latest code after restart. */
+export const ACCOUNT_MAP_RUNTIME_CONFIG = {
+  mappingTimeoutMs: MAPPING_TIMEOUT_MS,
+  pass1: { timeoutMs: PASS_1_TIMEOUT_MS, maxSearches: PASS_1_MAX_SEARCHES },
+  pass2: { timeoutMs: PASS_2_TIMEOUT_MS, maxSearches: PASS_2_MAX_SEARCHES },
+  leadershipEnrichCap: LEADERSHIP_ENRICH_CAP,
+  structureOnly: STRUCTURE_ONLY,
+  model: MAPPING_MODEL,
+} as const;
+
+function logAccountMapConfigAtBoot(): void {
+  console.info(
+    "[account-map] runtime config",
+    JSON.stringify(ACCOUNT_MAP_RUNTIME_CONFIG),
+  );
+}
+
+logAccountMapConfigAtBoot();
+
+function mappingPassError(err: unknown): Error {
+  const name = (err as { name?: string })?.name ?? "";
+  const message = err instanceof Error ? err.message : String(err);
+  if (
+    name === "APIConnectionTimeoutError" ||
+    name === "APIUserAbortError" ||
+    /timed?\s?out|aborted/i.test(message)
+  ) {
+    return new Error(
+      "Mapping timed out before finishing. Try again, or set MAP_STRUCTURE_ONLY=1 on the server for a faster structure-only map.",
+    );
+  }
+  return err instanceof Error ? err : new Error(message);
+}
+
+function composeStructurePrompt(
+  yourCompany: YourCompanyInput,
+  region: MapRegion,
+): { systemPrompt: string; sectorPackUsed: string } {
   const constitution = loadConstitution();
   const pack = loadPackByName(MAPPING_PACK_ID);
 
@@ -70,8 +160,9 @@ When mapping a global enterprise, follow the European Financial Services sector 
     sourceBlock,
     buildYourCompanyContext(yourCompany),
     "",
+    regionScopeInstruction(region),
     "PASS 1 — STRUCTURE ONLY: Do not search for named executives. Return buyers: [] on every entity.",
-    "SPEED INSTRUCTION: Complete this structure pass within 75 seconds using at most 6 web searches. Prioritise subsidiary discovery and group context — stop searching once you have solid entity coverage.",
+    `SPEED INSTRUCTION: Complete this structure pass within 100 seconds using at most ${PASS_1_MAX_SEARCHES} web searches. Prioritise subsidiary discovery and group context — stop searching once you have solid entity coverage.`,
     ACCOUNT_MAP_STRUCTURE_FORMAT,
   ].filter(Boolean).join("\n\n");
 
@@ -93,7 +184,7 @@ function composePeoplePrompt(yourCompany: YourCompanyInput): string {
     buildYourCompanyContext(yourCompany),
     "",
     "PASS 2 — LEADERSHIP ONLY: Find named, sourced executives per entity. Never invent names.",
-    "SPEED INSTRUCTION: Complete within 40 seconds using at most 5 web searches across all entities in this batch.",
+    `SPEED INSTRUCTION: Complete within 50 seconds using at most ${PASS_2_MAX_SEARCHES} web searches across all entities in this batch.`,
     ACCOUNT_MAP_PEOPLE_FORMAT,
   ].filter(Boolean).join("\n\n");
 }
@@ -108,19 +199,24 @@ async function callMappingPass(
 ): Promise<Record<string, unknown>> {
   // RequestOptions (signal/timeout/maxRetries) MUST be the second arg — passing
   // them in the body is silently ignored and leaves the request running (and billing).
-  const message = await client.messages.create(
-    {
-      model,
-      max_tokens: maxTokens,
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: maxSearches } as any],
-      system,
-      messages: [{ role: "user", content: userMessage }],
-    },
-    {
-      timeout: timeoutMs,
-      maxRetries: 0,
-    },
-  );
+  let message: Anthropic.Message;
+  try {
+    message = await client.messages.create(
+      {
+        model,
+        max_tokens: maxTokens,
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: maxSearches } as any],
+        system,
+        messages: [{ role: "user", content: userMessage }],
+      },
+      {
+        timeout: timeoutMs,
+        maxRetries: 0,
+      },
+    );
+  } catch (err) {
+    throw mappingPassError(err);
+  }
 
   const responseText = textFromMessageContent(message.content);
   if (!responseText) {
@@ -156,8 +252,9 @@ Return ONLY the JSON object — no other text.`;
 }
 
 router.post("/account-map", async (req, res): Promise<void> => {
-  const { company, yourCompany } = req.body as {
+  const { company, region: rawRegion, yourCompany } = req.body as {
     company?: string;
+    region?: string;
     yourCompany?: YourCompanyInput;
   };
 
@@ -172,11 +269,18 @@ router.post("/account-map", async (req, res): Promise<void> => {
     return;
   }
 
-  req.log.info({ company: companyName }, "Generating account map (two-pass)");
+  const region = normalizeRegion(rawRegion);
+
+  req.log.info(
+    { company: companyName, region, config: ACCOUNT_MAP_RUNTIME_CONFIG },
+    STRUCTURE_ONLY
+      ? "Generating account map (structure-only)"
+      : "Generating account map (two-pass)",
+  );
 
   let composed: { systemPrompt: string; sectorPackUsed: string };
   try {
-    composed = composeStructurePrompt(yourCompany!);
+    composed = composeStructurePrompt(yourCompany!, region);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to load mapping sector pack";
     req.log.error({ err }, message);
@@ -189,12 +293,15 @@ router.post("/account-map", async (req, res): Promise<void> => {
 
   try {
     const pass1Timeout = Math.min(PASS_1_TIMEOUT_MS, deadline - Date.now());
+    const scopeLine = region === "global"
+      ? "Organise operating entities by geographic region."
+      : `Focus the full-depth map on ${REGION_SCOPES[region].label}. List other-region entities by name only in unmappedEntities[].`;
     const structureRaw = await callMappingPass(
       MAPPING_MODEL,
       composed.systemPrompt,
-      `Map the global enterprise structure for: ${companyName}
+      `Map the enterprise structure for: ${companyName}
 
-Organise operating entities by geographic region. Do NOT return named executives — buyers must be [] on every entity.
+${scopeLine} Do NOT return named executives — buyers must be [] on every entity.
 Return ONLY the JSON object — no other text.`,
       PASS_1_MAX_TOKENS,
       PASS_1_MAX_SEARCHES,

@@ -56,10 +56,11 @@ PASS 1 RULES:
 - Every entity MUST have "buyers": [] (empty array). Leadership is filled in a separate pass.
 - Up to 8 entities per region, maximum 20 entities total in entities[].
 - If more entities exist, list ALL omitted names in unmappedEntities[].
+- REGION SCOPE: When a region scope is set, entities[] must contain ONLY full-depth entities for that region; list every other-region entity by NAME ONLY in unmappedEntities[] (no detail, no leaders).
 - Populate outreachSources[] with 3-6 public sources worth checking next (annual reports, regulator registers, IR pages, trade press).
 - Prefer strong fit entities, then moderate, then skip when selecting which to include.
 - companySnapshot and groupBackground must be factual group-level intelligence — NO call decision, NO opener, NO ICP score.
 - fitTier is factual alignment (geography, industry, business line) — NOT a sales heat score.
-- Use at most 6 web searches total for this structure pass — prioritise entity discovery and group context.
+- Use at most 4 web searches total for this structure pass — prioritise entity discovery and group context.
 - Set isSingleEntity=true if the target is not a federated multi-entity enterprise.
 - CRITICAL: no markdown, no preamble — raw JSON only.`;

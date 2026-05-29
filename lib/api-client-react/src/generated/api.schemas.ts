@@ -652,8 +652,24 @@ export interface AccountMapParent {
   industry: string;
 }
 
+/**
+ * Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global.
+ */
+export type AccountMapRequestRegion = typeof AccountMapRequestRegion[keyof typeof AccountMapRequestRegion];
+
+
+export const AccountMapRequestRegion = {
+  uk_ireland: 'uk_ireland',
+  europe: 'europe',
+  north_america: 'north_america',
+  apac: 'apac',
+  global: 'global',
+} as const;
+
 export interface AccountMapRequest {
   company: string;
+  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global. */
+  region?: AccountMapRequestRegion;
   yourCompany: YourCompany;
 }
 

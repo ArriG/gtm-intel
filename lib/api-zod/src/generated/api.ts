@@ -655,6 +655,7 @@ export const GenerateCallPrepResponse = zod.object({
 
 export const GenerateAccountMapBody = zod.object({
   "company": zod.string(),
+  "region": zod.enum(['uk_ireland', 'europe', 'north_america', 'apac', 'global']).optional().describe('Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global.'),
   "yourCompany": zod.object({
   "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
   "oneLineDescription": zod.string().describe('What we sell, in one sentence'),

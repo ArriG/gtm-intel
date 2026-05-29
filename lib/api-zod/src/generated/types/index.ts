@@ -18,6 +18,7 @@ export * from './accountBriefSourceSummary';
 export * from './accountBriefTheirWorld';
 export * from './accountMapParent';
 export * from './accountMapRequest';
+export * from './accountMapRequestRegion';
 export * from './accountMapResponse';
 export * from './accountSignal';
 export * from './accountSignalTier';

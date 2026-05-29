@@ -1272,6 +1272,15 @@ components:
       properties:
         company:
           type: string
+        region:
+          type: string
+          description: Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global.
+          enum:
+            - uk_ireland
+            - europe
+            - north_america
+            - apac
+            - global
         yourCompany:
           $ref: "#/components/schemas/YourCompany"
 

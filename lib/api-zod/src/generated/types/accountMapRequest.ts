@@ -5,9 +5,12 @@
  * GTM Intelligence API
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountMapRequestRegion } from './accountMapRequestRegion';
 import type { YourCompany } from './yourCompany';
 
 export interface AccountMapRequest {
   company: string;
+  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to global. */
+  region?: AccountMapRequestRegion;
   yourCompany: YourCompany;
 }

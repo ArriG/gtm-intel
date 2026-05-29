@@ -120,3 +120,6 @@ Account briefs derive research sources automatically from Your Company (geograph
 - **TypeScript:** `node node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc`
 - **api-client-react composite project:** run `tsc -p lib/api-client-react` if frontend can't see new OpenAPI types.
 - **Haiku may return partial brief JSON** — frontend guards with optional chaining; see architecture doc.
+- **Account Map on Replit:** After `git pull`, **restart the server** (Stop → Run). On boot, the API logs `[account-map] runtime config` with timeouts and `structureOnly` — confirm `pass1.maxSearches: 4` and `pass2.maxSearches: 3` before testing Zurich.
+- **MAP_STRUCTURE_ONLY:** Set `MAP_STRUCTURE_ONLY=1` in Replit Secrets/env for a cheap structure-only map (Pass 1, no leadership pass). Remove or set `0` for full two-pass maps.
+- **Mapping region scope:** Mapping mode sends a `region` (`uk_ireland`/`europe`/`north_america`/`apac`/`global`). The chosen region is mapped in full depth; other regions are name-only in `unmappedEntities[]`. Narrows the search so large enterprises finish inside the search/timeout budget.

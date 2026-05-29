@@ -178,6 +178,27 @@ Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy
 
 ---
 
+## Account Map (Mapping mode)
+
+`POST /api/account-map` — two-pass Haiku + `web_search` for global enterprise structure, then leadership on top 8 fit-tier entities.
+
+| Pass | Purpose | Timeout | `max_uses` |
+|------|---------|---------|------------|
+| 1 | Structure only (`buyers: []`) | 120s | 4 |
+| 2 | Leadership (`buyers`, `leadershipNote`) | 60s | 3 |
+
+Whole-request budget: 185s server; client abort 195s. Pass 2 skipped if &lt;15s remains after Pass 1.
+
+**Replit deploy check:** After `git pull`, restart the server. Console must show `[account-map] runtime config` with `pass1.maxSearches: 4`. If you still see `6`, old code is running.
+
+**Smoke test:** `MAP_STRUCTURE_ONLY=1` skips Pass 2 (structure-only, cheapest run).
+
+**Region scope (`region` in request):** AE manually picks a region (`uk_ireland`, `europe`, `north_america`, `apac`, `global`; default `global`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are listed **name-only** in `unmappedEntities[]`. This narrows the search target so the same 4 + 3 search budget goes deep on one region (big groups like Zurich finish inside the timeouts). Default is derived from Your Company geographies on the client, overridable per search. `REGION_SCOPES` in `account-map.ts` injects region-specific regulator source hints.
+
+Cost safeguards: `maxRetries: 0`, SDK `timeout` in RequestOptions (2nd arg), not in body. See `docs/anthropic-sdk-bug-report.md`.
+
+---
+
 ## Known gaps / follow-ups
 
 1. **Partial brief JSON** — OpenAPI requires full `AccountBrief` shape; Haiku sometimes omits `recentTriggers.items`. Frontend uses `?? []` fallbacks; backend does not yet normalize responses.
