@@ -28,7 +28,12 @@ const MAPPING_MODEL = "claude-haiku-4-5-20251001";
 /** Flip to Sonnet when ready — Pass 2 leadership enrichment only */
 const PASS_2_MODEL = MAPPING_MODEL;
 
+/** Hard cap for the whole request (Replit + browser should not hang past this). */
 const MAPPING_TIMEOUT_MS = 150_000;
+const PASS_1_TIMEOUT_MS = 90_000;
+const PASS_2_TIMEOUT_MS = 45_000;
+/** Need at least this much left on the clock before starting pass 2. */
+const PASS_2_MIN_REMAINING_MS = 20_000;
 const PASS_1_MAX_TOKENS = 8000;
 const PASS_2_MAX_TOKENS = 4000;
 
@@ -53,7 +58,7 @@ When mapping a global enterprise, follow the European Financial Services sector 
     buildYourCompanyContext(yourCompany),
     "",
     "PASS 1 — STRUCTURE ONLY: Do not search for named executives. Return buyers: [] on every entity.",
-    "SPEED INSTRUCTION: Complete this structure pass within 90 seconds using at most 10 web searches. Prioritise subsidiary discovery and group context.",
+    "SPEED INSTRUCTION: Complete this structure pass within 75 seconds using at most 6 web searches. Prioritise subsidiary discovery and group context — stop searching once you have solid entity coverage.",
     ACCOUNT_MAP_STRUCTURE_FORMAT,
   ].filter(Boolean).join("\n\n");
 
@@ -75,7 +80,7 @@ function composePeoplePrompt(yourCompany: YourCompanyInput): string {
     buildYourCompanyContext(yourCompany),
     "",
     "PASS 2 — LEADERSHIP ONLY: Find named, sourced executives per entity. Never invent names.",
-    "SPEED INSTRUCTION: Complete within 60 seconds using at most 8 web searches across all entities in this batch.",
+    "SPEED INSTRUCTION: Complete within 40 seconds using at most 5 web searches across all entities in this batch.",
     ACCOUNT_MAP_PEOPLE_FORMAT,
   ].filter(Boolean).join("\n\n");
 }
@@ -85,22 +90,38 @@ async function callMappingPass(
   system: string,
   userMessage: string,
   maxTokens: number,
-  remainingMs: number,
+  timeoutMs: number,
 ): Promise<Record<string, unknown>> {
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Mapping timed out — please try again")), remainingMs),
-  );
+  const controller = new AbortController();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Mapping timed out — please try again"));
+    }, timeoutMs);
+  });
 
-  const message = await Promise.race([
-    client.messages.create({
-      model,
-      max_tokens: maxTokens,
-      tools: [{ type: "web_search_20250305", name: "web_search" } as any],
-      system,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-    timeoutPromise,
-  ]) as Anthropic.Message;
+  let message: Anthropic.Message;
+  try {
+    message = await Promise.race([
+      client.messages.create({
+        model,
+        max_tokens: maxTokens,
+        tools: [{ type: "web_search_20250305", name: "web_search" } as any],
+        system,
+        messages: [{ role: "user", content: userMessage }],
+        signal: controller.signal,
+      }),
+      timeoutPromise,
+    ]) as Anthropic.Message;
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new Error("Mapping timed out — please try again");
+    }
+    throw err;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 
   const responseText = textFromMessageContent(message.content);
   if (!responseText) {
@@ -168,6 +189,7 @@ router.post("/account-map", async (req, res): Promise<void> => {
   const deadline = Date.now() + MAPPING_TIMEOUT_MS;
 
   try {
+    const pass1Timeout = Math.min(PASS_1_TIMEOUT_MS, deadline - Date.now());
     const structureRaw = await callMappingPass(
       MAPPING_MODEL,
       composed.systemPrompt,
@@ -176,7 +198,7 @@ router.post("/account-map", async (req, res): Promise<void> => {
 Organise operating entities by geographic region. Do NOT return named executives — buyers must be [] on every entity.
 Return ONLY the JSON object — no other text.`,
       PASS_1_MAX_TOKENS,
-      deadline - Date.now(),
+      pass1Timeout,
     );
 
     const rawEntities = Array.isArray(structureRaw.entities)
@@ -186,31 +208,33 @@ Return ONLY the JSON object — no other text.`,
     const enrichTargets = selectEntitiesForLeadership(rawEntities, LEADERSHIP_ENRICH_CAP);
     let merged = structureRaw;
 
-    if (enrichTargets.length > 0) {
-      const remainingMs = deadline - Date.now();
-      if (remainingMs > 15_000) {
-        try {
-          const peopleRaw = await callMappingPass(
-            PASS_2_MODEL,
-            composePeoplePrompt(yourCompany!),
-            buildPeopleUserMessage(companyName, enrichTargets),
-            PASS_2_MAX_TOKENS,
-            remainingMs,
-          );
-          merged = mergeLeadershipOntoStructure(structureRaw, peopleRaw);
-          req.log.info(
-            { company: companyName, enriched: enrichTargets.length },
-            "Account map pass 2 leadership merge complete",
-          );
-        } catch (pass2Err) {
-          req.log.warn(
-            { err: pass2Err, company: companyName },
-            "Pass 2 leadership enrichment failed — returning structure-only map",
-          );
-        }
-      } else {
-        req.log.warn({ company: companyName }, "Skipping pass 2 — insufficient time remaining");
+    const remainingMs = deadline - Date.now();
+    if (enrichTargets.length > 0 && remainingMs > PASS_2_MIN_REMAINING_MS) {
+      const pass2Timeout = Math.min(PASS_2_TIMEOUT_MS, remainingMs);
+      try {
+        const peopleRaw = await callMappingPass(
+          PASS_2_MODEL,
+          composePeoplePrompt(yourCompany!),
+          buildPeopleUserMessage(companyName, enrichTargets),
+          PASS_2_MAX_TOKENS,
+          pass2Timeout,
+        );
+        merged = mergeLeadershipOntoStructure(structureRaw, peopleRaw);
+        req.log.info(
+          { company: companyName, enriched: enrichTargets.length },
+          "Account map pass 2 leadership merge complete",
+        );
+      } catch (pass2Err) {
+        req.log.warn(
+          { err: pass2Err, company: companyName },
+          "Pass 2 leadership enrichment failed — returning structure-only map",
+        );
       }
+    } else if (enrichTargets.length > 0) {
+      req.log.warn(
+        { company: companyName, remainingMs },
+        "Skipping pass 2 — insufficient time remaining after structure pass",
+      );
     }
 
     const normalized = normalizeAccountMap(merged, generatedAt, composed.sectorPackUsed);

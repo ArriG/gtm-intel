@@ -28,7 +28,8 @@ import { researchLoadingMessage } from "@/lib/research-loading";
 import { mappingLoadingMessage } from "@/lib/mapping-loading-messages";
 import { AccountMapResult } from "@/components/account-map/account-map-result";
 import { SearchModeToggle, type SearchMode } from "@/components/search-mode-toggle";
-import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
+import { saveBriefSession, loadBriefSession, clearBriefSession } from "@/lib/brief-session";
+import { saveMapSession, loadMapSession, clearMapSession } from "@/lib/map-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
@@ -591,12 +592,14 @@ function CompanySearchInput({
   onQueryChange,
   onSearch,
   loading,
+  loadingLabel = "Researching...",
   cooldownSeconds,
 }: {
   query: string;
   onQueryChange: (value: string) => void;
   onSearch: (url: string, label: string) => void;
   loading: boolean;
+  loadingLabel?: string;
   cooldownSeconds: number;
 }) {
   const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
@@ -685,7 +688,7 @@ function CompanySearchInput({
             disabled={loading || cooldownSeconds > 0 || !query.trim()}
             className="gap-2 shrink-0 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-bold border-0 min-h-10 px-5"
           >
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Researching...</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />{loadingLabel}</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
           </Button>
         </div>
       </form>
@@ -1035,6 +1038,16 @@ export default function AccountBriefPage() {
       setCurrentHistoryId(session.currentHistoryId);
       setLinkedinPosts(session.linkedinPosts);
       setOwnIntel(session.ownIntel);
+      return;
+    }
+    const mapSession = loadMapSession();
+    if (mapSession) {
+      setSearchMode("mapping");
+      setLastLabel(mapSession.label);
+      setLastUrl(mapSession.url);
+      setLastDomain(domainFromUrl(mapSession.url));
+      setSearchQuery(mapSession.label);
+      setAccountMap(mapSession.accountMap);
     }
   }, []);
 
@@ -1079,6 +1092,7 @@ export default function AccountBriefPage() {
       });
       setWatchingSignals(true);
       setCurrentHistoryId(id);
+      clearMapSession();
       saveBriefSession({
         label,
         url,
@@ -1103,22 +1117,33 @@ export default function AccountBriefPage() {
     setError(null);
     setAccountMap(null);
     setBrief(null);
-    setLastLabel(company.trim());
-    setSearchQuery(company.trim());
-    const mapUrl = company.trim().startsWith("http") ? company.trim() : `https://${company.trim()}`;
+    clearBriefSession();
+    const label = company.trim();
+    setLastLabel(label);
+    setSearchQuery(label);
+    const mapUrl = label.startsWith("http") ? label : `https://${label}`;
     setLastUrl(mapUrl);
     setLastDomain(domainFromUrl(mapUrl));
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
 
+    const controller = new AbortController();
+    const clientTimeout = setTimeout(() => controller.abort(), 165_000);
+
     try {
-      const result = await generateAccountMap({
-        company: company.trim(),
-        yourCompany,
-      });
+      const result = await generateAccountMap(
+        { company: label, yourCompany },
+        { signal: controller.signal },
+      );
       setAccountMap(result);
+      saveMapSession({ label, url: mapUrl, accountMap: result });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      if (err instanceof Error && err.name === "AbortError") {
+        setError("Mapping took too long and was stopped. Try again — or switch to Brief mode for a faster single-company brief.");
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      }
     } finally {
+      clearTimeout(clientTimeout);
       setMapLoading(false);
     }
   }
@@ -1253,8 +1278,13 @@ export default function AccountBriefPage() {
               onChange={mode => {
                 setSearchMode(mode);
                 setError(null);
-                if (mode === "brief") setAccountMap(null);
-                else setBrief(null);
+                if (mode === "brief") {
+                  setAccountMap(null);
+                  clearMapSession();
+                } else {
+                  setBrief(null);
+                  clearBriefSession();
+                }
               }}
             />
             <CompanySearchInput
@@ -1262,6 +1292,7 @@ export default function AccountBriefPage() {
               onQueryChange={setSearchQuery}
               onSearch={handleCompanySubmit}
               loading={loading || mapLoading}
+              loadingLabel={searchMode === "mapping" ? "Mapping..." : "Researching..."}
               cooldownSeconds={searchMode === "brief" ? cooldownSeconds : 0}
             />
             {!brief && !accountMap && !showOptionalContext && searchMode === "brief" && (

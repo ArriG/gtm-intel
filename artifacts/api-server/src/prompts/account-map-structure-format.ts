@@ -60,6 +60,6 @@ PASS 1 RULES:
 - Prefer strong fit entities, then moderate, then skip when selecting which to include.
 - companySnapshot and groupBackground must be factual group-level intelligence — NO call decision, NO opener, NO ICP score.
 - fitTier is factual alignment (geography, industry, business line) — NOT a sales heat score.
-- Use at most 10 web searches total for this structure pass — prioritise entity discovery and group context.
+- Use at most 6 web searches total for this structure pass — prioritise entity discovery and group context.
 - Set isSingleEntity=true if the target is not a federated multi-entity enterprise.
 - CRITICAL: no markdown, no preamble — raw JSON only.`;
