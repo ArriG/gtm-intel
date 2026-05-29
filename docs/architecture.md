@@ -180,7 +180,7 @@ Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy
 
 ## Account Map (Mapping mode)
 
-`POST /api/account-map` — two-pass Haiku + `web_search` for global enterprise structure, then leadership on top 5 fit-tier entities.
+`POST /api/account-map` — two-pass Claude + `web_search` for global enterprise structure, then leadership on top 5 fit-tier entities. Default model: **Sonnet** (`claude-sonnet-4-6`); override with env `MAPPING_MODEL` / `MAPPING_PASS_2_MODEL` (e.g. Haiku for cost experiments).
 
 | Pass | Purpose | Timeout | `max_uses` |
 |------|---------|---------|------------|

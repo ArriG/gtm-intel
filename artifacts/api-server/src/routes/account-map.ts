@@ -26,7 +26,12 @@ const client = new Anthropic({
 });
 
 const MAPPING_PACK_ID = "european-financial-services";
-const MAPPING_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_MAPPING_MODEL = "claude-sonnet-4-6";
+/** Revert Mapping to Haiku: MAPPING_MODEL=claude-haiku-4-5-20251001 */
+const MAPPING_MODEL =
+  process.env.MAPPING_MODEL?.trim() || DEFAULT_MAPPING_MODEL;
+const PASS_2_MODEL =
+  process.env.MAPPING_PASS_2_MODEL?.trim() || MAPPING_MODEL;
 
 export type MapRegion = "emea" | "apac" | "north_america" | "latam";
 
@@ -79,9 +84,6 @@ function regionScopeInstruction(region: MapRegion): string {
     scope.sourceHint,
   ].join("\n");
 }
-/** Flip to Sonnet when ready — Pass 2 leadership enrichment only */
-const PASS_2_MODEL = MAPPING_MODEL;
-
 /** Hard cap for the whole request — must stay under client abort (see account-brief.tsx). */
 const MAPPING_TIMEOUT_MS = 185_000;
 const PASS_1_TIMEOUT_MS = 120_000;
@@ -116,7 +118,8 @@ export const ACCOUNT_MAP_RUNTIME_CONFIG = {
   },
   leadershipEnrichCap: LEADERSHIP_ENRICH_CAP,
   structureOnly: STRUCTURE_ONLY,
-  model: MAPPING_MODEL,
+  pass1Model: MAPPING_MODEL,
+  pass2Model: PASS_2_MODEL,
 } as const;
 
 function logAccountMapConfigAtBoot(): void {
