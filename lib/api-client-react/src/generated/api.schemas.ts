@@ -9,53 +9,6 @@ export interface HealthStatus {
   status: string;
 }
 
-export type SignalType = typeof SignalType[keyof typeof SignalType];
-
-
-export const SignalType = {
-  pricing_change: 'pricing_change',
-  product_launch: 'product_launch',
-  funding: 'funding',
-  hiring: 'hiring',
-  partnership: 'partnership',
-  other: 'other',
-} as const;
-
-export type SignalImportance = typeof SignalImportance[keyof typeof SignalImportance];
-
-
-export const SignalImportance = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-} as const;
-
-export interface Signal {
-  id: number;
-  title: string;
-  /** @nullable */
-  description?: string | null;
-  type: SignalType;
-  source: string;
-  importance: SignalImportance;
-  /** @nullable */
-  companyName?: string | null;
-  /** @nullable */
-  companyDomain?: string | null;
-  /** @nullable */
-  icpName?: string | null;
-  /** @nullable */
-  icpId?: number | null;
-  reviewed: boolean;
-  createdAt: string;
-}
-
-export interface DashboardSummary {
-  icpCount: number;
-  unreadSignalCount: number;
-  recentSignals: Signal[];
-}
-
 export interface Icp {
   id: number;
   name: string;
@@ -90,64 +43,6 @@ export interface IcpUpdate {
   goals?: string[];
   channels?: string[];
   notes?: string;
-}
-
-/**
- * Deal size motion — SMB, mid-market, or enterprise
- */
-export type DealSize = typeof DealSize[keyof typeof DealSize];
-
-
-export const DealSize = {
-  smb: 'smb',
-  'mid-market': 'mid-market',
-  enterprise: 'enterprise',
-} as const;
-
-/**
- * Seller profile stored client-side; sent per request for prompt context
- */
-export interface YourCompany {
-  /** Seller company name, e.g. "Optalitix" */
-  companyName: string;
-  /** What we sell, in one sentence */
-  oneLineDescription: string;
-  /** Industry or vertical our customers operate in */
-  industryServed: string;
-  /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
-  geographies: string[];
-  /**
-     * Typical deal size motions the seller sells into — tick all that apply
-     * @minItems 1
-     */
-  dealSize: DealSize[];
-  /** Typical decision-maker job titles */
-  buyerTitles: string[];
-  /** Pain points our product addresses */
-  painPointsSolved: string[];
-  /** Legacy field — mirrors oneLineDescription when present */
-  whatYouSell?: string;
-  /** Legacy field — mirrors industryServed and geographies when present */
-  whoYouSellTo?: string;
-  /** Legacy field — newline-joined painPointsSolved when present */
-  painPoints?: string;
-  /** Optional customer outcomes the AE can cite in outreach */
-  customerOutcomes?: string;
-  /** Patterns that make accounts worth calling now for this seller */
-  whyNowPattern?: string;
-  /** Free-text reasoning rules appended to the system prompt */
-  reasoningOverrides?: string;
-  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
-  sectorPackOverride?: string;
-}
-
-export interface SignalScanInput {
-  yourCompany?: YourCompany;
-}
-
-export interface SignalScanResponse {
-  signals: Signal[];
-  added: number;
 }
 
 /**
@@ -367,6 +262,55 @@ export interface AccountBrief {
   researchPack?: ResearchPackMeta;
 }
 
+/**
+ * Deal size motion — SMB, mid-market, or enterprise
+ */
+export type DealSize = typeof DealSize[keyof typeof DealSize];
+
+
+export const DealSize = {
+  smb: 'smb',
+  'mid-market': 'mid-market',
+  enterprise: 'enterprise',
+} as const;
+
+/**
+ * Seller profile stored client-side; sent per request for prompt context
+ */
+export interface YourCompany {
+  /** Seller company name, e.g. "Optalitix" */
+  companyName: string;
+  /** What we sell, in one sentence */
+  oneLineDescription: string;
+  /** Industry or vertical our customers operate in */
+  industryServed: string;
+  /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
+  geographies: string[];
+  /**
+     * Typical deal size motions the seller sells into — tick all that apply
+     * @minItems 1
+     */
+  dealSize: DealSize[];
+  /** Typical decision-maker job titles */
+  buyerTitles: string[];
+  /** Pain points our product addresses */
+  painPointsSolved: string[];
+  /** Legacy field — mirrors oneLineDescription when present */
+  whatYouSell?: string;
+  /** Legacy field — mirrors industryServed and geographies when present */
+  whoYouSellTo?: string;
+  /** Legacy field — newline-joined painPointsSolved when present */
+  painPoints?: string;
+  /** Optional customer outcomes the AE can cite in outreach */
+  customerOutcomes?: string;
+  /** Patterns that make accounts worth calling now for this seller */
+  whyNowPattern?: string;
+  /** Free-text reasoning rules appended to the system prompt */
+  reasoningOverrides?: string;
+  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
+  sectorPackOverride?: string;
+}
+
 export interface ScanAccountSignalsInput {
   company: string;
   brief?: AccountBrief;
@@ -400,40 +344,6 @@ export interface SignalOpenerInput {
 export interface SignalOpenerResponse {
   opener: string;
   generatedAt: string;
-}
-
-export type SignalUpdateType = typeof SignalUpdateType[keyof typeof SignalUpdateType];
-
-
-export const SignalUpdateType = {
-  pricing_change: 'pricing_change',
-  product_launch: 'product_launch',
-  funding: 'funding',
-  hiring: 'hiring',
-  partnership: 'partnership',
-  other: 'other',
-} as const;
-
-export type SignalUpdateImportance = typeof SignalUpdateImportance[keyof typeof SignalUpdateImportance];
-
-
-export const SignalUpdateImportance = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-} as const;
-
-export interface SignalUpdate {
-  title?: string;
-  description?: string;
-  type?: SignalUpdateType;
-  source?: string;
-  importance?: SignalUpdateImportance;
-  companyName?: string;
-  companyDomain?: string;
-  icpName?: string;
-  icpId?: number;
-  reviewed?: boolean;
 }
 
 export interface LinkedInPost {

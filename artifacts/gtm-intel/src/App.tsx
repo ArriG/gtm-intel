@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Building2, Sparkles, Users, Newspaper, Radio, ChevronRight, ChevronDown, Target, Brain, FolderOpen, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Users, Radio, ChevronRight, ChevronDown, Target, Brain, FolderOpen, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { BriefStatusPill } from "@/components/brief-status-pill";
-import { useHistory, clearHistory } from "@/lib/history";
+import { useHistory, clearHistory, getWatchedBriefs } from "@/lib/history";
+import { countScanDue } from "@/lib/signal-tracking";
 import { useDiscoverEnabled, useIsYourCompanyConfigured } from "@/lib/your-company";
 
 import AccountBriefPage from "./pages/account-brief";
@@ -13,7 +14,6 @@ import YourCompany from "./pages/your-company";
 import ReasoningPage from "./pages/reasoning";
 import ICPs from "./pages/icps";
 import ICPDetail from "./pages/icp-detail";
-import Dashboard from "./pages/dashboard";
 import Signals from "./pages/signals";
 import MarketProspect from "./pages/market-prospect";
 import CallPrepPage from "./pages/call-prep";
@@ -37,7 +37,6 @@ const NAV_DISCOVER = { href: "/discover", label: "Discover", icon: Target } as c
 
 const NAV_WORKSPACE = [
   { href: "/icps", label: "ICPs", icon: Users },
-  { href: "/dashboard", label: "Dashboard", icon: Newspaper },
 ];
 
 function RecentSearches() {
@@ -88,7 +87,19 @@ function NavSectionLabel({ children }: { children: string }) {
   );
 }
 
-function SidebarNavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+function SidebarNavLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  badge,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  active: boolean;
+  badge?: number;
+}) {
   return (
     <Link
       href={href}
@@ -100,7 +111,12 @@ function SidebarNavLink({ href, label, icon: Icon, active }: { href: string; lab
       )}
     >
       <Icon className={cn("w-4 h-4 shrink-0", active ? "text-foreground" : "text-muted-foreground")} />
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="min-w-[1.25rem] rounded-full bg-amber-500/20 px-1.5 py-0.5 text-center text-[10px] font-bold text-amber-900 dark:text-amber-100">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -117,8 +133,10 @@ function LegacyProspectRedirect() {
 
 function Sidebar() {
   const [location] = useLocation();
+  const history = useHistory();
   const discoverEnabled = useDiscoverEnabled();
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
+  const scanDueCount = countScanDue(getWatchedBriefs());
   const researchNav = discoverEnabled
     ? [...NAV_RESEARCH_BASE, NAV_DISCOVER]
     : [...NAV_RESEARCH_BASE];
@@ -145,7 +163,13 @@ function Sidebar() {
         <div className="space-y-0.5">
           {researchNav.map(({ href, label, icon }) => (
             <div key={href}>
-              <SidebarNavLink href={href} label={label} icon={icon} active={isActive(href)} />
+              <SidebarNavLink
+                href={href}
+                label={label}
+                icon={icon}
+                active={isActive(href)}
+                badge={href === "/signals" ? scanDueCount : undefined}
+              />
               {href === "/" && <RecentSearches />}
             </div>
           ))}
@@ -195,7 +219,6 @@ export default function App() {
             <Route path="/reasoning" component={ReasoningPage} />
             <Route path="/icps" component={ICPs} />
             <Route path="/icps/:id" component={ICPDetail} />
-            <Route path="/dashboard" component={Dashboard} />
             <Route path="/signals" component={Signals} />
             <Route component={NotFound} />
           </Switch>

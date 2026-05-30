@@ -1015,29 +1015,6 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary Get dashboard summary
- */
-export const GetDashboardResponse = zod.object({
-  "icpCount": zod.number(),
-  "unreadSignalCount": zod.number(),
-  "recentSignals": zod.array(zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
-  "source": zod.string(),
-  "importance": zod.enum(['high', 'medium', 'low']),
-  "companyName": zod.string().nullish(),
-  "companyDomain": zod.string().nullish(),
-  "icpName": zod.string().nullish(),
-  "icpId": zod.number().nullish(),
-  "reviewed": zod.boolean(),
-  "createdAt": zod.string()
-}))
-})
-
-
-/**
  * @summary List all ICPs
  */
 export const ListIcpsResponseItem = zod.object({
@@ -1128,70 +1105,6 @@ export const UpdateIcpResponse = zod.object({
  */
 export const DeleteIcpParams = zod.object({
   "id": zod.coerce.number()
-})
-
-
-/**
- * @summary List radar signals
- */
-export const ListSignalsResponseItem = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
-  "source": zod.string(),
-  "importance": zod.enum(['high', 'medium', 'low']),
-  "companyName": zod.string().nullish(),
-  "companyDomain": zod.string().nullish(),
-  "icpName": zod.string().nullish(),
-  "icpId": zod.number().nullish(),
-  "reviewed": zod.boolean(),
-  "createdAt": zod.string()
-})
-export const ListSignalsResponse = zod.array(ListSignalsResponseItem)
-
-
-/**
- * @summary Scan the web for ICP-matching buying signals
- */
-
-
-
-export const RunSignalRadarBody = zod.object({
-  "yourCompany": zod.object({
-  "companyName": zod.string().describe('Seller company name, e.g. \"Optalitix\"'),
-  "oneLineDescription": zod.string().describe('What we sell, in one sentence'),
-  "industryServed": zod.string().describe('Industry or vertical our customers operate in'),
-  "geographies": zod.array(zod.string()).describe('Markets we sell into, e.g. [\"UK\"], [\"AU\", \"NZ\"]'),
-  "dealSize": zod.array(zod.enum(['smb', 'mid-market', 'enterprise']).describe('Deal size motion — SMB, mid-market, or enterprise')).min(1).describe('Typical deal size motions the seller sells into — tick all that apply'),
-  "buyerTitles": zod.array(zod.string()).describe('Typical decision-maker job titles'),
-  "painPointsSolved": zod.array(zod.string()).describe('Pain points our product addresses'),
-  "whatYouSell": zod.string().optional().describe('Legacy field — mirrors oneLineDescription when present'),
-  "whoYouSellTo": zod.string().optional().describe('Legacy field — mirrors industryServed and geographies when present'),
-  "painPoints": zod.string().optional().describe('Legacy field — newline-joined painPointsSolved when present'),
-  "customerOutcomes": zod.string().optional().describe('Optional customer outcomes the AE can cite in outreach'),
-  "whyNowPattern": zod.string().optional().describe('Patterns that make accounts worth calling now for this seller'),
-  "reasoningOverrides": zod.string().optional().describe('Free-text reasoning rules appended to the system prompt'),
-  "sectorPackOverride": zod.string().optional().describe('Sector pack id to use instead of auto-detect; omit or empty for automatic matching')
-}).optional().describe('Seller profile stored client-side; sent per request for prompt context')
-})
-
-export const RunSignalRadarResponse = zod.object({
-  "signals": zod.array(zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
-  "source": zod.string(),
-  "importance": zod.enum(['high', 'medium', 'low']),
-  "companyName": zod.string().nullish(),
-  "companyDomain": zod.string().nullish(),
-  "icpName": zod.string().nullish(),
-  "icpId": zod.number().nullish(),
-  "reviewed": zod.boolean(),
-  "createdAt": zod.string()
-})),
-  "added": zod.number()
 })
 
 
@@ -1513,50 +1426,6 @@ export const GenerateSignalOpenerBody = zod.object({
 export const GenerateSignalOpenerResponse = zod.object({
   "opener": zod.string(),
   "generatedAt": zod.string()
-})
-
-
-/**
- * @summary Update signal
- */
-export const UpdateSignalParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateSignalBody = zod.object({
-  "title": zod.string().optional(),
-  "description": zod.string().optional(),
-  "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']).optional(),
-  "source": zod.string().optional(),
-  "importance": zod.enum(['high', 'medium', 'low']).optional(),
-  "companyName": zod.string().optional(),
-  "companyDomain": zod.string().optional(),
-  "icpName": zod.string().optional(),
-  "icpId": zod.number().optional(),
-  "reviewed": zod.boolean().optional()
-})
-
-export const UpdateSignalResponse = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "type": zod.enum(['pricing_change', 'product_launch', 'funding', 'hiring', 'partnership', 'other']),
-  "source": zod.string(),
-  "importance": zod.enum(['high', 'medium', 'low']),
-  "companyName": zod.string().nullish(),
-  "companyDomain": zod.string().nullish(),
-  "icpName": zod.string().nullish(),
-  "icpId": zod.number().nullish(),
-  "reviewed": zod.boolean(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Delete signal
- */
-export const DeleteSignalParams = zod.object({
-  "id": zod.coerce.number()
 })
 
 

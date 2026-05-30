@@ -203,19 +203,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /dashboard:
-    get:
-      operationId: getDashboard
-      tags: [dashboard]
-      summary: Get dashboard summary
-      responses:
-        "200":
-          description: Dashboard summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardSummary"
-
   /icps:
     get:
       operationId: listIcps
@@ -305,41 +292,6 @@ paths:
         "204":
           description: Deleted
 
-  /signals:
-    get:
-      operationId: listSignals
-      tags: [signals]
-      summary: List radar signals
-      responses:
-        "200":
-          description: List of signals
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Signal"
-
-  /signal-radar:
-    post:
-      operationId: runSignalRadar
-      tags: [signals]
-      summary: Scan the web for ICP-matching buying signals
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SignalScanInput"
-      responses:
-        "200":
-          description: Newly discovered signals
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SignalScanResponse"
-        "400":
-          description: No ICPs defined or invalid request
-
   /signals/scan:
     post:
       operationId: scanAccountSignals
@@ -382,44 +334,6 @@ paths:
         "400":
           description: Invalid request
 
-  /signals/{id}:
-    patch:
-      operationId: updateSignal
-      tags: [signals]
-      summary: Update signal
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SignalUpdate"
-      responses:
-        "200":
-          description: Updated signal
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Signal"
-    delete:
-      operationId: deleteSignal
-      tags: [signals]
-      summary: Delete signal
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-
 components:
   schemas:
     HealthStatus:
@@ -429,22 +343,6 @@ components:
           type: string
       required:
         - status
-
-    DashboardSummary:
-      type: object
-      required:
-        - icpCount
-        - unreadSignalCount
-        - recentSignals
-      properties:
-        icpCount:
-          type: integer
-        unreadSignalCount:
-          type: integer
-        recentSignals:
-          type: array
-          items:
-            $ref: "#/components/schemas/Signal"
 
     Icp:
       type: object
@@ -549,63 +447,6 @@ components:
             type: string
         notes:
           type: string
-
-    Signal:
-      type: object
-      required:
-        - id
-        - title
-        - type
-        - source
-        - importance
-        - reviewed
-        - createdAt
-      properties:
-        id:
-          type: integer
-        title:
-          type: string
-        description:
-          type: ["string", "null"]
-        type:
-          type: string
-          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
-        source:
-          type: string
-        importance:
-          type: string
-          enum: [high, medium, low]
-        companyName:
-          type: ["string", "null"]
-        companyDomain:
-          type: ["string", "null"]
-        icpName:
-          type: ["string", "null"]
-        icpId:
-          type: ["integer", "null"]
-        reviewed:
-          type: boolean
-        createdAt:
-          type: string
-
-    SignalScanInput:
-      type: object
-      properties:
-        yourCompany:
-          $ref: "#/components/schemas/YourCompany"
-
-    SignalScanResponse:
-      type: object
-      required:
-        - signals
-        - added
-      properties:
-        signals:
-          type: array
-          items:
-            $ref: "#/components/schemas/Signal"
-        added:
-          type: integer
 
     AccountSignalType:
       type: string
@@ -717,32 +558,6 @@ components:
           type: string
         generatedAt:
           type: string
-
-    SignalUpdate:
-      type: object
-      properties:
-        title:
-          type: string
-        description:
-          type: string
-        type:
-          type: string
-          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
-        source:
-          type: string
-        importance:
-          type: string
-          enum: [high, medium, low]
-        companyName:
-          type: string
-        companyDomain:
-          type: string
-        icpName:
-          type: string
-        icpId:
-          type: integer
-        reviewed:
-          type: boolean
 
     BriefSourceType:
       type: string
