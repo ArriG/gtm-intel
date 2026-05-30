@@ -12,15 +12,7 @@ Return ONLY valid JSON with this exact shape:
     "size": "e.g. 50,000+ employees globally",
     "industry": "e.g. Insurance",
     "location": "e.g. Zurich, Switzerland (global operations)",
-    "fundingStage": "Public (SIX: ZURN) or Private — factual only",
-    "techStack": "Optional — only if verified from public sources",
-    "possiblePainPoints": ["Factual operational themes from filings or press — not sales advice"],
-    "sources": [{ "type": "web", "label": "Source name", "detail": "What was found", "url": "https://...", "confidence": "verified" }]
-  },
-  "groupBackground": {
-    "confidence": "high | medium | low | assumed",
-    "bullets": ["3-4 factual bullets on group-level pressures, priorities, and recent context"],
-    "sources": [{ "type": "web", "label": "...", "detail": "...", "url": "https://...", "confidence": "verified" }]
+    "fundingStage": "Public (SIX: ZURN) or Private — factual only"
   },
   "outreachSources": [
     {
@@ -70,7 +62,7 @@ MAPPING RULES:
 - Prefer ROLE DIVERSITY over seniority duplicates: 1 executive lead (CEO/MD), 1 operations/risk role (COO/CRO/CUO), 1 technical/actuarial role (Chief Actuary/CTO/CIO). Don't return three near-duplicate senior managers.
 - Use local title aliases when verifying: Chief Actuary = Responsible Actuary (CH FINMA), Verantwortlicher Aktuar (DE BaFin), Appointed Actuary (IE), SMF20 (UK SMCR). CRO = SMF4 (UK). Search regulator filings, not just press releases.
 - Populate leadershipNote when buyers is empty or has fewer than 2 named executives — explain WHAT you searched and WHERE the user should look next (e.g. "Searched SFCR and BaFin Vorstand register — only Group CEO disclosed publicly; UK Chief Actuary likely listed in SMF20 register.").
-- companySnapshot and groupBackground must be factual group-level intelligence — NO call decision, NO opener, NO ICP score, NO discovery questions.
+- companySnapshot is a lean factual header only — NO call decision, NO opener, NO ICP score, NO discovery questions. Deeper context belongs in Brief mode.
 - fitTier is factual alignment (geography, industry, business line, buyer match) — NOT a sales heat score.
 - For non-European regions, note reduced regulator depth in entity sources[] and limitations.
 - Set isSingleEntity=true if the target is not a federated multi-entity enterprise.

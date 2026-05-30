@@ -42,7 +42,7 @@ export function MapCompanySnapshotCard({ snapshot }: { snapshot: MapCompanySnaps
             </div>
           )}
         </div>
-        <MapSourceChips sources={snapshot.sources} sectionId="map-snapshot" />
+        <MapSourceChips sources={snapshot.sources ?? []} sectionId="map-snapshot" />
       </BriefCardContent>
     </BriefCard>
   );

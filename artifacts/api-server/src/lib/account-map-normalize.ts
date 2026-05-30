@@ -22,8 +22,6 @@ const BUYING_AUTONOMY = new Set(["independent", "group_gated", "mixed", "unknown
 const FIT_TIERS = new Set(["strong", "moderate", "skip"]);
 const FIT_RANK: Record<string, number> = { strong: 0, moderate: 1, skip: 2 };
 const SOURCE_CONFIDENCE = new Set(["verified", "informed", "assumed"]);
-const BACKGROUND_CONFIDENCE = new Set(["high", "medium", "low", "assumed"]);
-
 const MAX_PER_REGION = 8;
 const MAX_TOTAL = 20;
 const MAX_BUYERS = 3;
@@ -135,26 +133,6 @@ function normaliseCompanySnapshot(raw: unknown, parent: Record<string, unknown>)
     fundingStage: cleanString(existing?.fundingStage) || "Unknown",
     ...(cleanString(existing?.techStack) ? { techStack: cleanString(existing?.techStack) } : {}),
     possiblePainPoints: pains,
-    sources: normaliseBriefSources(existing?.sources),
-  };
-}
-
-function normaliseGroupBackground(raw: unknown, parent: Record<string, unknown>) {
-  const existing = asRecord(raw);
-  const bullets = Array.isArray(existing?.bullets)
-    ? existing!.bullets!.map(item => cleanString(item)).filter(Boolean)
-    : [];
-
-  const confidence = cleanString(existing?.confidence);
-  const description = cleanString(parent.description);
-
-  return {
-    confidence: BACKGROUND_CONFIDENCE.has(confidence) ? confidence : "assumed",
-    bullets: bullets.length > 0
-      ? bullets
-      : description
-        ? [description]
-        : ["Limited group-level context available from this mapping pass."],
     sources: normaliseBriefSources(existing?.sources),
   };
 }
@@ -303,7 +281,6 @@ export function normalizeAccountMap(
     limitations,
     isSingleEntity: raw.isSingleEntity === true,
     companySnapshot: normaliseCompanySnapshot(raw.companySnapshot, parent),
-    groupBackground: normaliseGroupBackground(raw.groupBackground, parent),
     outreachSources: normaliseOutreachSources(raw.outreachSources),
     generatedAt,
     sectorPackUsed,

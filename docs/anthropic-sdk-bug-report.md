@@ -2,7 +2,24 @@
 
 Where to file: https://github.com/anthropics/anthropic-sdk-typescript/issues
 
-**Environment:** `@anthropic-ai/sdk@^0.96.0` · Node 26 · Express 5 · model `claude-haiku-4-5-20251001` · `web_search_20250305` tool.
+**Environment:** `@anthropic-ai/sdk@^0.96.0` · Node 26 · Express 5 · models `claude-haiku-4-5-20251001` and `claude-sonnet-4-6` · `web_search_20250305` tool.
+
+---
+
+## Incident log
+
+| Date | Model | Scope | Symptom | Duration | Billed | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| (initial) | `claude-haiku-4-5-20251001` | mapping | uncapped `web_search`, signal in body ignored | 3+ min hang | ~$7.00 | nothing returned |
+| (post Issue 1 fix) | `claude-haiku-4-5-20251001` | mapping | call hits timeout, server-side search keeps billing | timeout | ~$0.60 | nothing returned |
+| 2026-05-29 | `claude-sonnet-4-6` | EMEA map | single search timed out, no JSON returned | ~3 min (client 195s abort) | **~$1.90** | nothing returned |
+
+The 2026-05-29 incident is a direct recurrence of **Issue 2**: a timed-out
+`web_search` request still bills for partial work and returns nothing — but on
+Sonnet the wasted spend is ~3× the Haiku figure (**~$1.90 vs ~$0.60**) because
+Sonnet runs slower and consumes more tokens/searches before the deadline. Switching
+the mapping default to Sonnet for quality made the pay-for-nothing failure mode
+materially more expensive per occurrence.
 
 ---
 
@@ -38,11 +55,14 @@ After fixing Issue 1 (timeout moved into RequestOptions, `maxRetries: 0`, `max_u
 cap on `web_search`), the runaway is gone — but a request that hits the timeout now:
 
 - returns **no usable result** (the call rejects with a timeout/abort error), **and**
-- **still bills ~$0.60** for the searches + tokens consumed before the abort.
+- **still bills for the searches + tokens consumed before the abort** — observed
+  **~$0.60 on Haiku** and **~$1.90 on Sonnet** (2026-05-29, single EMEA search).
 
 This suggests the client-side abort/timeout closes the HTTP connection but does **not
 cancel Anthropic's server-side `web_search` execution** — so the user pays for work
-they never receive. For interactive apps this is the worst case: pay-for-nothing.
+they never receive. For interactive apps this is the worst case: pay-for-nothing, and
+the cost scales with the model (a slower/pricier model bills *more* for the same
+failed-and-discarded request).
 
 **Expected / requests:**
 - Server-side `web_search` work should stop when the client aborts the connection, or
@@ -73,7 +93,9 @@ omitted would prevent surprise bills.
 | Friendly mapping of SDK timeout/abort errors to a user message | Clean "Request timed out — please try again" UX |
 
 **Net result:** catastrophic cost ($7/search, 3-min hangs) eliminated. Remaining gap:
-a timed-out `web_search` call still costs ~$0.60 and returns nothing (Issue 2). The
-practical mitigation is to size the timeout so the call actually *completes* (return a
-partial-but-real result) rather than timing out, and/or lower `max_uses` so the run
-finishes inside the window.
+a timed-out `web_search` call still costs money and returns nothing (Issue 2) —
+**~$0.60 on Haiku, ~$1.90 on Sonnet**. The practical mitigation is to size the timeout
+so the call actually *completes* (return a partial-but-real result) rather than timing
+out, and/or lower `max_uses` so the run finishes inside the window. On Sonnet this is
+especially important: the same timed-out request bills ~3× more, so either Pass 1 must
+reliably finish inside the budget or mapping should stay on Haiku for structure.

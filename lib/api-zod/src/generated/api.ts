@@ -720,18 +720,7 @@ export const GenerateAccountMapResponse = zod.object({
   "detail": zod.string(),
   "url": zod.string().optional(),
   "confidence": zod.enum(['verified', 'informed', 'assumed'])
-}))
-}),
-  "groupBackground": zod.object({
-  "confidence": zod.enum(['high', 'medium', 'low', 'assumed']).optional(),
-  "bullets": zod.array(zod.string()),
-  "sources": zod.array(zod.object({
-  "type": zod.enum(['web', 'linkedin', 'asic', 'abn', 'seek_job', 'crunchbase', 'industry_press', 'builtwith', 'g2', 'asx_filing', 'mfaa', 'own_intel', 'assumed']),
-  "label": zod.string(),
-  "detail": zod.string(),
-  "url": zod.string().optional(),
-  "confidence": zod.enum(['verified', 'informed', 'assumed'])
-}))
+})).optional()
 }),
   "outreachSources": zod.array(zod.object({
   "label": zod.string(),

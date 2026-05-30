@@ -14,5 +14,5 @@ export interface MapCompanySnapshot {
   fundingStage: string;
   techStack?: string;
   possiblePainPoints?: string[];
-  sources: BriefSource[];
+  sources?: BriefSource[];
 }

@@ -679,23 +679,7 @@ export interface MapCompanySnapshot {
   fundingStage: string;
   techStack?: string;
   possiblePainPoints?: string[];
-  sources: BriefSource[];
-}
-
-export type MapGroupBackgroundConfidence = typeof MapGroupBackgroundConfidence[keyof typeof MapGroupBackgroundConfidence];
-
-
-export const MapGroupBackgroundConfidence = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-  assumed: 'assumed',
-} as const;
-
-export interface MapGroupBackground {
-  confidence?: MapGroupBackgroundConfidence;
-  bullets: string[];
-  sources: BriefSource[];
+  sources?: BriefSource[];
 }
 
 export interface MapOutreachSource {
@@ -714,7 +698,6 @@ export interface AccountMapResponse {
   generatedAt: string;
   sectorPackUsed: string;
   companySnapshot: MapCompanySnapshot;
-  groupBackground: MapGroupBackground;
   outreachSources: MapOutreachSource[];
 }
 

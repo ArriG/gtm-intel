@@ -1294,7 +1294,6 @@ components:
         - generatedAt
         - sectorPackUsed
         - companySnapshot
-        - groupBackground
         - outreachSources
       properties:
         parent:
@@ -1317,8 +1316,6 @@ components:
           type: string
         companySnapshot:
           $ref: "#/components/schemas/MapCompanySnapshot"
-        groupBackground:
-          $ref: "#/components/schemas/MapGroupBackground"
         outreachSources:
           type: array
           items:
@@ -1331,7 +1328,6 @@ components:
         - industry
         - location
         - fundingStage
-        - sources
       properties:
         size:
           type: string
@@ -1344,24 +1340,6 @@ components:
         techStack:
           type: string
         possiblePainPoints:
-          type: array
-          items:
-            type: string
-        sources:
-          type: array
-          items:
-            $ref: "#/components/schemas/BriefSource"
-
-    MapGroupBackground:
-      type: object
-      required:
-        - bullets
-        - sources
-      properties:
-        confidence:
-          type: string
-          enum: [high, medium, low, assumed]
-        bullets:
           type: array
           items:
             type: string

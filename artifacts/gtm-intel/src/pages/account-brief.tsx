@@ -1134,8 +1134,8 @@ export default function AccountBriefPage() {
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
 
     const controller = new AbortController();
-    // Slightly above server MAPPING_TIMEOUT_MS (185s) so the API error surfaces before client abort.
-    const clientTimeout = setTimeout(() => controller.abort(), 195_000);
+    // Slightly above server MAPPING_TIMEOUT_MS (215s) so the API error surfaces before client abort.
+    const clientTimeout = setTimeout(() => controller.abort(), 225_000);
 
     try {
       const result = await generateAccountMap(

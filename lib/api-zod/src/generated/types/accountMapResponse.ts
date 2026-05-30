@@ -8,7 +8,6 @@
 import type { AccountMapParent } from './accountMapParent';
 import type { MapCompanySnapshot } from './mapCompanySnapshot';
 import type { MapEntity } from './mapEntity';
-import type { MapGroupBackground } from './mapGroupBackground';
 import type { MapOutreachSource } from './mapOutreachSource';
 
 export interface AccountMapResponse {
@@ -20,6 +19,5 @@ export interface AccountMapResponse {
   generatedAt: string;
   sectorPackUsed: string;
   companySnapshot: MapCompanySnapshot;
-  groupBackground: MapGroupBackground;
   outreachSources: MapOutreachSource[];
 }

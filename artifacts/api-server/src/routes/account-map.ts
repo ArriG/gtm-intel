@@ -85,15 +85,15 @@ function regionScopeInstruction(region: MapRegion): string {
   ].join("\n");
 }
 /** Hard cap for the whole request — must stay under client abort (see account-brief.tsx). */
-const MAPPING_TIMEOUT_MS = 185_000;
+const MAPPING_TIMEOUT_MS = 215_000;
 const PASS_1_TIMEOUT_MS = 120_000;
-const PASS_2_TIMEOUT_MS = 60_000;
+const PASS_2_TIMEOUT_MS = 90_000;
 /** Need at least this much left on the clock before starting pass 2. */
 const PASS_2_MIN_REMAINING_MS = 15_000;
 const PASS_1_MAX_TOKENS = 8000;
 const PASS_2_MAX_TOKENS = 4000;
 /** Hard server-side cap on web searches per pass — fewer searches = faster finish inside timeout. */
-const PASS_1_MAX_SEARCHES = 4;
+const PASS_1_MAX_SEARCHES = 3;
 /** Pass 2: ~1 focused search per enriched entity, clamped to keep cost tight. */
 const PASS_2_MIN_SEARCHES = 3;
 const PASS_2_MAX_SEARCHES = 5;
@@ -193,7 +193,7 @@ function composePeoplePrompt(yourCompany: YourCompanyInput, maxSearches: number)
     buildYourCompanyContext(yourCompany),
     "",
     "PASS 2 — LEADERSHIP ONLY: Find named, sourced executives per entity. Never invent names.",
-    `SPEED INSTRUCTION: Complete within 50 seconds using at most ${maxSearches} web searches — roughly one focused search per entity in this batch.`,
+    `SPEED INSTRUCTION: Complete within 80 seconds using at most ${maxSearches} web searches — roughly one focused search per entity in this batch.`,
     ACCOUNT_MAP_PEOPLE_FORMAT,
   ].filter(Boolean).join("\n\n");
 }

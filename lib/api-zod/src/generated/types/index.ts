@@ -50,8 +50,6 @@ export * from './linkedInPost';
 export * from './manualResearchTip';
 export * from './mapCompanySnapshot';
 export * from './mapEntity';
-export * from './mapGroupBackground';
-export * from './mapGroupBackgroundConfidence';
 export * from './mapOutreachSource';
 export * from './mapRegion';
 export * from './marketProspectInput';
