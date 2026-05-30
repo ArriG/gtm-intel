@@ -17,7 +17,6 @@ import {
   type EmailTone,
   type YourCompanyInput,
 } from "../lib/brief-ai";
-import { handleSignalRadar } from "../lib/signal-radar-handler";
 import { composeAccountBriefPrompt } from "../prompts/compose-system-prompt";
 import { normalizeAccountBriefWithMeta, normalizeColdEmailOnly } from "../lib/brief-normalize";
 
@@ -295,7 +294,5 @@ ${buildPrepMeetingInstruction(type)}`;
     res.status(500).json({ error: message });
   }
 });
-
-router.post("/account-brief/signal-radar", handleSignalRadar);
 
 export default router;

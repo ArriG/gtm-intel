@@ -5,8 +5,6 @@ import {
   callClaudeJsonWithSearch,
   type YourCompanyInput,
 } from "../lib/brief-ai";
-import { handleSignalRadar } from "../lib/signal-radar-handler";
-
 const router: IRouter = Router();
 
 const client = new Anthropic({
@@ -14,16 +12,10 @@ const client = new Anthropic({
 });
 
 router.post("/market-prospect", async (req, res): Promise<void> => {
-  const { description, yourCompany, mode } = req.body as {
+  const { description, yourCompany } = req.body as {
     description?: string;
     yourCompany?: YourCompanyInput;
-    mode?: string;
   };
-
-  if (mode === "signal-radar") {
-    await handleSignalRadar(req, res);
-    return;
-  }
 
   if (!description || typeof description !== "string" || !description.trim()) {
     res.status(400).json({ error: "description is required" });

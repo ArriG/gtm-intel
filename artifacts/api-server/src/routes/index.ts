@@ -8,7 +8,6 @@ import nextTouchRouter from "./next-touch";
 import accountMapRouter from "./account-map";
 import accountSignalsRouter from "./account-signals";
 import marketProspectRouter from "./market-prospect";
-import signalRadarRouter from "./signal-radar";
 import yourCompanyRouter from "./your-company";
 
 const router: IRouter = Router();
@@ -17,7 +16,6 @@ router.use(healthRouter);
 router.use(dashboardRouter);
 router.use(icpsRouter);
 router.use(signalsRouter);
-router.use(signalRadarRouter);
 router.use(yourCompanyRouter);
 router.use(accountBriefRouter);
 router.use(accountMapRouter);
