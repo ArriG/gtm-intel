@@ -11,6 +11,7 @@ import {
   mergeLeadershipOntoStructure,
   selectEntitiesForLeadership,
 } from "../lib/account-map-merge";
+import { applyRegionScopeToRaw, type MapRequestRegion } from "../lib/account-map-scope";
 import { normalizeAccountMap } from "../lib/account-map-normalize";
 import { ACCOUNT_MAP_PEOPLE_FORMAT } from "../prompts/account-map-people-format";
 import { ACCOUNT_MAP_STRUCTURE_FORMAT } from "../prompts/account-map-structure-format";
@@ -188,9 +189,9 @@ function regionScopeInstruction(region: MapRegion): string {
   ].join("\n");
 }
 /** Hard cap for the whole request — must stay under client abort (see account-brief.tsx). */
-const MAPPING_TIMEOUT_MS = envInt("MAPPING_TIMEOUT_MS", 215_000);
+const MAPPING_TIMEOUT_MS = envInt("MAPPING_TIMEOUT_MS", 225_000);
 const PASS_1_TIMEOUT_MS = envInt("PASS_1_TIMEOUT_MS", 120_000);
-const PASS_2_TIMEOUT_MS = envInt("PASS_2_TIMEOUT_MS", 90_000);
+const PASS_2_TIMEOUT_MS = envInt("PASS_2_TIMEOUT_MS", 105_000);
 /** Need at least this much left on the clock before starting pass 2. */
 const PASS_2_MIN_REMAINING_MS = envInt("PASS_2_MIN_REMAINING_MS", 15_000);
 const PASS_1_MAX_TOKENS = 8000;
@@ -199,8 +200,8 @@ const PASS_2_MAX_TOKENS = 4000;
 const PASS_1_MAX_SEARCHES = envInt("PASS_1_MAX_SEARCHES", 3);
 /** Pass 2: ~1 focused search per enriched entity, clamped to keep cost tight. */
 const PASS_2_MIN_SEARCHES = envInt("PASS_2_MIN_SEARCHES", 3);
-const PASS_2_MAX_SEARCHES = envInt("PASS_2_MAX_SEARCHES", 5);
-const LEADERSHIP_ENRICH_CAP = envInt("LEADERSHIP_ENRICH_CAP", 5);
+const PASS_2_MAX_SEARCHES = envInt("PASS_2_MAX_SEARCHES", 8);
+const LEADERSHIP_ENRICH_CAP = envInt("LEADERSHIP_ENRICH_CAP", 8);
 /**
  * When MAP_DOMAIN_FILTER=1, Pass 2 web_search uses per-region allowed_domains
  * (regulator + anchor sites). Default off — A/B against baseline first.
@@ -354,13 +355,18 @@ function structurePackExcerpt(packBody: string): string {
   return packBody.trim();
 }
 
-const PASS_1_SEARCH_RULES = [
-  "PASS 1 SEARCH RULES (strict — Pass 2 handles leadership and regulator deep-dives):",
-  "- Use broad queries only: group annual report subsidiary list, investor relations segment page, Wikipedia/group about page.",
-  "- Do NOT open or fetch PDF filings, SFCR documents, FINMA/BaFin register exports, or multi-page regulator detail pages in this pass.",
-  "- Do NOT run web searches solely to fill outreachSources[] or companySnapshot — use known facts and URLs from searches you already ran.",
-  "- Stop searching as soon as you have enough real entity names for the scoped region; return JSON immediately.",
-].join("\n");
+function pass1SearchRules(region: MapRegion): string {
+  const scope = REGION_SCOPES[region];
+  return [
+    "PASS 1 SEARCH RULES (strict — Pass 2 handles leadership and regulator deep-dives):",
+    `- Spend every web search on ${scope.label} only — regulators and filings listed in REGION SCOPE (not US/APAC/LATAM structure unless that is the selected scope).`,
+    "- Use broad in-scope queries only: regional annual report subsidiary list, in-scope investor relations, in-scope regulator group pages.",
+    "- Do NOT open or fetch PDF filings, SFCR documents, or regulator register exports in this pass — Pass 2 only.",
+    "- Do NOT run web searches solely to fill outreachSources[] or companySnapshot — use known facts and URLs from searches you already ran.",
+    "- Do NOT search for out-of-scope regions; list those entity names only in unmappedEntities[] without searching.",
+    "- Stop searching as soon as you have solid in-scope entity coverage; return JSON immediately.",
+  ].join("\n");
+}
 
 function composeStructurePrompt(
   yourCompany: YourCompanyInput,
@@ -387,7 +393,7 @@ When mapping a global enterprise, follow the European Financial Services sector 
     "",
     regionScopeInstruction(region),
     "PASS 1 — STRUCTURE ONLY: Do not search for named executives. Return buyers: [] on every entity.",
-    PASS_1_SEARCH_RULES,
+    pass1SearchRules(region),
     `SPEED INSTRUCTION: Complete this structure pass within 90 seconds using at most ${PASS_1_MAX_SEARCHES} web searches. Prioritise subsidiary discovery — stop searching once you have solid entity coverage and return JSON.`,
     ACCOUNT_MAP_STRUCTURE_FORMAT,
   ].filter(Boolean).join("\n\n");
@@ -649,7 +655,15 @@ Return ONLY the JSON object — no other text.`,
       );
     }
 
-    const normalized = normalizeAccountMap(merged, generatedAt, composed.sectorPackUsed);
+    const toNormalize = { ...merged };
+    const demotedOutOfScope = applyRegionScopeToRaw(toNormalize, region as MapRequestRegion);
+    if (demotedOutOfScope > 0) {
+      req.log.info(
+        { company: companyName, region, demotedOutOfScope },
+        "Demoted out-of-scope entities to unmappedEntities",
+      );
+    }
+    const normalized = normalizeAccountMap(toNormalize, generatedAt, composed.sectorPackUsed);
     const entityCount = Array.isArray(normalized.entities) ? normalized.entities.length : 0;
     const sourcedLeaderCount = countSourcedLeaders(normalized.entities);
     const totalElapsedMs = Date.now() - requestStartedAt;

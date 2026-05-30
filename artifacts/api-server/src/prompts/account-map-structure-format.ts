@@ -43,12 +43,12 @@ Return ONLY valid JSON with this exact shape:
 }
 
 PASS 1 RULES:
-- Map the company GLOBALLY into the fixed region buckets above.
+- REGION SCOPE IS MANDATORY: entities[] must contain ONLY full-depth operating entities for the scoped region in the user message. Every other-region entity is NAME ONLY in unmappedEntities[] — no country, context, fitTier, or sources for out-of-scope entities.
+- Do NOT run web searches to discover or detail out-of-scope regions — spend all searches on in-scope subsidiaries and regulators only.
 - Identify only real, publicly verifiable operating entities — NOT named executives.
 - Every entity MUST have "buyers": [] (empty array). Leadership is filled in a separate pass.
-- Up to 8 entities per region, maximum 20 entities total in entities[].
-- If more entities exist, list ALL omitted names in unmappedEntities[].
-- REGION SCOPE: When a region scope is set, entities[] must contain ONLY full-depth entities for that region; list every other-region entity by NAME ONLY in unmappedEntities[] (no detail, no leaders).
+- Up to 8 entities per in-scope region bucket, maximum 20 entities total in entities[] (all in-scope).
+- If more in-scope entities exist than the cap, list omitted in-scope names in unmappedEntities[] too.
 - Populate outreachSources[] with 2-4 public sources worth checking next (annual reports, regulator registers, IR pages, trade press) — use URLs you already found or well-known public pages; do NOT run extra web searches just for outreachSources.
 - Prefer strong fit entities, then moderate, then skip when selecting which to include.
 - companySnapshot is a lean factual header only (size, industry, location, fundingStage) — fill from known facts; do NOT spend web searches on snapshot fields. Deeper company context belongs in Brief mode, not Mapping.

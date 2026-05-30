@@ -189,15 +189,15 @@ Full walkthrough of recent changes (two-pass design, timeouts, lean Pass 1): [`d
 | 1 | Structure only (`buyers: []`) — lean snapshot, no `groupBackground` | 120s | 3 |
 | 2 | Leadership (`buyers`, `leadershipNote`) | 90s | ~1 per enriched entity (3–5, dynamic) |
 
-Whole-request budget: 215s server; client abort 225s. Pass 2 skipped if &lt;15s remains after Pass 1.
+Whole-request budget: 225s server; client abort 235s. Pass 2 skipped if &lt;15s remains after Pass 1.
 
 **Pass 1 scope:** Lean `companySnapshot` (size/industry/location/fundingStage only — no dedicated searches for snapshot). `groupBackground` removed from mapping — deeper company context belongs in Brief mode. Up to 20 entities (8/region) plus `outreachSources[]` pointing to where unmapped entities live. Pass 1 must **not** open PDF filings, SFCR documents, or regulator register exports — those are Pass 2 only (`PASS_1_SEARCH_RULES` + `structurePackExcerpt()` in `account-map.ts`). Per-pass timing logs: `[account-map] Pass 1 (structure) complete in …ms` in server Console.
 
-**Replit deploy check:** After `git pull`, restart the server. Set `MAPPING_MODEL=claude-haiku-4-5-20251001` for Haiku testing. Console must show `[account-map] runtime config` with `pass1.maxSearches: 3`, `leadershipEnrichCap: 5`, `pass2.timeoutMs: 90000`, and `pass2.searchesPerEntity: true` with `pass2.maxSearches: 5`.
+**Replit deploy check:** After `git pull`, restart the server. Set `MAPPING_MODEL=claude-haiku-4-5-20251001` for Haiku testing. Console must show `[account-map] runtime config` with `pass1.maxSearches: 3`, `leadershipEnrichCap: 8`, `pass2.timeoutMs: 105000`, and `pass2.searchesPerEntity: true` with `pass2.maxSearches: 8`.
 
 **Smoke test:** `MAP_STRUCTURE_ONLY=1` skips Pass 2 (structure-only, cheapest run).
 
-**Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are listed **name-only** in `unmappedEntities[]`. Pass 1 (3 searches) prioritises entity discovery in the scoped region; Pass 2 spends ~1 search each on the top 5 fit-tier entities (3–5 searches total). `REGION_SCOPES` in `account-map.ts` injects region-specific regulator source hints.
+**Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are **name-only** in `unmappedEntities[]`. **Enforced in code** via [`account-map-scope.ts`](../artifacts/api-server/src/lib/account-map-scope.ts) before normalize (demotes out-of-scope `entities[]` rows). Pass 1 prompts avoid global structure searches; Pass 2 defaults to **8** leadership targets (`LEADERSHIP_ENRICH_CAP`). Whole-request budget **225s** server / **235s** client abort. UI: **Map another region** for separate NA/APAC/LATAM runs. `REGION_SCOPES` in `account-map.ts` injects regulator hints and `user_location`.
 
 Cost safeguards: `maxRetries: 0`, SDK `timeout` in RequestOptions (2nd arg), not in body. Timed-out `web_search` still bills for partial work (Issue 2 in `docs/anthropic-sdk-bug-report.md`) — longer Pass 2 timeout only pays off if it converts into returned stakeholders.
 

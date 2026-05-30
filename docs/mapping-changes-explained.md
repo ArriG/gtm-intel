@@ -87,7 +87,7 @@ flowchart TB
     A --> D
 ```
 
-You pick **EMEA / APAC / North America / LATAM** in the UI. The prompt in `account-map.ts` (`REGION_SCOPES`) injects region-specific regulator hints (FINMA for CH, FCA for UK, etc.).
+You pick **EMEA / APAC / North America / LATAM** in the UI. The prompt in `account-map.ts` (`REGION_SCOPES`) injects region-specific regulator hints (FINMA for CH, FCA for UK, etc.). **Server enforcement** in `account-map-scope.ts` moves any out-of-scope full entity cards into `unmappedEntities[]` so Pass 2 search spend stays in-region. Use **Map another region** after a map to run NA/APAC/LATAM without one global run.
 
 ---
 
@@ -137,7 +137,7 @@ gantt
 
 | Layer | Constant | Value | File |
 |-------|----------|-------|------|
-| Whole request | `MAPPING_TIMEOUT_MS` | 215s | `artifacts/api-server/src/routes/account-map.ts` |
+| Whole request | `MAPPING_TIMEOUT_MS` | 225s | `artifacts/api-server/src/routes/account-map.ts` |
 | Pass 1 | `PASS_1_TIMEOUT_MS` / `PASS_1_MAX_SEARCHES` | 120s / 3 searches | same |
 | Pass 2 | `PASS_2_TIMEOUT_MS` / searches | 90s / 3–5 searches | same |
 | Client abort | `clientTimeout` | 225s | `artifacts/gtm-intel/src/pages/account-brief.tsx` |

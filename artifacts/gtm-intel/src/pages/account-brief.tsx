@@ -1134,8 +1134,8 @@ export default function AccountBriefPage() {
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
 
     const controller = new AbortController();
-    // Slightly above server MAPPING_TIMEOUT_MS (215s) so the API error surfaces before client abort.
-    const clientTimeout = setTimeout(() => controller.abort(), 225_000);
+    // Slightly above server MAPPING_TIMEOUT_MS (225s) so the API error surfaces before client abort.
+    const clientTimeout = setTimeout(() => controller.abort(), 235_000);
 
     try {
       const result = await generateAccountMap(
@@ -1365,7 +1365,19 @@ export default function AccountBriefPage() {
         {mapLoading && !accountMap && searchMode === "mapping" && <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
 
         {accountMap && searchMode === "mapping" && (
-          <AccountMapResult map={accountMap} onSwitchToBrief={() => { void switchToBriefAndSearch(); }} />
+          <AccountMapResult
+            map={accountMap}
+            companyLabel={lastLabel}
+            currentRegion={mapRegion}
+            onSwitchToBrief={() => { void switchToBriefAndSearch(); }}
+            onMapAnotherRegion={nextRegion => {
+              setMapRegion(nextRegion);
+              setAccountMap(null);
+              setError(null);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              void handleMapSearch(lastLabel);
+            }}
+          />
         )}
 
         {brief && searchMode === "brief" && (() => {
