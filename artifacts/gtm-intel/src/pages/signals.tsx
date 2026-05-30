@@ -17,6 +17,7 @@ import {
   countSignalsThisWeek,
   countWatchedAccounts,
   formatRelativeScanTime,
+  isScanDue,
   sortWatchedBriefs,
 } from "@/lib/signal-tracking";
 import { loadYourCompany, yourCompanyForRequest } from "@/lib/your-company";
@@ -91,7 +92,8 @@ export default function SignalsPage() {
             Signals
           </h1>
           <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            Watch accounts you have briefed and scan for fresh buying signals to re-open conversations with context.
+            The internet, watched for you. AI scans your accounts for the buying signals you don&apos;t
+            have the time to chase — then shows you the source so you can decide.
           </p>
         </div>
       </div>
@@ -136,8 +138,13 @@ export default function SignalsPage() {
                         <Link href={`/?h=${entry.id}`} className="text-lg font-semibold hover:text-primary transition-colors">
                           {entry.label}
                         </Link>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Last scanned: {formatRelativeScanTime(entry.lastScannedAt)}
+                        <p className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+                          <span>Last scanned: {formatRelativeScanTime(entry.lastScannedAt)}</span>
+                          {isScanDue(entry.lastScannedAt) && (
+                            <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-200">
+                              Due to scan
+                            </span>
+                          )}
                         </p>
                       </div>
                       <Button
