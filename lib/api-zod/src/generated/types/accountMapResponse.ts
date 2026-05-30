@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AccountMapParent } from './accountMapParent';
+import type { AccountMapResponseMeta } from './accountMapResponseMeta';
 import type { MapCompanySnapshot } from './mapCompanySnapshot';
 import type { MapEntity } from './mapEntity';
 import type { MapOutreachSource } from './mapOutreachSource';
@@ -20,4 +21,5 @@ export interface AccountMapResponse {
   sectorPackUsed: string;
   companySnapshot: MapCompanySnapshot;
   outreachSources: MapOutreachSource[];
+  meta?: AccountMapResponseMeta;
 }

@@ -727,7 +727,29 @@ export const GenerateAccountMapResponse = zod.object({
   "detail": zod.string(),
   "url": zod.string().optional(),
   "relatedEntity": zod.string().optional()
-}))
+})),
+  "meta": zod.object({
+  "region": zod.enum(['emea', 'apac', 'north_america', 'latam']),
+  "totalElapsedMs": zod.number(),
+  "entityCount": zod.number(),
+  "sourcedLeaderCount": zod.number().describe('Buyers with a non-empty sourceUrl across all entities.'),
+  "pass2Status": zod.enum(['structure_only', 'skipped_insufficient_time', 'completed', 'failed', 'not_needed']),
+  "pass1": zod.object({
+  "model": zod.string(),
+  "maxSearches": zod.number(),
+  "searchesUsed": zod.number(),
+  "elapsedMs": zod.number(),
+  "allowedDomains": zod.boolean().optional().describe('True when Pass 2 used MAP_DOMAIN_FILTER allowed_domains.')
+}),
+  "pass2": zod.object({
+  "model": zod.string(),
+  "maxSearches": zod.number(),
+  "searchesUsed": zod.number(),
+  "elapsedMs": zod.number(),
+  "allowedDomains": zod.boolean().optional().describe('True when Pass 2 used MAP_DOMAIN_FILTER allowed_domains.')
+}).optional(),
+  "domainFilterEnabled": zod.boolean().describe('Whether MAP_DOMAIN_FILTER was active for this run.')
+}).optional()
 })
 
 

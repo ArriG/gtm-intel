@@ -1320,6 +1320,69 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MapOutreachSource"
+        meta:
+          $ref: "#/components/schemas/AccountMapResponseMeta"
+
+    AccountMapPassMeta:
+      type: object
+      required:
+        - model
+        - maxSearches
+        - searchesUsed
+        - elapsedMs
+      properties:
+        model:
+          type: string
+        maxSearches:
+          type: integer
+        searchesUsed:
+          type: integer
+        elapsedMs:
+          type: integer
+        allowedDomains:
+          type: boolean
+          description: True when Pass 2 used MAP_DOMAIN_FILTER allowed_domains.
+
+    AccountMapResponseMeta:
+      type: object
+      required:
+        - region
+        - totalElapsedMs
+        - entityCount
+        - sourcedLeaderCount
+        - pass2Status
+        - pass1
+        - domainFilterEnabled
+      properties:
+        region:
+          type: string
+          enum:
+            - emea
+            - apac
+            - north_america
+            - latam
+        totalElapsedMs:
+          type: integer
+        entityCount:
+          type: integer
+        sourcedLeaderCount:
+          type: integer
+          description: Buyers with a non-empty sourceUrl across all entities.
+        pass2Status:
+          type: string
+          enum:
+            - structure_only
+            - skipped_insufficient_time
+            - completed
+            - failed
+            - not_needed
+        pass1:
+          $ref: "#/components/schemas/AccountMapPassMeta"
+        pass2:
+          $ref: "#/components/schemas/AccountMapPassMeta"
+        domainFilterEnabled:
+          type: boolean
+          description: Whether MAP_DOMAIN_FILTER was active for this run.
 
     MapCompanySnapshot:
       type: object

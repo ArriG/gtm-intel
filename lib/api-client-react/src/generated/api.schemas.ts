@@ -689,6 +689,49 @@ export interface MapOutreachSource {
   relatedEntity?: string;
 }
 
+export type AccountMapResponseMetaRegion = typeof AccountMapResponseMetaRegion[keyof typeof AccountMapResponseMetaRegion];
+
+
+export const AccountMapResponseMetaRegion = {
+  emea: 'emea',
+  apac: 'apac',
+  north_america: 'north_america',
+  latam: 'latam',
+} as const;
+
+export type AccountMapResponseMetaPass2Status = typeof AccountMapResponseMetaPass2Status[keyof typeof AccountMapResponseMetaPass2Status];
+
+
+export const AccountMapResponseMetaPass2Status = {
+  structure_only: 'structure_only',
+  skipped_insufficient_time: 'skipped_insufficient_time',
+  completed: 'completed',
+  failed: 'failed',
+  not_needed: 'not_needed',
+} as const;
+
+export interface AccountMapPassMeta {
+  model: string;
+  maxSearches: number;
+  searchesUsed: number;
+  elapsedMs: number;
+  /** True when Pass 2 used MAP_DOMAIN_FILTER allowed_domains. */
+  allowedDomains?: boolean;
+}
+
+export interface AccountMapResponseMeta {
+  region: AccountMapResponseMetaRegion;
+  totalElapsedMs: number;
+  entityCount: number;
+  /** Buyers with a non-empty sourceUrl across all entities. */
+  sourcedLeaderCount: number;
+  pass2Status: AccountMapResponseMetaPass2Status;
+  pass1: AccountMapPassMeta;
+  pass2?: AccountMapPassMeta;
+  /** Whether MAP_DOMAIN_FILTER was active for this run. */
+  domainFilterEnabled: boolean;
+}
+
 export interface AccountMapResponse {
   parent: AccountMapParent;
   entities: MapEntity[];
@@ -699,6 +742,7 @@ export interface AccountMapResponse {
   sectorPackUsed: string;
   companySnapshot: MapCompanySnapshot;
   outreachSources: MapOutreachSource[];
+  meta?: AccountMapResponseMeta;
 }
 
 export interface AccountBriefInput {
