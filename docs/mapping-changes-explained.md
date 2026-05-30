@@ -121,6 +121,20 @@ Documented in [anthropic-sdk-bug-report.md](./anthropic-sdk-bug-report.md):
 
 ## 5. Time budget (current numbers)
 
+```mermaid
+gantt
+    title Mapping request budget (215s server / 225s client)
+    dateFormat X
+    axisFormat %S s
+
+    section Pass1
+    Structure max 120s :p1, 0, 120000
+    section Pass2
+    Leadership max 90s :p2, 120000, 210000
+    section Buffer
+    Min 15s before Pass2 starts :crit, 105000, 120000
+```
+
 | Layer | Constant | Value | File |
 |-------|----------|-------|------|
 | Whole request | `MAPPING_TIMEOUT_MS` | 215s | `artifacts/api-server/src/routes/account-map.ts` |
