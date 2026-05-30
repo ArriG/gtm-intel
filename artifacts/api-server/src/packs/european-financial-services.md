@@ -18,7 +18,9 @@ loading_label: Mapping structure and leadership — about 2–3 minutes...
 
 For mapping UK, EU, EEA, and Swiss insurers, reinsurers, banks, and regulated financial groups.
 
-## Sources (priority order — max 7 per mapping pass)
+## Sources (priority order — Pass 1: max 3 broad searches; Pass 2: max 5 focused leadership searches)
+
+Pass 1 (structure): use sections 3 and 7 below only — broad subsidiary discovery. Pass 2 (leadership): use sections 2, 3, and 6 for named executives.
 
 Search across these sources for European entities. Stop each search after one attempt if nothing useful returns.
 

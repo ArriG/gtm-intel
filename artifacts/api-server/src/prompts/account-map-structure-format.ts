@@ -49,9 +49,11 @@ PASS 1 RULES:
 - Up to 8 entities per region, maximum 20 entities total in entities[].
 - If more entities exist, list ALL omitted names in unmappedEntities[].
 - REGION SCOPE: When a region scope is set, entities[] must contain ONLY full-depth entities for that region; list every other-region entity by NAME ONLY in unmappedEntities[] (no detail, no leaders).
-- Populate outreachSources[] with 3-6 public sources worth checking next (annual reports, regulator registers, IR pages, trade press).
+- Populate outreachSources[] with 2-4 public sources worth checking next (annual reports, regulator registers, IR pages, trade press) — use URLs you already found or well-known public pages; do NOT run extra web searches just for outreachSources.
 - Prefer strong fit entities, then moderate, then skip when selecting which to include.
 - companySnapshot is a lean factual header only (size, industry, location, fundingStage) — fill from known facts; do NOT spend web searches on snapshot fields. Deeper company context belongs in Brief mode, not Mapping.
+- entity context is brief (1-2 sentences max) — do NOT run per-entity news searches in Pass 1.
+- Do NOT fetch PDF filings, SFCR documents, or regulator register exports in Pass 1 — Pass 2 handles leadership from those sources.
 - fitTier is factual alignment (geography, industry, business line) — NOT a sales heat score.
 - Use at most 3 web searches total for this structure pass — prioritise entity discovery; stop searching once you have solid entity coverage.
 - Set isSingleEntity=true if the target is not a federated multi-entity enterprise.

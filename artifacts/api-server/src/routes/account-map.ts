@@ -131,7 +131,7 @@ function logAccountMapConfigAtBoot(): void {
 
 logAccountMapConfigAtBoot();
 
-function mappingPassError(err: unknown): Error {
+function mappingPassError(err: unknown, passLabel: "Pass 1 (structure)" | "Pass 2 (leadership)"): Error {
   const name = (err as { name?: string })?.name ?? "";
   const message = err instanceof Error ? err.message : String(err);
   if (
@@ -139,12 +139,31 @@ function mappingPassError(err: unknown): Error {
     name === "APIUserAbortError" ||
     /timed?\s?out|aborted/i.test(message)
   ) {
-    return new Error(
-      "Mapping timed out before finishing. Try again, or set MAP_STRUCTURE_ONLY=1 on the server for a faster structure-only map.",
-    );
+    const hint =
+      passLabel === "Pass 1 (structure)"
+        ? "Structure discovery hit the search deadline — often caused by slow PDF/regulator sources. Try again, or set MAP_STRUCTURE_ONLY=1 for a faster structure-only smoke test."
+        : "Leadership enrichment timed out — you may still get a structure-only map on retry if Pass 1 finishes faster.";
+    return new Error(`${passLabel} timed out. ${hint}`);
   }
   return err instanceof Error ? err : new Error(message);
 }
+
+/** Pass 1 only needs subsidiary/structure guidance — not leadership search aliases. */
+function structurePackExcerpt(packBody: string): string {
+  const leadershipStart = packBody.search(/^## Common European insurance buyer titles/m);
+  if (leadershipStart > 0) {
+    return packBody.slice(0, leadershipStart).trim();
+  }
+  return packBody.trim();
+}
+
+const PASS_1_SEARCH_RULES = [
+  "PASS 1 SEARCH RULES (strict — Pass 2 handles leadership and regulator deep-dives):",
+  "- Use broad queries only: group annual report subsidiary list, investor relations segment page, Wikipedia/group about page.",
+  "- Do NOT open or fetch PDF filings, SFCR documents, FINMA/BaFin register exports, or multi-page regulator detail pages in this pass.",
+  "- Do NOT run web searches solely to fill outreachSources[] or companySnapshot — use known facts and URLs from searches you already ran.",
+  "- Stop searching as soon as you have enough real entity names for the scoped region; return JSON immediately.",
+].join("\n");
 
 function composeStructurePrompt(
   yourCompany: YourCompanyInput,
@@ -157,7 +176,7 @@ function composeStructurePrompt(
     throw new Error(`Sector pack "${MAPPING_PACK_ID}" not found`);
   }
 
-  const sourceBlock = `${pack.body}
+  const sourceBlock = `${structurePackExcerpt(pack.body)}
 
 When mapping a global enterprise, follow the European Financial Services sector pack above for European entities. Use public web search for non-European regions with the same verification standard.`;
 
@@ -171,7 +190,8 @@ When mapping a global enterprise, follow the European Financial Services sector 
     "",
     regionScopeInstruction(region),
     "PASS 1 — STRUCTURE ONLY: Do not search for named executives. Return buyers: [] on every entity.",
-    `SPEED INSTRUCTION: Complete this structure pass within 100 seconds using at most ${PASS_1_MAX_SEARCHES} web searches. Prioritise subsidiary discovery and group context — stop searching once you have solid entity coverage.`,
+    PASS_1_SEARCH_RULES,
+    `SPEED INSTRUCTION: Complete this structure pass within 90 seconds using at most ${PASS_1_MAX_SEARCHES} web searches. Prioritise subsidiary discovery — stop searching once you have solid entity coverage and return JSON.`,
     ACCOUNT_MAP_STRUCTURE_FORMAT,
   ].filter(Boolean).join("\n\n");
 
@@ -199,6 +219,7 @@ function composePeoplePrompt(yourCompany: YourCompanyInput, maxSearches: number)
 }
 
 async function callMappingPass(
+  passLabel: "Pass 1 (structure)" | "Pass 2 (leadership)",
   model: string,
   system: string,
   userMessage: string,
@@ -206,6 +227,7 @@ async function callMappingPass(
   maxSearches: number,
   timeoutMs: number,
 ): Promise<Record<string, unknown>> {
+  const startedAt = Date.now();
   // RequestOptions (signal/timeout/maxRetries) MUST be the second arg — passing
   // them in the body is silently ignored and leaves the request running (and billing).
   let message: Anthropic.Message;
@@ -224,7 +246,11 @@ async function callMappingPass(
       },
     );
   } catch (err) {
-    throw mappingPassError(err);
+    console.warn(
+      `[account-map] ${passLabel} failed after ${Date.now() - startedAt}ms`,
+      err instanceof Error ? err.message : err,
+    );
+    throw mappingPassError(err, passLabel);
   }
 
   const responseText = textFromMessageContent(message.content);
@@ -232,6 +258,7 @@ async function callMappingPass(
     throw new Error("No response generated. Please try again.");
   }
 
+  console.info(`[account-map] ${passLabel} complete in ${Date.now() - startedAt}ms`);
   return parseJsonFromResponse(responseText) as Record<string, unknown>;
 }
 
@@ -299,11 +326,17 @@ router.post("/account-map", async (req, res): Promise<void> => {
 
   const generatedAt = new Date().toISOString();
   const deadline = Date.now() + MAPPING_TIMEOUT_MS;
+  const requestStartedAt = Date.now();
 
   try {
     const pass1Timeout = Math.min(PASS_1_TIMEOUT_MS, deadline - Date.now());
     const scopeLine = `Focus the full-depth map on ${REGION_SCOPES[region].label}. List other-region entities by name only in unmappedEntities[].`;
+    req.log.info(
+      { company: companyName, pass1TimeoutMs: pass1Timeout, pass1MaxSearches: PASS_1_MAX_SEARCHES },
+      "Account map pass 1 starting",
+    );
     const structureRaw = await callMappingPass(
+      "Pass 1 (structure)",
       MAPPING_MODEL,
       composed.systemPrompt,
       `Map the enterprise structure for: ${companyName}
@@ -338,8 +371,19 @@ Return ONLY the JSON object — no other text.`,
         Math.max(enrichTargets.length, PASS_2_MIN_SEARCHES),
         PASS_2_MAX_SEARCHES,
       );
+      req.log.info(
+        {
+          company: companyName,
+          pass2TimeoutMs: pass2Timeout,
+          pass2Searches,
+          remainingMs,
+          enrichTargets: enrichTargets.length,
+        },
+        "Account map pass 2 starting",
+      );
       try {
         const peopleRaw = await callMappingPass(
+          "Pass 2 (leadership)",
           PASS_2_MODEL,
           composePeoplePrompt(yourCompany!, pass2Searches),
           buildPeopleUserMessage(companyName, enrichTargets),
@@ -366,6 +410,15 @@ Return ONLY the JSON object — no other text.`,
     }
 
     const normalized = normalizeAccountMap(merged, generatedAt, composed.sectorPackUsed);
+    const entityCount = Array.isArray(normalized.entities) ? normalized.entities.length : 0;
+    req.log.info(
+      {
+        company: companyName,
+        elapsedMs: Date.now() - requestStartedAt,
+        entityCount,
+      },
+      "Account map complete",
+    );
     res.json(normalized);
   } catch (err) {
     const message = err instanceof Error ? err.message : "AI request failed";
