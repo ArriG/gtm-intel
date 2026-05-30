@@ -610,10 +610,16 @@ function CompanySearchInput({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dropdownLockedRef = useRef(false);
+  // Only show the dropdown when the user has actually clicked into the search bar.
+  // Prevents it auto-opening on page load when a previous query is restored.
+  const focusedRef = useRef(false);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setShowDropdown(false);
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+        focusedRef.current = false;
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -640,7 +646,7 @@ function CompanySearchInput({
           const data = await res.json() as CompanySuggestion[];
           if (!dropdownLockedRef.current) {
             setSuggestions(data.slice(0, 6));
-            setShowDropdown(data.length > 0);
+            setShowDropdown(focusedRef.current && data.length > 0);
           }
         }
       } catch { setSuggestions([]); } finally { setFetching(false); }
@@ -681,7 +687,7 @@ function CompanySearchInput({
             {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           </div>
           <Input type="text" value={query} onChange={e => handleQueryChange(e.target.value)}
-            onFocus={() => { if (!dropdownLockedRef.current && suggestions.length > 0) setShowDropdown(true); }}
+            onFocus={() => { focusedRef.current = true; if (!dropdownLockedRef.current && suggestions.length > 0) setShowDropdown(true); }}
             placeholder="Company name or URL"
             className="flex-1 text-sm font-medium border-0 shadow-none focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground"
             disabled={loading} autoComplete="off" />
@@ -1259,14 +1265,14 @@ export default function AccountBriefPage() {
       {/* Hero — WTTJ split: yellow top, cream bottom */}
       <div className="relative z-10">
         {/* Top half — yellow */}
-        <div className="bg-primary text-foreground px-8 py-14 sm:py-16 lg:py-20">
+        <div className="bg-primary text-foreground px-8 py-10 sm:py-12 lg:py-14">
           <div className="max-w-5xl mx-auto">
-            <BearMark size={52} className="mb-6" />
+            <BearMark size={44} className="mb-4" />
             <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">GTM research</p>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.05] max-w-3xl">
-              Company snapshots, buying committees, and triggers from public sources
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.1] max-w-3xl">
+              Company snapshots, buying committees, and triggers
             </h1>
-            <p className="mt-4 text-lg sm:text-xl font-medium text-foreground/85 leading-snug max-w-2xl">
+            <p className="mt-3 text-base sm:text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
               {isYourCompanyConfigured(yourCompany)
                 ? researchHeroSubtitle(yourCompany)
                 : "Market-specific intel from public sources, LinkedIn, and press. Brief ready to send."}
