@@ -23,7 +23,7 @@ import { loadHistory, saveToHistory, updateHistoryEntry, getHistoryEntry, type H
 import type { BriefStatus } from "@/lib/brief-status";
 import { BriefStatusSelect } from "@/components/brief-status-select";
 import { NextTouchSection } from "@/components/next-touch-section";
-import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
+import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, useMappingEnabled, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { researchLoadingMessage } from "@/lib/research-loading";
 import { mappingLoadingMessage } from "@/lib/mapping-loading-messages";
 import { AccountMapResult } from "@/components/account-map/account-map-result";
@@ -976,6 +976,7 @@ function SaveAsIcpDialog({ brief, companyName }: { brief: AccountBrief; companyN
 export default function AccountBriefPage() {
   const companyConfigured = useIsYourCompanyConfigured();
   const yourCompany = useYourCompany();
+  const mappingEnabled = useMappingEnabled();
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -996,7 +997,7 @@ export default function AccountBriefPage() {
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
   const [watchingSignals, setWatchingSignals] = useState(true);
-  const [searchMode, setSearchMode] = useState<SearchMode>("mapping");
+  const [searchMode, setSearchMode] = useState<SearchMode>("brief");
   const [mapLoading, setMapLoading] = useState(false);
   const [mapLoadingSeconds, setMapLoadingSeconds] = useState(0);
   const [accountMap, setAccountMap] = useState<AccountMapResponse | null>(null);
@@ -1051,7 +1052,7 @@ export default function AccountBriefPage() {
       return;
     }
     const mapSession = loadMapSession();
-    if (mapSession) {
+    if (mapSession && mappingEnabled) {
       setSearchMode("mapping");
       setLastLabel(mapSession.label);
       setLastUrl(mapSession.url);
@@ -1061,6 +1062,14 @@ export default function AccountBriefPage() {
       setAccountMap(mapSession.accountMap);
     }
   }, []);
+
+  useEffect(() => {
+    if (!mappingEnabled && searchMode === "mapping") {
+      setSearchMode("brief");
+      setAccountMap(null);
+      clearMapSession();
+    }
+  }, [mappingEnabled]);
 
   useEffect(() => {
     if (!historyParam) return;
@@ -1276,27 +1285,31 @@ export default function AccountBriefPage() {
         <div className="px-8 pb-10 sm:pb-12">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-              <SearchModeToggle
-                mode={searchMode}
-                disabled={loading || mapLoading}
-                onChange={mode => {
-                  setSearchMode(mode);
-                  setError(null);
-                  if (mode === "brief") {
-                    setAccountMap(null);
-                    clearMapSession();
-                  } else {
-                    setBrief(null);
-                    clearBriefSession();
-                  }
-                }}
-              />
-              {searchMode === "mapping" && (
-                <RegionSelect
-                  region={mapRegion}
-                  onChange={setMapRegion}
-                  disabled={mapLoading}
-                />
+              {mappingEnabled && (
+                <>
+                  <SearchModeToggle
+                    mode={searchMode}
+                    disabled={loading || mapLoading}
+                    onChange={mode => {
+                      setSearchMode(mode);
+                      setError(null);
+                      if (mode === "brief") {
+                        setAccountMap(null);
+                        clearMapSession();
+                      } else {
+                        setBrief(null);
+                        clearBriefSession();
+                      }
+                    }}
+                  />
+                  {searchMode === "mapping" && (
+                    <RegionSelect
+                      region={mapRegion}
+                      onChange={setMapRegion}
+                      disabled={mapLoading}
+                    />
+                  )}
+                </>
               )}
               <div className="flex-1 min-w-0">
                 <CompanySearchInput
@@ -1309,7 +1322,7 @@ export default function AccountBriefPage() {
                 />
               </div>
             </div>
-            {searchMode === "mapping" && (
+            {mappingEnabled && searchMode === "mapping" && (
               <p className="mt-2 text-xs text-muted-foreground max-w-2xl leading-relaxed">
                 One region per map — full detail and leadership search only here. Other regions appear as names only.
                 For a global group, run a separate map per region (e.g. EMEA, then North America).
