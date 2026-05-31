@@ -8,13 +8,6 @@ export function AccountMapDiagram({ map }: { map: AccountMapResponse }) {
 
   return (
     <div className="map-diagram space-y-8 min-w-0">
-      <div className="parent-header text-center space-y-1">
-        <h2 className="text-2xl font-extrabold tracking-tight break-words">{map.parent.name}</h2>
-        <p className="text-sm text-muted-foreground">
-          {map.parent.headquartersCountry} · {map.parent.industry}
-        </p>
-      </div>
-
       {regionsWithEntities.map(region => (
         <section key={region} className="space-y-3 min-w-0">
           <div className="region-header text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
