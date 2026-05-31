@@ -17,7 +17,6 @@ export function ParentSummaryCard({ parent, sectorPackUsed }: Pick<AccountMapRes
             Sourced from: {sectorPackUsed.replace(/-/g, " ")}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">{parent.description}</p>
       </BriefCardContent>
     </BriefCard>
   );

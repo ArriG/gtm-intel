@@ -12,7 +12,7 @@ export function SearchModeToggle({
   disabled?: boolean;
 }) {
   return (
-    <div className="mb-6">
+    <div className="shrink-0">
       <div className="inline-flex rounded-xl border border-border bg-background p-1 gap-1">
         <button
           type="button"

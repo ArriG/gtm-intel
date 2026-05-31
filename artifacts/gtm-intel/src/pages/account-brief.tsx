@@ -1283,36 +1283,46 @@ export default function AccountBriefPage() {
         {/* Bottom half — cream */}
         <div className="relative bg-secondary px-8 py-10 sm:py-12 border-b border-border">
           <div className="max-w-5xl mx-auto">
-            <SearchModeToggle
-              mode={searchMode}
-              disabled={loading || mapLoading}
-              onChange={mode => {
-                setSearchMode(mode);
-                setError(null);
-                if (mode === "brief") {
-                  setAccountMap(null);
-                  clearMapSession();
-                } else {
-                  setBrief(null);
-                  clearBriefSession();
-                }
-              }}
-            />
-            {searchMode === "mapping" && (
-              <RegionSelect
-                region={mapRegion}
-                onChange={setMapRegion}
-                disabled={mapLoading}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+              <SearchModeToggle
+                mode={searchMode}
+                disabled={loading || mapLoading}
+                onChange={mode => {
+                  setSearchMode(mode);
+                  setError(null);
+                  if (mode === "brief") {
+                    setAccountMap(null);
+                    clearMapSession();
+                  } else {
+                    setBrief(null);
+                    clearBriefSession();
+                  }
+                }}
               />
+              {searchMode === "mapping" && (
+                <RegionSelect
+                  region={mapRegion}
+                  onChange={setMapRegion}
+                  disabled={mapLoading}
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <CompanySearchInput
+                  query={searchQuery}
+                  onQueryChange={setSearchQuery}
+                  onSearch={handleCompanySubmit}
+                  loading={loading || mapLoading}
+                  loadingLabel={searchMode === "mapping" ? "Mapping..." : "Researching..."}
+                  cooldownSeconds={searchMode === "brief" ? cooldownSeconds : 0}
+                />
+              </div>
+            </div>
+            {searchMode === "mapping" && (
+              <p className="mt-2 text-xs text-muted-foreground max-w-2xl leading-relaxed">
+                One region per map — full detail and leadership search only here. Other regions appear as names only.
+                For a global group, run a separate map per region (e.g. EMEA, then North America).
+              </p>
             )}
-            <CompanySearchInput
-              query={searchQuery}
-              onQueryChange={setSearchQuery}
-              onSearch={handleCompanySubmit}
-              loading={loading || mapLoading}
-              loadingLabel={searchMode === "mapping" ? "Mapping..." : "Researching..."}
-              cooldownSeconds={searchMode === "brief" ? cooldownSeconds : 0}
-            />
             {!brief && !accountMap && !showOptionalContext && searchMode === "brief" && (
               <button
                 type="button"

@@ -35,13 +35,13 @@ export function AccountMapResult({
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0">
       <ParentSummaryCard parent={map.parent} sectorPackUsed={map.sectorPackUsed} />
+      <MapCompanySnapshotCard snapshot={map.companySnapshot} />
       <p className="text-xs text-muted-foreground">
         Expand any entity card to see verified leadership, context, and sources.
       </p>
       <AccountMapDiagram map={map} />
       <MapUnmappedSection map={map} />
       <LimitationsCard limitations={map.limitations} />
-      <MapCompanySnapshotCard snapshot={map.companySnapshot} />
       <MapBackgroundSection map={map} />
       {onMapAnotherRegion && companyLabel && otherRegions.length > 0 && (
         <BriefCard className="border-dashed bg-muted/10">

@@ -18,9 +18,8 @@ export function RegionSelect({
   disabled?: boolean;
 }) {
   return (
-    <div className="mb-4 space-y-1.5">
-      <div className="flex items-center gap-2">
-      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+    <div className="flex items-center gap-2 shrink-0">
+      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground whitespace-nowrap">
         <MapPin className="w-4 h-4" />
         Region focus
       </span>
@@ -29,7 +28,7 @@ export function RegionSelect({
         onValueChange={value => onChange(value as MapRegion)}
         disabled={disabled}
       >
-        <SelectTrigger className="w-[200px] bg-background">
+        <SelectTrigger className="w-[170px] bg-background">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -40,11 +39,6 @@ export function RegionSelect({
           ))}
         </SelectContent>
       </Select>
-      </div>
-      <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-        One region per map — full detail and leadership search only here. Other regions appear as names only.
-        For a global group, run a separate map per region (e.g. EMEA, then North America).
-      </p>
     </div>
   );
 }
