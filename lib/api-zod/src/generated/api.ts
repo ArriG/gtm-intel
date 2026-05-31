@@ -970,6 +970,31 @@ export const PreviewAccountBriefPromptResponse = zod.object({
 
 
 /**
+ * @summary Suggest Your Company profile fields by researching the seller's own website
+ */
+export const SuggestCompanyProfileBody = zod.object({
+  "companyName": zod.string(),
+  "website": zod.string().optional()
+})
+
+export const SuggestCompanyProfileResponse = zod.object({
+  "oneLineDescription": zod.string(),
+  "industryServed": zod.string(),
+  "geographies": zod.array(zod.string()),
+  "buyerTitles": zod.array(zod.string()),
+  "painPointsSolved": zod.array(zod.string()),
+  "customerOutcomes": zod.string(),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sources": zod.array(zod.object({
+  "label": zod.string(),
+  "url": zod.string()
+})),
+  "notes": zod.string().optional(),
+  "researchedAt": zod.string()
+})
+
+
+/**
  * @summary Find matching companies for a target market description
  */
 

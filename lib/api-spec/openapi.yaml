@@ -170,6 +170,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/PreviewPromptResponse"
 
+  /your-company/suggest-profile:
+    post:
+      operationId: suggestCompanyProfile
+      tags: [your-company]
+      summary: Suggest Your Company profile fields by researching the seller's own website
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuggestProfileRequest"
+      responses:
+        "200":
+          description: Suggested seller profile fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestProfileResponse"
+
   /market-prospect:
     post:
       operationId: prospectMarket
@@ -766,6 +785,70 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SectorPackOption"
+
+    SuggestProfileRequest:
+      type: object
+      required:
+        - companyName
+      properties:
+        companyName:
+          type: string
+        website:
+          type: string
+
+    ProfileSource:
+      type: object
+      required:
+        - label
+        - url
+      properties:
+        label:
+          type: string
+        url:
+          type: string
+
+    SuggestProfileResponse:
+      type: object
+      required:
+        - oneLineDescription
+        - industryServed
+        - geographies
+        - buyerTitles
+        - painPointsSolved
+        - customerOutcomes
+        - confidence
+        - sources
+        - researchedAt
+      properties:
+        oneLineDescription:
+          type: string
+        industryServed:
+          type: string
+        geographies:
+          type: array
+          items:
+            type: string
+        buyerTitles:
+          type: array
+          items:
+            type: string
+        painPointsSolved:
+          type: array
+          items:
+            type: string
+        customerOutcomes:
+          type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileSource"
+        notes:
+          type: string
+        researchedAt:
+          type: string
 
     EmailTone:
       type: string

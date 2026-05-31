@@ -393,6 +393,38 @@ export interface PreviewPromptResponse {
   availablePacks: SectorPackOption[];
 }
 
+export interface SuggestProfileRequest {
+  companyName: string;
+  website?: string;
+}
+
+export interface ProfileSource {
+  label: string;
+  url: string;
+}
+
+export type SuggestProfileResponseConfidence = typeof SuggestProfileResponseConfidence[keyof typeof SuggestProfileResponseConfidence];
+
+
+export const SuggestProfileResponseConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface SuggestProfileResponse {
+  oneLineDescription: string;
+  industryServed: string;
+  geographies: string[];
+  buyerTitles: string[];
+  painPointsSolved: string[];
+  customerOutcomes: string;
+  confidence: SuggestProfileResponseConfidence;
+  sources: ProfileSource[];
+  notes?: string;
+  researchedAt: string;
+}
+
 export interface BriefActionInput {
   companyName: string;
   brief: AccountBrief;

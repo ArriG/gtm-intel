@@ -44,6 +44,8 @@ import type {
   SectorPackListResponse,
   SignalOpenerInput,
   SignalOpenerResponse,
+  SuggestProfileRequest,
+  SuggestProfileResponse,
   TalkTrack
 } from './api.schemas';
 
@@ -631,6 +633,77 @@ export const usePreviewAccountBriefPrompt = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getPreviewAccountBriefPromptMutationOptions(options));
+    }
+
+export const getSuggestCompanyProfileUrl = () => {
+
+
+
+
+  return `/api/your-company/suggest-profile`
+}
+
+/**
+ * @summary Suggest Your Company profile fields by researching the seller's own website
+ */
+export const suggestCompanyProfile = async (suggestProfileRequest: SuggestProfileRequest, options?: RequestInit): Promise<SuggestProfileResponse> => {
+
+  return customFetch<SuggestProfileResponse>(getSuggestCompanyProfileUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      suggestProfileRequest,)
+  }
+);}
+
+
+
+
+export const getSuggestCompanyProfileMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suggestCompanyProfile>>, TError,{data: BodyType<SuggestProfileRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof suggestCompanyProfile>>, TError,{data: BodyType<SuggestProfileRequest>}, TContext> => {
+
+const mutationKey = ['suggestCompanyProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suggestCompanyProfile>>, {data: BodyType<SuggestProfileRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  suggestCompanyProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuggestCompanyProfileMutationResult = NonNullable<Awaited<ReturnType<typeof suggestCompanyProfile>>>
+    export type SuggestCompanyProfileMutationBody = BodyType<SuggestProfileRequest>
+    export type SuggestCompanyProfileMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Suggest Your Company profile fields by researching the seller's own website
+ */
+export const useSuggestCompanyProfile = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suggestCompanyProfile>>, TError,{data: BodyType<SuggestProfileRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof suggestCompanyProfile>>,
+        TError,
+        {data: BodyType<SuggestProfileRequest>},
+        TContext
+      > => {
+      return useMutation(getSuggestCompanyProfileMutationOptions(options));
     }
 
 export const getProspectMarketUrl = () => {
