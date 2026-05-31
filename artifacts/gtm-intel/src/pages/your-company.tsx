@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Check, ArrowRight, Pencil, Building2, Brain, Loader2 } from "lucide-react";
 import { suggestCompanyProfile, type SuggestProfileResponse } from "@workspace/api-client-react";
@@ -8,10 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { BriefCard, BriefCardContent } from "@/components/brief-card";
 import {
   loadYourCompany,
   saveYourCompany,
+  getMappingPreference,
+  isMappingEnabled,
+  setMappingPreference,
   useIsYourCompanyConfigured,
   useYourCompany,
   linesToList,
@@ -219,6 +223,12 @@ export default function YourCompanyPage() {
   const [ticked, setTicked] = useState<Record<SuggestFieldKey, boolean>>(() =>
     Object.fromEntries(SUGGEST_FIELD_KEYS.map(key => [key, false])) as Record<SuggestFieldKey, boolean>,
   );
+  const [mappingOn, setMappingOn] = useState<boolean>(() => isMappingEnabled(loadYourCompany()));
+
+  useEffect(() => {
+    if (getMappingPreference() !== null) return;
+    setMappingOn(form.dealSize.includes("enterprise"));
+  }, [form.dealSize]);
 
   function clearSuggestionCard() {
     setSuggestion(null);
@@ -233,6 +243,7 @@ export default function YourCompanyPage() {
     setErrors([]);
     setSaved(false);
     clearSuggestionCard();
+    setMappingOn(isMappingEnabled(loadYourCompany()));
     setEditing(true);
   }
 
@@ -515,6 +526,34 @@ export default function YourCompanyPage() {
                       </label>
                     );
                   })}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="accountMapping">Account mapping</Label>
+                <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                  <div className="flex items-start gap-3">
+                    <Switch
+                      id="accountMapping"
+                      checked={mappingOn}
+                      onCheckedChange={checked => {
+                        const next = checked === true;
+                        setMappingOn(next);
+                        setMappingPreference(next ? "on" : "off");
+                      }}
+                      className="mt-0.5"
+                    />
+                    <div className="space-y-1 min-w-0">
+                      <Label htmlFor="accountMapping" className="text-sm font-medium cursor-pointer">
+                        Enable account mapping
+                      </Label>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        For sellers targeting large, multi-entity organisations (e.g. Zurich, Aviva). Maps the
+                        group into its divisions and the leaders of each. Leave off if you sell to single-site
+                        or SMB accounts — your standard Brief stays primary either way.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
