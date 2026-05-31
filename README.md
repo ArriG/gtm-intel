@@ -7,7 +7,7 @@ An AI-powered research tool for AEs and SDRs. Type a company name, get a sourced
 Built by a Salesman with 15+ years SaaS experience and zero prior coding background — a portfolio piece demonstrating full-stack product thinking from the seller's chair.
 
 ## Live demo
-![GTM Intelligence — refreshed search and account map](<img width="1688" height="588" alt="GTM Intel 2" src="https://github.com/user-attachments/assets/9d3d3f3d-d88c-4631-acaa-e940d4eac33a" />
+![GTM Intelligence — refreshed search and account map](!<img width="1688" height="588" alt="GTM Intel 2" src="https://github.com/user-attachments/assets/b33ea875-19e5-4f01-8bb3-7e67d7ba3bc0" />
 )
 
 Deploy on [Replit](https://replit.com) — pull from this repo and set `ANTHROPIC_API_KEY` in Secrets.
