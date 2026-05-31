@@ -425,6 +425,31 @@ export interface SuggestProfileResponse {
   researchedAt: string;
 }
 
+export interface SuggestReasoningRequest {
+  companyName: string;
+  website?: string;
+  oneLineDescription?: string;
+  industryServed?: string;
+}
+
+export type SuggestReasoningResponseConfidence = typeof SuggestReasoningResponseConfidence[keyof typeof SuggestReasoningResponseConfidence];
+
+
+export const SuggestReasoningResponseConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface SuggestReasoningResponse {
+  whyNowPatterns: string[];
+  reasoningOverrides: string[];
+  confidence: SuggestReasoningResponseConfidence;
+  sources: ProfileSource[];
+  notes?: string;
+  researchedAt: string;
+}
+
 export interface BriefActionInput {
   companyName: string;
   brief: AccountBrief;

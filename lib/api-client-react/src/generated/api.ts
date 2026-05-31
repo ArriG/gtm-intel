@@ -46,6 +46,8 @@ import type {
   SignalOpenerResponse,
   SuggestProfileRequest,
   SuggestProfileResponse,
+  SuggestReasoningRequest,
+  SuggestReasoningResponse,
   TalkTrack
 } from './api.schemas';
 
@@ -704,6 +706,77 @@ export const useSuggestCompanyProfile = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSuggestCompanyProfileMutationOptions(options));
+    }
+
+export const getSuggestCompanyReasoningUrl = () => {
+
+
+
+
+  return `/api/your-company/suggest-reasoning`
+}
+
+/**
+ * @summary Suggest Reasoning fields by researching the seller's own website
+ */
+export const suggestCompanyReasoning = async (suggestReasoningRequest: SuggestReasoningRequest, options?: RequestInit): Promise<SuggestReasoningResponse> => {
+
+  return customFetch<SuggestReasoningResponse>(getSuggestCompanyReasoningUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      suggestReasoningRequest,)
+  }
+);}
+
+
+
+
+export const getSuggestCompanyReasoningMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suggestCompanyReasoning>>, TError,{data: BodyType<SuggestReasoningRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof suggestCompanyReasoning>>, TError,{data: BodyType<SuggestReasoningRequest>}, TContext> => {
+
+const mutationKey = ['suggestCompanyReasoning'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suggestCompanyReasoning>>, {data: BodyType<SuggestReasoningRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  suggestCompanyReasoning(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuggestCompanyReasoningMutationResult = NonNullable<Awaited<ReturnType<typeof suggestCompanyReasoning>>>
+    export type SuggestCompanyReasoningMutationBody = BodyType<SuggestReasoningRequest>
+    export type SuggestCompanyReasoningMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Suggest Reasoning fields by researching the seller's own website
+ */
+export const useSuggestCompanyReasoning = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suggestCompanyReasoning>>, TError,{data: BodyType<SuggestReasoningRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof suggestCompanyReasoning>>,
+        TError,
+        {data: BodyType<SuggestReasoningRequest>},
+        TContext
+      > => {
+      return useMutation(getSuggestCompanyReasoningMutationOptions(options));
     }
 
 export const getProspectMarketUrl = () => {

@@ -189,6 +189,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuggestProfileResponse"
 
+  /your-company/suggest-reasoning:
+    post:
+      operationId: suggestCompanyReasoning
+      tags: [your-company]
+      summary: Suggest Reasoning fields by researching the seller's own website
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuggestReasoningRequest"
+      responses:
+        "200":
+          description: Suggested why-now patterns and reasoning overrides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestReasoningResponse"
+
   /market-prospect:
     post:
       operationId: prospectMarket
@@ -838,6 +857,49 @@ components:
             type: string
         customerOutcomes:
           type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileSource"
+        notes:
+          type: string
+        researchedAt:
+          type: string
+
+    SuggestReasoningRequest:
+      type: object
+      required:
+        - companyName
+      properties:
+        companyName:
+          type: string
+        website:
+          type: string
+        oneLineDescription:
+          type: string
+        industryServed:
+          type: string
+
+    SuggestReasoningResponse:
+      type: object
+      required:
+        - whyNowPatterns
+        - reasoningOverrides
+        - confidence
+        - sources
+        - researchedAt
+      properties:
+        whyNowPatterns:
+          type: array
+          items:
+            type: string
+        reasoningOverrides:
+          type: array
+          items:
+            type: string
         confidence:
           type: string
           enum: [high, medium, low]

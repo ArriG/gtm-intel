@@ -995,6 +995,29 @@ export const SuggestCompanyProfileResponse = zod.object({
 
 
 /**
+ * @summary Suggest Reasoning fields by researching the seller's own website
+ */
+export const SuggestCompanyReasoningBody = zod.object({
+  "companyName": zod.string(),
+  "website": zod.string().optional(),
+  "oneLineDescription": zod.string().optional(),
+  "industryServed": zod.string().optional()
+})
+
+export const SuggestCompanyReasoningResponse = zod.object({
+  "whyNowPatterns": zod.array(zod.string()),
+  "reasoningOverrides": zod.array(zod.string()),
+  "confidence": zod.enum(['high', 'medium', 'low']),
+  "sources": zod.array(zod.object({
+  "label": zod.string(),
+  "url": zod.string()
+})),
+  "notes": zod.string().optional(),
+  "researchedAt": zod.string()
+})
+
+
+/**
  * @summary Find matching companies for a target market description
  */
 
