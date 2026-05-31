@@ -3,15 +3,27 @@ import { cn } from "@/lib/utils";
 interface BearMarkProps {
   size?: number;
   className?: string;
-  /** Show the cream circle backdrop (hero / sidebar header). */
+  /** Show the outer circle backdrop (hero / sidebar header). */
   withCircle?: boolean;
+  /**
+   * brand — Option B: white circle + purple bear, white muzzle/eyes (default).
+   * subtle — no circle; purple bear only (compact inline use).
+   */
+  variant?: "brand" | "subtle";
 }
 
 /**
  * Design D — forehead slit gaze: slit eyes high under ears, compact muzzle,
  * maximum chin room so the bear reads as looking up.
  */
-export function BearMark({ size = 24, className, withCircle = true }: BearMarkProps) {
+export function BearMark({
+  size = 24,
+  className,
+  withCircle = true,
+  variant = "brand",
+}: BearMarkProps) {
+  const showCircle = withCircle && variant === "brand";
+
   return (
     <svg
       width={size}
@@ -22,9 +34,7 @@ export function BearMark({ size = 24, className, withCircle = true }: BearMarkPr
       className={cn("shrink-0", className)}
       aria-hidden
     >
-      {withCircle && (
-        <circle cx="16" cy="16" r="15" className="fill-bear-muted" />
-      )}
+      {showCircle && <circle cx="16" cy="16" r="15" className="fill-bear-muted" />}
 
       <ellipse cx="9.2" cy="11" rx="4" ry="4.3" className="fill-bear" />
       <ellipse cx="22.8" cy="11" rx="4" ry="4.3" className="fill-bear" />

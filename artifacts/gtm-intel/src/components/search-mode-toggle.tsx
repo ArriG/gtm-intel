@@ -26,7 +26,7 @@ export function SearchModeToggle({
           )}
         >
           {mode === "mapping" && (
-            <span className="absolute -top-2.5 right-3 rounded-full bg-foreground px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-background">
+            <span className="absolute -top-2.5 right-3 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary-foreground">
               Recommended
             </span>
           )}
