@@ -5,7 +5,6 @@ import { MAP_REGION_OPTIONS, regionLabel, type MapRegion } from "@/lib/map-regio
 import { AccountMapDiagram } from "./account-map-diagram";
 import { LimitationsCard } from "./limitations-card";
 import { MapBackgroundSection } from "./map-background-section";
-import { MapCompanySnapshotCard } from "./map-company-snapshot";
 import { MapUnmappedSection } from "./map-unmapped-section";
 import { ParentSummaryCard } from "./parent-summary-card";
 import { SingleEntityFallback } from "./single-entity-fallback";
@@ -34,8 +33,11 @@ export function AccountMapResult({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0">
-      <ParentSummaryCard parent={map.parent} sectorPackUsed={map.sectorPackUsed} />
-      <MapCompanySnapshotCard snapshot={map.companySnapshot} />
+      <ParentSummaryCard
+        parent={map.parent}
+        sectorPackUsed={map.sectorPackUsed}
+        companySnapshot={map.companySnapshot}
+      />
       <p className="text-xs text-muted-foreground">
         Expand any entity card to see verified leadership, context, and sources.
       </p>
