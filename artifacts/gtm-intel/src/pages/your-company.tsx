@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Check, ArrowRight, Pencil, Building2, Brain } from "lucide-react";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,7 +76,7 @@ function ProfileSummary({ profile, onEdit }: { profile: YourCompany; onEdit: () 
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Your company</p>
-                <h2 className="text-2xl font-extrabold text-foreground">{profile.companyName}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{profile.companyName}</h2>
               </div>
             </div>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full shrink-0">
@@ -192,21 +192,17 @@ export default function YourCompanyPage() {
     : "Tell us what you sell, who you serve, and where you play. Every brief, email, and fit score uses this as its foundation.";
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16 lg:py-20">
-        <div className="max-w-3xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Your company</p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            {heroTitle}
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            {heroSubtitle}
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-12 sm:pt-14 pb-8 border-b border-border">
+        <PageHero
+          showBear
+          eyebrow="Your company"
+          title={heroTitle}
+          subtitle={heroSubtitle}
+        />
       </div>
 
-      <div className="bg-secondary px-8 py-10 sm:py-12 border-b border-border">
+      <div className="px-8 py-10 sm:py-12 border-b border-border">
         <div className="max-w-3xl mx-auto">
           {savedConfigured && !editing ? (
             <ProfileSummary profile={savedProfile} onEdit={startEditing} />

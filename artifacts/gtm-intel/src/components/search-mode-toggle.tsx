@@ -13,40 +13,39 @@ export function SearchModeToggle({
 }) {
   return (
     <div className="shrink-0">
-      <div className="inline-flex rounded-xl border border-border bg-background p-1 gap-1">
+      <div className="inline-flex rounded-full border border-border bg-muted/50 p-1 gap-0.5">
         <button
           type="button"
           disabled={disabled}
           onClick={() => onChange("mapping")}
           className={cn(
-            "rounded-lg px-4 py-2 text-left transition-colors min-w-[160px] relative",
-            "border border-primary/40",
+            "rounded-full px-4 py-2.5 text-left transition-colors min-w-[148px] relative",
             mode === "mapping"
-              ? "bg-primary text-foreground shadow-sm border-primary"
-              : "text-foreground hover:bg-muted/40 bg-primary/5",
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-foreground hover:bg-background/80",
           )}
         >
-          <span className="absolute -top-2 right-2 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-foreground shadow-sm">
-            Recommended
-          </span>
+          {mode === "mapping" && (
+            <span className="absolute -top-2.5 right-3 rounded-full bg-foreground px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-background">
+              Recommended
+            </span>
+          )}
           <span className="block text-sm font-semibold">Mapping</span>
           <span className="block text-[11px] opacity-80">~2 minutes</span>
-          <span className="block text-[11px] opacity-70">Enterprise structure</span>
         </button>
         <button
           type="button"
           disabled={disabled}
           onClick={() => onChange("brief")}
           className={cn(
-            "rounded-lg px-4 py-2 text-left transition-colors min-w-[140px]",
+            "rounded-full px-4 py-2.5 text-left transition-colors min-w-[128px]",
             mode === "brief"
-              ? "bg-primary text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/80",
           )}
         >
           <span className="block text-sm font-semibold">Brief</span>
           <span className="block text-[11px] opacity-80">~30 seconds</span>
-          <span className="block text-[11px] opacity-70">Single view</span>
         </button>
       </div>
     </div>

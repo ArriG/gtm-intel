@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Loader2, Radio, Search } from "lucide-react";
 import { scanAccountSignals } from "@workspace/api-client-react";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { BriefCard, BriefCardContent } from "@/components/brief-card";
 import { SignalCard } from "@/components/signal-card";
@@ -26,7 +26,7 @@ function SummaryTile({ label, value }: { label: string; value: number }) {
   return (
     <BriefCard>
       <BriefCardContent className="pt-5">
-        <p className="text-3xl font-extrabold tracking-tight text-foreground">{value}</p>
+        <p className="text-3xl font-bold tracking-tight text-foreground">{value}</p>
         <p className="text-xs text-muted-foreground mt-1">{label}</p>
       </BriefCardContent>
     </BriefCard>
@@ -83,22 +83,18 @@ export default function SignalsPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
-        <div className="max-w-4xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Research</p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            Signals
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            The internet, watched for you. AI scans your accounts for the buying signals you don&apos;t
-            have the time to chase — then shows you the source so you can decide.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-12 sm:pt-14 pb-8 border-b border-border">
+        <PageHero
+          showBear
+          eyebrow="Research"
+          title="Signals"
+          subtitle="The internet, watched for you. AI scans your accounts for the buying signals you don't have the time to chase — then shows you the source so you can decide."
+          className="max-w-4xl"
+        />
       </div>
 
-      <div className="bg-secondary px-8 py-10 sm:py-12">
+      <div className="px-8 py-10 sm:py-12">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <SummaryTile label="Accounts watched" value={watchedCount} />

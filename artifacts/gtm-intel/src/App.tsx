@@ -81,7 +81,7 @@ function RecentSearches() {
 
 function NavSectionLabel({ children }: { children: string }) {
   return (
-    <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+    <p className="px-4 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
       {children}
     </p>
   );
@@ -106,11 +106,11 @@ function SidebarNavLink({
       className={cn(
         "flex items-center gap-2.5 pl-2.5 pr-3 py-2 rounded-r-md text-sm transition-colors border-l-2",
         active
-          ? "border-foreground bg-foreground/[0.06] text-foreground font-bold"
-          : "border-transparent text-muted-foreground font-medium hover:bg-background/60 hover:text-foreground",
+          ? "border-primary bg-primary/10 text-foreground font-semibold"
+          : "border-transparent text-muted-foreground font-medium hover:bg-background/80 hover:text-foreground",
       )}
     >
-      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-foreground" : "text-muted-foreground")} />
+      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-foreground" : "text-muted-foreground/80")} />
       <span className="flex-1">{label}</span>
       {badge != null && badge > 0 && (
         <span className="min-w-[1.25rem] rounded-full bg-amber-500/20 px-1.5 py-0.5 text-center text-[10px] font-bold text-amber-900 dark:text-amber-100">
@@ -143,8 +143,8 @@ function Sidebar() {
 
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-sidebar flex flex-col">
-      <div className="px-5 py-5 border-b border-border bg-sidebar">
-        <Link href="/your-company" className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground">
+      <div className="px-4 py-4 border-b border-border bg-sidebar">
+        <Link href="/your-company" className="flex items-center gap-2.5 font-bold tracking-tight text-foreground">
           <BearMark size={32} />
           <span>GTM Intel</span>
         </Link>

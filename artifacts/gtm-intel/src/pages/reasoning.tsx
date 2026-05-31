@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Brain, Check, Loader2, Sparkles, ArrowRight, Pencil, RotateCcw } from "lucide-react";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -140,7 +140,7 @@ function ReasoningSummary({
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Reasoning</p>
-                <h2 className="text-2xl font-extrabold text-foreground">Configured</h2>
+                <h2 className="text-2xl font-bold text-foreground">Configured</h2>
               </div>
             </div>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full shrink-0">
@@ -417,13 +417,14 @@ export default function ReasoningPage() {
 
   if (!configured) {
     return (
-      <div className="min-h-screen bg-secondary px-8 py-16">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <BearMark size={48} />
-          <h1 className="text-3xl font-extrabold">Set up Your Company first</h1>
-          <p className="text-muted-foreground leading-relaxed">
-            Reasoning uses your seller profile to auto-detect sector packs and compose prompts.
-          </p>
+      <div className="min-h-screen bg-background px-8 py-16">
+        <PageHero
+          showBear
+          bearSize={48}
+          title="Set up Your Company first"
+          subtitle="Reasoning uses your seller profile to auto-detect sector packs and compose prompts."
+        />
+        <div className="max-w-2xl mx-auto mt-8 text-center">
           <Link href="/your-company">
             <Button className="gap-1.5">
               Go to Your Company
@@ -445,21 +446,17 @@ export default function ReasoningPage() {
       : "Auto-detected from Your Company — no changes needed unless the match is wrong for your motion.";
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
-        <div className="max-w-3xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Reasoning</p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            {heroTitle}
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            {heroSubtitle}
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-12 sm:pt-14 pb-8 border-b border-border">
+        <PageHero
+          showBear
+          eyebrow="Reasoning"
+          title={heroTitle}
+          subtitle={heroSubtitle}
+        />
       </div>
 
-      <div className="bg-secondary px-8 py-10 sm:py-12">
+      <div className="px-8 py-10 sm:py-12">
         <div className="max-w-3xl mx-auto space-y-6">
           {!editing ? (
             <ReasoningSummary

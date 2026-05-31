@@ -47,7 +47,7 @@ import {
 } from "@/lib/brief-helpers";
 import { getValidTriggers } from "@/lib/brief-triggers";
 import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { savePrepContext } from "@/lib/call-prep-context";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
@@ -682,7 +682,7 @@ function CompanySearchInput({
   return (
     <div ref={wrapperRef} className="relative z-50">
       <form onSubmit={handleManualSubmit}>
-        <div className="flex gap-2 bg-card border-2 border-foreground/10 rounded-2xl p-2 focus-within:border-foreground/25 transition-all">
+        <div className="flex gap-2 bg-muted/50 border border-border rounded-full p-1.5 pl-4 focus-within:ring-2 focus-within:ring-primary/25 transition-all">
           <div className="flex items-center pl-2 text-muted-foreground">
             {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           </div>
@@ -693,8 +693,9 @@ function CompanySearchInput({
             disabled={loading} autoComplete="off" />
           <Button
             type="submit"
+            size="pill"
             disabled={loading || cooldownSeconds > 0 || !query.trim()}
-            className="gap-2 shrink-0 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-bold border-0 min-h-10 px-5"
+            className="gap-2 shrink-0"
           >
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" />{loadingLabel}</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
           </Button>
@@ -814,19 +815,16 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
 
 function BriefSetupRequired() {
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
-        <div className="max-w-3xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05]">
-            Set up Your Company first
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play. That context shapes every brief, email, and fit score.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-14 sm:pt-16 pb-10">
+        <PageHero
+          showBear
+          bearSize={52}
+          title="Set up Your Company first"
+          subtitle="Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play. That context shapes every brief, email, and fit score."
+        />
       </div>
-      <div className="bg-secondary px-8 py-10 sm:py-12">
+      <div className="px-8 pb-12">
         <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
             It takes about two minutes. Once saved, Search unlocks and research sources adapt to your market automatically.
@@ -1261,27 +1259,21 @@ export default function AccountBriefPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Hero — WTTJ split: yellow top, cream bottom */}
-      <div className="relative z-10">
-        {/* Top half — yellow */}
-        <div className="bg-primary text-foreground px-8 py-10 sm:py-12 lg:py-14">
-          <div className="max-w-5xl mx-auto">
-            <BearMark size={44} className="mb-4" />
-            <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">GTM research</p>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-[1.1] max-w-3xl">
-              Company snapshots, buying committees, and triggers
-            </h1>
-            <p className="mt-3 text-base sm:text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-              {isYourCompanyConfigured(yourCompany)
+    <div className="min-h-screen bg-background">
+      <div className="relative z-10 border-b border-border">
+        <div className="px-8 pt-12 sm:pt-14 pb-8">
+          <PageHero
+            showBear
+            eyebrow="GTM research"
+            title="Company snapshots, buying committees, and triggers"
+            subtitle={
+              isYourCompanyConfigured(yourCompany)
                 ? researchHeroSubtitle(yourCompany)
-                : "Market-specific intel from public sources, LinkedIn, and press. Brief ready to send."}
-            </p>
-          </div>
+                : "Market-specific intel from public sources, LinkedIn, and press. Brief ready to send."
+            }
+          />
         </div>
-
-        {/* Bottom half — cream */}
-        <div className="relative bg-secondary px-8 py-10 sm:py-12 border-b border-border">
+        <div className="px-8 pb-10 sm:pb-12">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col lg:flex-row lg:items-center gap-3">
               <SearchModeToggle

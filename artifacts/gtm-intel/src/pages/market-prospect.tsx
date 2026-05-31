@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Search, Zap, AlertCircle, ChevronRight, Compass } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
+import { PageHero } from "@/components/page-hero";
 import type { MarketProspectResponse } from "@workspace/api-client-react";
 import { loadYourCompany, useDiscoverEnabled, yourCompanyForRequest } from "@/lib/your-company";
 
@@ -110,15 +110,16 @@ export default function MarketProspectPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="border-b border-border bg-gradient-to-br from-background via-background to-primary/5 px-8 py-10">
+    <div className="min-h-screen bg-background">
+      <div className="border-b border-border px-8 pt-12 sm:pt-14 pb-10">
         <div className="max-w-3xl mx-auto">
-          <Compass className="w-6 h-6 text-primary mb-4" />
-          <PageHeader
+          <PageHero
             title="Discover"
             subtitle="Describe your target market in plain English — get up to 20 matching companies to brief and contact."
-            subtitleClassName="mb-6"
-          />
+          >
+            <Compass className="w-6 h-6 text-primary mx-auto mt-6" />
+          </PageHero>
+          <div className="mt-10">
           <DiscoverExplainer />
           <form onSubmit={handleSearch} className="space-y-3">
             <Textarea
@@ -138,6 +139,7 @@ export default function MarketProspectPage() {
               <Loader2 className="w-3 h-3 animate-spin" />Searching the web for matching companies — 30–60 seconds...
             </p>
           )}
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -70,21 +70,22 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE — WTTJ-inspired yellow + cream + black */
+/* LIGHT MODE — Kraken-clean canvas + yellow accent CTAs */
 :root {
+  --hero-max-width: 48rem;
   --button-outline: rgba(0,0,0, .12);
   --badge-outline: rgba(0,0,0, .06);
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 45 22% 96%;
+  --background: 40 20% 98%;
   --foreground: 0 0% 0%;
-  --border: 45 12% 88%;
+  --border: 40 10% 90%;
   --card: 0 0% 100%;
   --card-foreground: 0 0% 0%;
-  --card-border: 45 12% 88%;
-  --sidebar: 45 25% 97%;
+  --card-border: 40 10% 90%;
+  --sidebar: 40 18% 97%;
   --sidebar-foreground: 0 0% 0%;
   --sidebar-border: 45 12% 88%;
   --sidebar-primary: 48 100% 50%;
@@ -97,7 +98,7 @@
   --popover-border: 45 12% 88%;
   --primary: 48 100% 50%;
   --primary-foreground: 0 0% 0%;
-  --secondary: 45 28% 94%;
+  --secondary: 40 16% 95%;
   --secondary-foreground: 0 0% 0%;
   --muted: 0 0% 100%;
   --muted-foreground: 0 0% 28%;
@@ -117,10 +118,10 @@
   --chart-4: 45 28% 94%;
   --chart-5: 0 0% 45%;
 
-  --app-font-sans: 'Lexend', system-ui, sans-serif;
+  --app-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'JetBrains Mono', monospace;
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 }
 
 .dark {

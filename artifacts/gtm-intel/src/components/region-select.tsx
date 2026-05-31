@@ -28,7 +28,7 @@ export function RegionSelect({
         onValueChange={value => onChange(value as MapRegion)}
         disabled={disabled}
       >
-        <SelectTrigger className="w-[170px] bg-background">
+        <SelectTrigger className="w-[170px] h-11 rounded-full bg-muted/50 border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
