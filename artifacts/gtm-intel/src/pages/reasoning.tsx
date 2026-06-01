@@ -5,7 +5,6 @@ import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BriefCard, BriefCardContent, BriefCardHeader, BriefCardTitle } from "@/components/brief-card";
 import { Badge } from "@/components/ui/badge";
@@ -29,37 +28,6 @@ import {
 } from "@workspace/api-client-react";
 
 const AUTO_DETECT_VALUE = "__auto__";
-
-type ReasoningSuggestFieldKey = "whyNowPatterns" | "reasoningOverrides";
-
-const REASONING_SUGGEST_FIELD_KEYS: ReasoningSuggestFieldKey[] = ["whyNowPatterns", "reasoningOverrides"];
-
-const REASONING_SUGGEST_LABELS: Record<ReasoningSuggestFieldKey, string> = {
-  whyNowPatterns: "Why-now patterns",
-  reasoningOverrides: "Reasoning overrides",
-};
-
-function reasoningSuggestFieldNonEmpty(
-  suggestion: SuggestReasoningResponse,
-  key: ReasoningSuggestFieldKey,
-): boolean {
-  return (suggestion[key]?.length ?? 0) > 0;
-}
-
-function defaultReasoningTicked(
-  suggestion: SuggestReasoningResponse,
-): Record<ReasoningSuggestFieldKey, boolean> {
-  return Object.fromEntries(
-    REASONING_SUGGEST_FIELD_KEYS.map(key => [key, reasoningSuggestFieldNonEmpty(suggestion, key)]),
-  ) as Record<ReasoningSuggestFieldKey, boolean>;
-}
-
-function formatReasoningSuggestDisplay(
-  suggestion: SuggestReasoningResponse,
-  key: ReasoningSuggestFieldKey,
-): string {
-  return suggestion[key].map(item => `• ${item}`).join("\n");
-}
 
 function confidencePillClass(confidence: SuggestReasoningResponse["confidence"]): string {
   switch (confidence) {
@@ -260,27 +228,26 @@ function ReasoningEditForm({
   const [suggesting, setSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<SuggestReasoningResponse | null>(null);
   const [suggestError, setSuggestError] = useState<string | null>(null);
-  const [ticked, setTicked] = useState<Record<ReasoningSuggestFieldKey, boolean>>(() =>
-    Object.fromEntries(REASONING_SUGGEST_FIELD_KEYS.map(key => [key, false])) as Record<
-      ReasoningSuggestFieldKey,
-      boolean
-    >,
-  );
+  const [preAutofill, setPreAutofill] = useState<ReasoningFormState | null>(null);
 
   function clearSuggestionCard() {
     setSuggestion(null);
     setSuggestError(null);
-    setTicked(
-      Object.fromEntries(REASONING_SUGGEST_FIELD_KEYS.map(key => [key, false])) as Record<
-        ReasoningSuggestFieldKey,
-        boolean
-      >,
-    );
+    setPreAutofill(null);
+  }
+
+  function handleUndoAutofill() {
+    if (preAutofill) {
+      onChange("whyNowPattern", preAutofill.whyNowPattern);
+      onChange("reasoningOverrides", preAutofill.reasoningOverrides);
+    }
+    clearSuggestionCard();
   }
 
   async function handleAutofillFromWebsite() {
     const name = profile.companyName.trim();
     if (!name || suggesting) return;
+    const snapshot = { ...form };
 
     setSuggesting(true);
     setSuggestError(null);
@@ -292,28 +259,25 @@ function ReasoningEditForm({
         oneLineDescription: profile.oneLineDescription.trim() || undefined,
         industryServed: profile.industryServed.trim() || undefined,
       });
+      setPreAutofill(snapshot);
+      onChange(
+        "whyNowPattern",
+        result.whyNowPatterns.length ? listToLines(result.whyNowPatterns) : form.whyNowPattern,
+      );
+      onChange(
+        "reasoningOverrides",
+        result.reasoningOverrides.length
+          ? listToLines(result.reasoningOverrides)
+          : form.reasoningOverrides,
+      );
       setSuggestion(result);
-      setTicked(defaultReasoningTicked(result));
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not research your company. Try again.";
-      setSuggestError(message);
+      setSuggestError(
+        err instanceof Error ? err.message : "Could not research your company. Try again.",
+      );
     } finally {
       setSuggesting(false);
     }
-  }
-
-  function handleApplySelectedSuggestions() {
-    if (!suggestion) return;
-
-    if (ticked.whyNowPatterns && suggestion.whyNowPatterns.length > 0) {
-      onChange("whyNowPattern", listToLines(suggestion.whyNowPatterns));
-    }
-    if (ticked.reasoningOverrides && suggestion.reasoningOverrides.length > 0) {
-      onChange("reasoningOverrides", listToLines(suggestion.reasoningOverrides));
-    }
-
-    clearSuggestionCard();
   }
 
   const activePackLabel = packOptions.find(p => p.id === (
@@ -332,7 +296,6 @@ function ReasoningEditForm({
       <div className="space-y-3">
         <Button
           type="button"
-          variant="outline"
           size="sm"
           className="gap-1.5"
           disabled={!profile.companyName.trim() || suggesting}
@@ -344,84 +307,13 @@ function ReasoningEditForm({
               Researching your company…
             </>
           ) : (
-            "Autofill from website"
+            <>
+              <Sparkles className="w-4 h-4" />
+              Autofill from website
+            </>
           )}
         </Button>
-
         {suggestError && <p className="text-sm text-destructive">{suggestError}</p>}
-
-        {suggestion && (
-          <BriefCard>
-            <BriefCardContent className="pt-5 space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-foreground">Suggested from your website</p>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${confidencePillClass(suggestion.confidence)}`}
-                >
-                  {suggestion.confidence} confidence
-                </span>
-              </div>
-
-              {suggestion.notes?.trim() && (
-                <p className="text-xs text-muted-foreground leading-snug">{suggestion.notes.trim()}</p>
-              )}
-
-              <div className="space-y-3">
-                {REASONING_SUGGEST_FIELD_KEYS.filter(key =>
-                  reasoningSuggestFieldNonEmpty(suggestion, key),
-                ).map(key => (
-                  <label
-                    key={key}
-                    htmlFor={`reasoning-suggest-${key}`}
-                    className="flex items-start gap-3 cursor-pointer rounded-lg border border-border bg-secondary/30 p-3"
-                  >
-                    <Checkbox
-                      id={`reasoning-suggest-${key}`}
-                      checked={ticked[key]}
-                      onCheckedChange={checked =>
-                        setTicked(current => ({ ...current, [key]: checked === true }))
-                      }
-                      className="mt-0.5"
-                    />
-                    <span className="min-w-0 flex-1 space-y-1">
-                      <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {REASONING_SUGGEST_LABELS[key]}
-                      </span>
-                      <span className="block text-sm text-foreground whitespace-pre-line leading-relaxed">
-                        {formatReasoningSuggestDisplay(suggestion, key)}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              {suggestion.sources.length > 0 && (
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                  {suggestion.sources.map(source => (
-                    <a
-                      key={source.url}
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline underline-offset-2 hover:text-primary/80"
-                    >
-                      {source.label || source.url}
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Button type="button" size="sm" onClick={handleApplySelectedSuggestions}>
-                  Apply selected
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={clearSuggestionCard}>
-                  Dismiss
-                </Button>
-              </div>
-            </BriefCardContent>
-          </BriefCard>
-        )}
       </div>
 
       <BriefCard>
@@ -513,6 +405,55 @@ function ReasoningEditForm({
           </div>
         </BriefCardContent>
       </BriefCard>
+
+      {suggestion && (
+        <BriefCard>
+          <BriefCardContent className="pt-5 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm text-foreground">
+                Drafted from your website — review and edit the fields above.
+              </p>
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${confidencePillClass(suggestion.confidence)}`}
+              >
+                {suggestion.confidence} confidence
+              </span>
+            </div>
+            {suggestion.notes?.trim() && (
+              <p className="text-xs text-muted-foreground leading-snug">{suggestion.notes.trim()}</p>
+            )}
+            {suggestion.sources.length > 0 && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {suggestion.sources.map(source => (
+                  <a
+                    key={source.url}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline underline-offset-2 hover:text-primary/80"
+                  >
+                    {source.label || source.url}
+                  </a>
+                ))}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleUndoAutofill}
+                disabled={!preAutofill}
+              >
+                Undo autofill
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={clearSuggestionCard}>
+                Dismiss
+              </Button>
+            </div>
+          </BriefCardContent>
+        </BriefCard>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={onSave} className="gap-1.5">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, Pencil, Building2, Brain, Loader2 } from "lucide-react";
+import { Check, ArrowRight, Pencil, Building2, Brain, Loader2, Sparkles } from "lucide-react";
 import { suggestCompanyProfile, type SuggestProfileResponse } from "@workspace/api-client-react";
 import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
@@ -51,65 +51,6 @@ function toFormState(data: YourCompany): FormState {
     painPointsText: listToLines(data.painPointsSolved),
     customerOutcomes: data.customerOutcomes ?? "",
   };
-}
-
-type SuggestFieldKey =
-  | "oneLineDescription"
-  | "industryServed"
-  | "geographies"
-  | "buyerTitles"
-  | "painPointsSolved"
-  | "customerOutcomes";
-
-const SUGGEST_FIELD_KEYS: SuggestFieldKey[] = [
-  "oneLineDescription",
-  "industryServed",
-  "geographies",
-  "buyerTitles",
-  "painPointsSolved",
-  "customerOutcomes",
-];
-
-const SUGGEST_FIELD_LABELS: Record<SuggestFieldKey, string> = {
-  oneLineDescription: "What you sell",
-  industryServed: "Industry served",
-  geographies: "Geographies",
-  buyerTitles: "Typical buyers",
-  painPointsSolved: "Pain points",
-  customerOutcomes: "Outcomes",
-};
-
-function suggestFieldNonEmpty(suggestion: SuggestProfileResponse, key: SuggestFieldKey): boolean {
-  switch (key) {
-    case "oneLineDescription":
-    case "industryServed":
-    case "customerOutcomes":
-      return Boolean(suggestion[key]?.trim());
-    case "geographies":
-    case "buyerTitles":
-    case "painPointsSolved":
-      return (suggestion[key]?.length ?? 0) > 0;
-  }
-}
-
-function defaultTickedFromSuggestion(suggestion: SuggestProfileResponse): Record<SuggestFieldKey, boolean> {
-  return Object.fromEntries(
-    SUGGEST_FIELD_KEYS.map(key => [key, suggestFieldNonEmpty(suggestion, key)]),
-  ) as Record<SuggestFieldKey, boolean>;
-}
-
-function formatSuggestDisplay(suggestion: SuggestProfileResponse, key: SuggestFieldKey): string {
-  switch (key) {
-    case "oneLineDescription":
-    case "industryServed":
-    case "customerOutcomes":
-      return suggestion[key]?.trim() ?? "";
-    case "geographies":
-      return suggestion.geographies.join(", ");
-    case "buyerTitles":
-    case "painPointsSolved":
-      return suggestion[key].map(item => `• ${item}`).join("\n");
-  }
 }
 
 function confidencePillClass(confidence: SuggestProfileResponse["confidence"]): string {
@@ -220,9 +161,7 @@ export default function YourCompanyPage() {
   const [suggesting, setSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<SuggestProfileResponse | null>(null);
   const [suggestError, setSuggestError] = useState<string | null>(null);
-  const [ticked, setTicked] = useState<Record<SuggestFieldKey, boolean>>(() =>
-    Object.fromEntries(SUGGEST_FIELD_KEYS.map(key => [key, false])) as Record<SuggestFieldKey, boolean>,
-  );
+  const [preAutofill, setPreAutofill] = useState<FormState | null>(null);
   const [mappingOn, setMappingOn] = useState<boolean>(() => isMappingEnabled(loadYourCompany()));
 
   useEffect(() => {
@@ -233,9 +172,12 @@ export default function YourCompanyPage() {
   function clearSuggestionCard() {
     setSuggestion(null);
     setSuggestError(null);
-    setTicked(
-      Object.fromEntries(SUGGEST_FIELD_KEYS.map(key => [key, false])) as Record<SuggestFieldKey, boolean>,
-    );
+    setPreAutofill(null);
+  }
+
+  function handleUndoAutofill() {
+    if (preAutofill) setForm(preAutofill);
+    clearSuggestionCard();
   }
 
   function startEditing() {
@@ -250,6 +192,7 @@ export default function YourCompanyPage() {
   async function handleAutofillFromWebsite() {
     const name = form.companyName.trim();
     if (!name || suggesting) return;
+    const snapshot = { ...form };
 
     setSuggesting(true);
     setSuggestError(null);
@@ -257,40 +200,30 @@ export default function YourCompanyPage() {
 
     try {
       const result = await suggestCompanyProfile({ companyName: name });
+      setPreAutofill(snapshot);
+      setForm(current => ({
+        ...current,
+        oneLineDescription: result.oneLineDescription.trim() || current.oneLineDescription,
+        industryServed: result.industryServed.trim() || current.industryServed,
+        geographiesText: result.geographies.length
+          ? formatGeographies(result.geographies)
+          : current.geographiesText,
+        buyerTitlesText: result.buyerTitles.length ? listToLines(result.buyerTitles) : current.buyerTitlesText,
+        painPointsText: result.painPointsSolved.length
+          ? listToLines(result.painPointsSolved)
+          : current.painPointsText,
+        customerOutcomes: result.customerOutcomes.trim() || current.customerOutcomes,
+      }));
+      setSaved(false);
+      setErrors([]);
       setSuggestion(result);
-      setTicked(defaultTickedFromSuggestion(result));
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not research your company. Try again.";
-      setSuggestError(message);
+      setSuggestError(
+        err instanceof Error ? err.message : "Could not research your company. Try again.",
+      );
     } finally {
       setSuggesting(false);
     }
-  }
-
-  function handleApplySelectedSuggestions() {
-    if (!suggestion) return;
-
-    if (ticked.oneLineDescription && suggestion.oneLineDescription.trim()) {
-      handleChange("oneLineDescription", suggestion.oneLineDescription.trim());
-    }
-    if (ticked.industryServed && suggestion.industryServed.trim()) {
-      handleChange("industryServed", suggestion.industryServed.trim());
-    }
-    if (ticked.geographies && suggestion.geographies.length > 0) {
-      handleChange("geographiesText", formatGeographies(suggestion.geographies));
-    }
-    if (ticked.buyerTitles && suggestion.buyerTitles.length > 0) {
-      handleChange("buyerTitlesText", listToLines(suggestion.buyerTitles));
-    }
-    if (ticked.painPointsSolved && suggestion.painPointsSolved.length > 0) {
-      handleChange("painPointsText", listToLines(suggestion.painPointsSolved));
-    }
-    if (ticked.customerOutcomes && suggestion.customerOutcomes.trim()) {
-      handleChange("customerOutcomes", suggestion.customerOutcomes.trim());
-    }
-
-    clearSuggestionCard();
   }
 
   function handleChange<K extends keyof FormState>(field: K, value: FormState[K]) {
@@ -369,10 +302,15 @@ export default function YourCompanyPage() {
                 />
               </div>
 
-              <div className="space-y-3">
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">Save the typing</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    We&apos;ll draft your profile from your website — then you can edit every field before saving.
+                  </p>
+                </div>
                 <Button
                   type="button"
-                  variant="outline"
                   size="sm"
                   className="gap-1.5"
                   disabled={!form.companyName.trim() || suggesting}
@@ -384,89 +322,14 @@ export default function YourCompanyPage() {
                       Researching your company…
                     </>
                   ) : (
-                    "Autofill from website"
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Autofill from website
+                    </>
                   )}
                 </Button>
-
                 {suggestError && (
                   <p className="text-sm text-destructive">{suggestError}</p>
-                )}
-
-                {suggestion && (
-                  <BriefCard>
-                    <BriefCardContent className="pt-5 space-y-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">Suggested from your website</p>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${confidencePillClass(suggestion.confidence)}`}
-                        >
-                          {suggestion.confidence} confidence
-                        </span>
-                      </div>
-
-                      {suggestion.notes?.trim() && (
-                        <p className="text-xs text-muted-foreground leading-snug">{suggestion.notes.trim()}</p>
-                      )}
-
-                      <div className="space-y-3">
-                        {SUGGEST_FIELD_KEYS.filter(key => suggestFieldNonEmpty(suggestion, key)).map(key => {
-                          const display = formatSuggestDisplay(suggestion, key);
-                          const multiline = key === "buyerTitles" || key === "painPointsSolved";
-                          return (
-                            <label
-                              key={key}
-                              htmlFor={`suggest-${key}`}
-                              className="flex items-start gap-3 cursor-pointer rounded-lg border border-border bg-secondary/30 p-3"
-                            >
-                              <Checkbox
-                                id={`suggest-${key}`}
-                                checked={ticked[key]}
-                                onCheckedChange={checked =>
-                                  setTicked(current => ({ ...current, [key]: checked === true }))
-                                }
-                                className="mt-0.5"
-                              />
-                              <span className="min-w-0 flex-1 space-y-1">
-                                <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                  {SUGGEST_FIELD_LABELS[key]}
-                                </span>
-                                <span
-                                  className={`block text-sm text-foreground ${multiline ? "whitespace-pre-line leading-relaxed" : ""}`}
-                                >
-                                  {display}
-                                </span>
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      {suggestion.sources.length > 0 && (
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                          {suggestion.sources.map(source => (
-                            <a
-                              key={source.url}
-                              href={source.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary underline underline-offset-2 hover:text-primary/80"
-                            >
-                              {source.label || source.url}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <Button type="button" size="sm" onClick={handleApplySelectedSuggestions}>
-                          Apply selected
-                        </Button>
-                        <Button type="button" variant="outline" size="sm" onClick={clearSuggestionCard}>
-                          Dismiss
-                        </Button>
-                      </div>
-                    </BriefCardContent>
-                  </BriefCard>
                 )}
               </div>
 
@@ -591,6 +454,55 @@ export default function YourCompanyPage() {
                   placeholder="Specific results from existing customers — e.g. 40% faster quote turnaround within 90 days."
                 />
               </div>
+
+              {suggestion && (
+                <BriefCard>
+                  <BriefCardContent className="pt-5 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm text-foreground">
+                        Drafted from your website — review and edit the fields above.
+                      </p>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${confidencePillClass(suggestion.confidence)}`}
+                      >
+                        {suggestion.confidence} confidence
+                      </span>
+                    </div>
+                    {suggestion.notes?.trim() && (
+                      <p className="text-xs text-muted-foreground leading-snug">{suggestion.notes.trim()}</p>
+                    )}
+                    {suggestion.sources.length > 0 && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                        {suggestion.sources.map(source => (
+                          <a
+                            key={source.url}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline underline-offset-2 hover:text-primary/80"
+                          >
+                            {source.label || source.url}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleUndoAutofill}
+                        disabled={!preAutofill}
+                      >
+                        Undo autofill
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={clearSuggestionCard}>
+                        Dismiss
+                      </Button>
+                    </div>
+                  </BriefCardContent>
+                </BriefCard>
+              )}
 
               {errors.length > 0 && (
                 <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive space-y-1">
