@@ -1,7 +1,5 @@
 import { Router, type IRouter } from "express";
 import Anthropic from "@anthropic-ai/sdk";
-import { db } from "@workspace/db";
-import { icpsTable } from "@workspace/db/schema";
 import {
   buildEmailToneInstruction,
   buildDealMotionInstruction,
@@ -70,14 +68,7 @@ router.post("/account-brief", async (req, res): Promise<void> => {
     hasYourCompany: yourCompanyHasContext(yourCompany),
   };
 
-  let icpContext = "";
-  try {
-    const icps = await db.select().from(icpsTable);
-    icpContext = buildIcpScoringContext(icps, userContext, yourCompany);
-  } catch (err) {
-    req.log.warn({ err }, "Could not load ICPs — falling back to generic scoring");
-    icpContext = buildIcpScoringContext([], userContext, yourCompany);
-  }
+  const icpContext = buildIcpScoringContext([], userContext, yourCompany);
 
   const tone = emailTone || "direct";
   const composed = composeAccountBriefPrompt(yourCompany);

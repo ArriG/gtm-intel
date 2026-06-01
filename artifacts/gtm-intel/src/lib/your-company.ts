@@ -179,16 +179,6 @@ export function useMappingEnabled(): boolean {
   return isMappingEnabled(yc);
 }
 
-/** Discover is scoped to SMB outreach — requires complete Your Company plus SMB in deal size. */
-export function isDiscoverEnabled(yc: YourCompany): boolean {
-  return isYourCompanyConfigured(yc) && yc.dealSize.includes("smb");
-}
-
-export function useDiscoverEnabled(): boolean {
-  const data = useYourCompany();
-  return isDiscoverEnabled(data);
-}
-
 export function linesToList(text: string): string[] {
   return text.split("\n").map(line => line.trim()).filter(Boolean);
 }

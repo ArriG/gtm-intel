@@ -9,42 +9,6 @@ export interface HealthStatus {
   status: string;
 }
 
-export interface Icp {
-  id: number;
-  name: string;
-  industry: string;
-  companySize: string;
-  jobTitles?: string[];
-  painPoints: string[];
-  goals: string[];
-  channels: string[];
-  /** @nullable */
-  notes?: string | null;
-  createdAt: string;
-}
-
-export interface IcpInput {
-  name: string;
-  industry: string;
-  companySize: string;
-  jobTitles?: string[];
-  painPoints: string[];
-  goals: string[];
-  channels: string[];
-  notes?: string;
-}
-
-export interface IcpUpdate {
-  name?: string;
-  industry?: string;
-  companySize?: string;
-  jobTitles?: string[];
-  painPoints?: string[];
-  goals?: string[];
-  channels?: string[];
-  notes?: string;
-}
-
 /**
  * Tier 1 and Tier 2 buying signal categories for account scans
  */
@@ -525,22 +489,6 @@ export interface CallPrep {
 export type CallPrepInput = BriefActionInput & {
   meetingType: MeetingType;
 };
-
-export interface MarketProspectInput {
-  description: string;
-  yourCompany?: YourCompany;
-}
-
-export interface ProspectCompany {
-  name: string;
-  domain: string;
-  reason: string;
-  estimatedSize?: string;
-}
-
-export interface MarketProspectResponse {
-  companies: ProspectCompany[];
-}
 
 export type MapRegion = typeof MapRegion[keyof typeof MapRegion];
 

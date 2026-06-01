@@ -1,21 +1,18 @@
 import { useEffect, useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Building2, Sparkles, Users, Radio, ChevronRight, ChevronDown, Target, Brain, FolderOpen, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Radio, ChevronRight, ChevronDown, Brain, FolderOpen, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { BriefStatusPill } from "@/components/brief-status-pill";
 import { useHistory, clearHistory, getWatchedBriefs } from "@/lib/history";
 import { countScanDue } from "@/lib/signal-tracking";
-import { useDiscoverEnabled, useIsYourCompanyConfigured } from "@/lib/your-company";
+import { useIsYourCompanyConfigured } from "@/lib/your-company";
 
 import AccountBriefPage from "./pages/account-brief";
 import YourCompany from "./pages/your-company";
 import ReasoningPage from "./pages/reasoning";
-import ICPs from "./pages/icps";
-import ICPDetail from "./pages/icp-detail";
 import Signals from "./pages/signals";
-import MarketProspect from "./pages/market-prospect";
 import CallPrepPage from "./pages/call-prep";
 import MyBriefsPage from "./pages/my-briefs";
 import NotFound from "./pages/not-found";
@@ -29,15 +26,9 @@ const NAV_SETUP = [
 
 const NAV_RESEARCH_BASE = [
   { href: "/", label: "Search", icon: Sparkles },
-  { href: "/my-briefs", label: "My briefs", icon: FolderOpen },
+  { href: "/my-briefs", label: "My list", icon: FolderOpen },
   { href: "/signals", label: "Signals", icon: Radio },
 ] as const;
-
-const NAV_DISCOVER = { href: "/discover", label: "Discover", icon: Target } as const;
-
-const NAV_WORKSPACE = [
-  { href: "/icps", label: "ICPs", icon: Users },
-];
 
 function RecentSearches() {
   const history = useHistory();
@@ -121,25 +112,12 @@ function SidebarNavLink({
   );
 }
 
-function LegacyProspectRedirect() {
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    setLocation("/discover");
-  }, [setLocation]);
-
-  return null;
-}
-
 function Sidebar() {
   const [location] = useLocation();
   const history = useHistory();
-  const discoverEnabled = useDiscoverEnabled();
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
   const scanDueCount = countScanDue(getWatchedBriefs());
-  const researchNav = discoverEnabled
-    ? [...NAV_RESEARCH_BASE, NAV_DISCOVER]
-    : [...NAV_RESEARCH_BASE];
+  const researchNav = NAV_RESEARCH_BASE;
 
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-sidebar flex flex-col">
@@ -174,15 +152,6 @@ function Sidebar() {
             </div>
           ))}
         </div>
-
-        <div className="my-3 mx-3 border-t border-border" />
-
-        <NavSectionLabel>Workspace</NavSectionLabel>
-        <div className="space-y-0.5">
-          {NAV_WORKSPACE.map(({ href, label, icon }) => (
-            <SidebarNavLink key={href} href={href} label={label} icon={icon} active={isActive(href)} />
-          ))}
-        </div>
       </nav>
     </aside>
   );
@@ -213,12 +182,8 @@ export default function App() {
             <Route path="/" component={AccountBriefPage} />
             <Route path="/my-briefs" component={MyBriefsPage} />
             <Route path="/prep" component={CallPrepPage} />
-            <Route path="/prospect" component={LegacyProspectRedirect} />
-            <Route path="/discover" component={MarketProspect} />
             <Route path="/your-company" component={YourCompany} />
             <Route path="/reasoning" component={ReasoningPage} />
-            <Route path="/icps" component={ICPs} />
-            <Route path="/icps/:id" component={ICPDetail} />
             <Route path="/signals" component={Signals} />
             <Route component={NotFound} />
           </Switch>

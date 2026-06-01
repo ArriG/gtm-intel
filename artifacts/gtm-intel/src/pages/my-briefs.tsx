@@ -87,8 +87,8 @@ export default function MyBriefsPage() {
         <PageHero
           showBear
           eyebrow="Research"
-          title="My briefs"
-          subtitle="Track where each account stands and jump back into the brief when you need it."
+          title="My list"
+          subtitle="Track where each account stands and jump back into research when you need it."
           className="max-w-4xl"
         />
       </div>
@@ -139,11 +139,11 @@ export default function MyBriefsPage() {
                 </div>
                 <div className="space-y-2">
                   <h2 className="text-lg font-bold text-foreground">
-                    {history.length === 0 ? "No briefs yet" : "No briefs match these filters"}
+                    {history.length === 0 ? "No accounts yet" : "No accounts match these filters"}
                   </h2>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     {history.length === 0
-                      ? "Run a search to get started."
+                      ? "Run a search to add your first account."
                       : "Try showing more statuses or change your sort order."}
                   </p>
                 </div>

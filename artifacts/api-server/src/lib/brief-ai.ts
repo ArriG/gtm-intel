@@ -141,38 +141,6 @@ DEFINED ICPs:
 ${descriptions}`;
 }
 
-export function buildIcpRadarContext(icps: typeof icpsTable.$inferSelect[]): string {
-  if (!icps || icps.length === 0) {
-    return "";
-  }
-
-  const descriptions = icps.map((icp, i) => {
-    const safeparse = (val: string, fallback: string[] = []) => {
-      try { return JSON.parse(val) as string[]; } catch { return fallback; }
-    };
-    const jobTitles = safeparse(icp.jobTitles);
-    const painPoints = safeparse(icp.painPoints);
-    const goals = safeparse(icp.goals);
-    const channels = safeparse(icp.channels);
-
-    return [
-      `ICP ${i + 1} (id: ${icp.id}): "${icp.name}"`,
-      `  Industry: ${icp.industry}`,
-      `  Company size: ${icp.companySize}`,
-      jobTitles.length ? `  Key roles: ${jobTitles.join(", ")}` : null,
-      painPoints.length ? `  Pain points: ${painPoints.join("; ")}` : null,
-      goals.length ? `  Goals: ${goals.join("; ")}` : null,
-      channels.length ? `  Preferred channels: ${channels.join(", ")}` : null,
-      icp.notes ? `  Notes: ${icp.notes}` : null,
-    ].filter(Boolean).join("\n");
-  }).join("\n\n");
-
-  return `DEFINED ICPs — find companies and events that match these profiles:
-${descriptions}
-
-For each signal, set icpName to the matching ICP name and icpId to its id.`;
-}
-
 export function yourCompanyHasRadarContext(yourCompany?: YourCompanyInput): boolean {
   return yourCompanyHasContext(yourCompany);
 }
