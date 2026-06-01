@@ -538,6 +538,7 @@ export interface EntityBuyer {
   sourceUrl: string;
   sourceTitle: string;
   tenureNote?: string;
+  reportsTo?: string;
 }
 
 export interface MapEntity {
@@ -549,6 +550,7 @@ export interface MapEntity {
   parentRelationship: EntityParentRelationship;
   context: string;
   buyingAutonomy: EntityBuyingAutonomy;
+  autonomyReason?: string;
   fitTier: EntityFitTier;
   fitReason: string;
   buyers: EntityBuyer[];

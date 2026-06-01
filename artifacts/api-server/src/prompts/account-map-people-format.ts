@@ -11,7 +11,8 @@ Return ONLY valid JSON with this exact shape:
           "role": "e.g. Chief Actuary, COO, CTO, CRO, or Managing Director",
           "sourceUrl": "https://verifiable-source.example",
           "sourceTitle": "e.g. Zurich UK Annual Report 2024",
-          "tenureNote": "appointed Jan 2024"
+          "tenureNote": "appointed Jan 2024",
+          "reportsTo": "Who they report to, ONLY where a public source states it — e.g. 'Reports to Group COO'. Omit/empty if not public. Never infer."
         }
       ],
       "leadershipNote": "Required when buyers is empty or has fewer than 2 named executives",
@@ -32,4 +33,5 @@ Other rules:
 - Search regulator filings and annual report executive committee pages — not only press releases.
 - Use roughly one focused web search per entity in the list — spend it on the entity's most likely public source (regulator register, SFCR/statutory filing, annual report exec page).
 - Return one object per entity in the user list — same count, same names.
+- reportsTo is factual only — include it solely when a public source states the reporting line. Never infer a reporting line from titles.
 - CRITICAL: no markdown, no preamble — raw JSON only.`;

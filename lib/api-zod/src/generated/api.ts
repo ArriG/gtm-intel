@@ -690,6 +690,7 @@ export const GenerateAccountMapResponse = zod.object({
   "parentRelationship": zod.enum(['subsidiary', 'branch', 'affiliate', 'division', 'joint_venture']),
   "context": zod.string(),
   "buyingAutonomy": zod.enum(['independent', 'group_gated', 'mixed', 'unknown']),
+  "autonomyReason": zod.string().optional(),
   "fitTier": zod.enum(['strong', 'moderate', 'skip']),
   "fitReason": zod.string(),
   "buyers": zod.array(zod.object({
@@ -697,7 +698,8 @@ export const GenerateAccountMapResponse = zod.object({
   "role": zod.string(),
   "sourceUrl": zod.string(),
   "sourceTitle": zod.string(),
-  "tenureNote": zod.string().optional()
+  "tenureNote": zod.string().optional(),
+  "reportsTo": zod.string().optional()
 })),
   "leadershipNote": zod.string().optional().describe('Honest one-liner explaining what was searched for leadership and what gaps remain.\nPopulated when the model could not surface a full executive committee for this entity.\nFormat: \"Searched [sources] — [what was found \/ what to check next]\".\n'),
   "sources": zod.array(zod.string())

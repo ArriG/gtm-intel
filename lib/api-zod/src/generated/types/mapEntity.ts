@@ -20,6 +20,7 @@ export interface MapEntity {
   parentRelationship: EntityParentRelationship;
   context: string;
   buyingAutonomy: EntityBuyingAutonomy;
+  autonomyReason?: string;
   fitTier: EntityFitTier;
   fitReason: string;
   buyers: EntityBuyer[];

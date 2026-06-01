@@ -12,4 +12,5 @@ export interface EntityBuyer {
   sourceUrl: string;
   sourceTitle: string;
   tenureNote?: string;
+  reportsTo?: string;
 }

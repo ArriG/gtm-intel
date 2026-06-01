@@ -31,8 +31,9 @@ Return ONLY valid JSON with this exact shape:
       "parentRelationship": "subsidiary | branch | affiliate | division | joint_venture",
       "context": "1-3 factual sentences on recent events — tech, regulation, leadership changes (no named people required). NO coaching.",
       "buyingAutonomy": "independent | group_gated | mixed | unknown",
+      "autonomyReason": "One factual, SOURCED sentence behind the autonomy call — e.g. 'Has its own CIO and IT procurement per 2024 annual report.' State the fact only, no recommendation. Empty string if not evidenced.",
       "fitTier": "strong | moderate | skip",
-      "fitReason": "One factual sentence on alignment to seller profile.",
+      "fitReason": "One factual sentence naming the function and whether this entity performs it (e.g. 'Underwrites commercial property risk directly' or 'Holding company — no underwriting operations').",
       "buyers": [],
       "sources": ["https://...", "https://..."]
     }
@@ -54,7 +55,8 @@ PASS 1 RULES:
 - companySnapshot is a lean factual header only (size, industry, location, fundingStage) — fill from known facts; do NOT spend web searches on snapshot fields. Deeper company context belongs in Brief mode, not Mapping.
 - entity context is brief (1-2 sentences max) — do NOT run per-entity news searches in Pass 1.
 - Do NOT fetch PDF filings, SFCR documents, or regulator register exports in Pass 1 — Pass 2 handles leadership from those sources.
-- fitTier is factual alignment (geography, industry, business line) — NOT a sales heat score.
+- fitTier reflects FUNCTION-LEVEL fit: does this entity actually perform the work the seller's product addresses (use the Your Company context — e.g. for underwriting software, does this entity underwrite)? "strong" = performs that function directly; "moderate" = adjacent or partial; "skip" = does not perform it (e.g. holding, financing, shared-services, or brand-only entity). Judge on the entity's business line and what the seller sells — NOT on geography or industry alone, and NOT as a sales heat score.
+- autonomyReason must be a verifiable fact (filing, annual report, org announcement) — NOT a guess and NOT advice. Empty string when the autonomy call is "unknown" or unevidenced.
 - Use at most 3 web searches total for this structure pass — prioritise entity discovery; stop searching once you have solid entity coverage.
 - Set isSingleEntity=true if the target is not a federated multi-entity enterprise.
 - CRITICAL: no markdown, no preamble — raw JSON only.`;

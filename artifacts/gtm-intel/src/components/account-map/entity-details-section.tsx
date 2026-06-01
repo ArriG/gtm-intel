@@ -52,6 +52,9 @@ function EntityDetailCard({
             <p className="text-sm">
               <span className="font-medium text-foreground">Buying autonomy: </span>
               <span className="text-muted-foreground">{AUTONOMY_LABELS[entity.buyingAutonomy]}</span>
+              {entity.autonomyReason && (
+                <span className="block text-xs text-muted-foreground mt-0.5">{entity.autonomyReason}</span>
+              )}
             </p>
             <p className="text-sm text-muted-foreground">{entity.fitReason}</p>
 
@@ -65,6 +68,9 @@ function EntityDetailCard({
                       <span className="text-muted-foreground"> — {buyer.role}</span>
                       {buyer.tenureNote && (
                         <span className="text-muted-foreground"> ({buyer.tenureNote})</span>
+                      )}
+                      {buyer.reportsTo && (
+                        <p className="text-xs text-muted-foreground mt-0.5">↳ {buyer.reportsTo}</p>
                       )}
                       <div>
                         <a

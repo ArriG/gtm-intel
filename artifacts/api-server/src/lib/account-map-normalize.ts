@@ -32,6 +32,7 @@ type RawBuyer = {
   sourceUrl?: string;
   sourceTitle?: string;
   tenureNote?: string;
+  reportsTo?: string;
 };
 
 type RawEntity = {
@@ -43,6 +44,7 @@ type RawEntity = {
   parentRelationship?: string;
   context?: string;
   buyingAutonomy?: string;
+  autonomyReason?: string;
   fitTier?: string;
   fitReason?: string;
   buyers?: unknown;
@@ -158,6 +160,7 @@ function normaliseBuyers(raw: unknown): Array<Record<string, unknown>> {
       sourceUrl,
       sourceTitle,
       ...(cleanString(buyer.tenureNote) ? { tenureNote: cleanString(buyer.tenureNote) } : {}),
+      ...(cleanString(buyer.reportsTo) ? { reportsTo: cleanString(buyer.reportsTo) } : {}),
     });
     if (buyers.length >= MAX_BUYERS) break;
   }
@@ -175,6 +178,7 @@ function normaliseEntity(raw: RawEntity): Record<string, unknown> | null {
 
   const parentRelationship = cleanString(raw.parentRelationship);
   const buyingAutonomy = cleanString(raw.buyingAutonomy);
+  const autonomyReason = cleanString(raw.autonomyReason);
   const fitTier = cleanString(raw.fitTier);
 
   const sources = Array.isArray(raw.sources)
@@ -195,6 +199,7 @@ function normaliseEntity(raw: RawEntity): Record<string, unknown> | null {
     parentRelationship: PARENT_RELATIONSHIPS.has(parentRelationship) ? parentRelationship : "subsidiary",
     context,
     buyingAutonomy: BUYING_AUTONOMY.has(buyingAutonomy) ? buyingAutonomy : "unknown",
+    ...(autonomyReason ? { autonomyReason } : {}),
     fitTier: FIT_TIERS.has(fitTier) ? fitTier : "moderate",
     fitReason,
     buyers,

@@ -904,6 +904,8 @@ components:
           type: string
         tenureNote:
           type: string
+        reportsTo:
+          type: string
 
     MapEntity:
       type: object
@@ -938,6 +940,8 @@ components:
           type: string
         buyingAutonomy:
           $ref: "#/components/schemas/EntityBuyingAutonomy"
+        autonomyReason:
+          type: string
         fitTier:
           $ref: "#/components/schemas/EntityFitTier"
         fitReason:

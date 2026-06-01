@@ -87,6 +87,9 @@ export function EntityCardCompact({ entity }: { entity: MapEntity }) {
                       {leader.tenureNote && (
                         <span className="text-white/70"> ({leader.tenureNote})</span>
                       )}
+                      {leader.reportsTo && (
+                        <p className="text-[11px] text-white/70 mt-0.5">↳ {leader.reportsTo}</p>
+                      )}
                       <div className="mt-0.5">
                         <a
                           href={leader.sourceUrl}
@@ -119,6 +122,9 @@ export function EntityCardCompact({ entity }: { entity: MapEntity }) {
             <p className="text-xs break-words">
               <span className="font-medium text-white">Buying autonomy: </span>
               <span className="text-white/80">{AUTONOMY_LABELS[entity.buyingAutonomy]}</span>
+              {entity.autonomyReason && (
+                <span className="block text-[11px] text-white/70 mt-0.5">{entity.autonomyReason}</span>
+              )}
             </p>
 
             <p className="text-xs text-white/80 break-words">{entity.fitReason}</p>
