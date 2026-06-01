@@ -302,13 +302,7 @@ export default function YourCompanyPage() {
                 />
               </div>
 
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">Save the typing</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    We&apos;ll draft your profile from your website — then you can edit every field before saving.
-                  </p>
-                </div>
+              <div className="space-y-2">
                 <Button
                   type="button"
                   size="sm"
