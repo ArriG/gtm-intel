@@ -147,6 +147,38 @@ export function useIsYourCompanyConfigured(): boolean {
   return isYourCompanyConfigured(data);
 }
 
+const MAPPING_PREF_KEY = "gtm_mapping_pref_v1"; // "on" | "off"; absent = derive from deal size
+
+export function getMappingPreference(): "on" | "off" | null {
+  try {
+    const v = localStorage.getItem(MAPPING_PREF_KEY);
+    return v === "on" || v === "off" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setMappingPreference(pref: "on" | "off") {
+  try {
+    localStorage.setItem(MAPPING_PREF_KEY, pref);
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Mapping is on when explicitly enabled, or (no explicit pref) when the seller targets Enterprise. */
+export function isMappingEnabled(yc: YourCompany): boolean {
+  const pref = getMappingPreference();
+  if (pref) return pref === "on";
+  return yc.dealSize.includes("enterprise");
+}
+
+export function useMappingEnabled(): boolean {
+  const yc = useYourCompany();
+  return isMappingEnabled(yc);
+}
+
 export function linesToList(text: string): string[] {
   return text.split("\n").map(line => line.trim()).filter(Boolean);
 }

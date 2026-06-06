@@ -1,0 +1,29 @@
+import type { AccountMapResponse } from "@workspace/api-client-react";
+import { Badge } from "@/components/ui/badge";
+import { BriefCard, BriefCardContent } from "@/components/brief-card";
+import { MapCompanySnapshotInline } from "./map-company-snapshot";
+
+export function ParentSummaryCard({
+  parent,
+  sectorPackUsed,
+  companySnapshot,
+}: Pick<AccountMapResponse, "parent" | "sectorPackUsed" | "companySnapshot">) {
+  return (
+    <BriefCard>
+      <BriefCardContent className="pt-5 space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold tracking-tight">{parent.name}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {parent.headquartersCountry} · {parent.industry}
+            </p>
+          </div>
+          <Badge variant="outline" className="text-[11px] shrink-0">
+            Sourced from: {sectorPackUsed.replace(/-/g, " ")}
+          </Badge>
+        </div>
+        <MapCompanySnapshotInline snapshot={companySnapshot} />
+      </BriefCardContent>
+    </BriefCard>
+  );
+}

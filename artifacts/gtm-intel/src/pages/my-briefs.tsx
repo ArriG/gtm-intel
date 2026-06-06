@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, FolderOpen } from "lucide-react";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -82,21 +82,18 @@ export default function MyBriefsPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
-        <div className="max-w-4xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Research</p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            My briefs
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            Track where each account stands and jump back into the brief when you need it.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-12 sm:pt-14 pb-8 border-b border-border">
+        <PageHero
+          showBear
+          eyebrow="Research"
+          title="My list"
+          subtitle="Track where each account stands and jump back into research when you need it."
+          className="max-w-4xl"
+        />
       </div>
 
-      <div className="bg-secondary px-8 py-10 sm:py-12">
+      <div className="px-8 py-10 sm:py-12">
         <div className="max-w-4xl mx-auto space-y-6">
           {history.length > 0 && (
             <BriefCard>
@@ -142,11 +139,11 @@ export default function MyBriefsPage() {
                 </div>
                 <div className="space-y-2">
                   <h2 className="text-lg font-bold text-foreground">
-                    {history.length === 0 ? "No briefs yet" : "No briefs match these filters"}
+                    {history.length === 0 ? "No accounts yet" : "No accounts match these filters"}
                   </h2>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     {history.length === 0
-                      ? "Run a search to get started."
+                      ? "Run a search to add your first account."
                       : "Try showing more statuses or change your sort order."}
                   </p>
                 </div>

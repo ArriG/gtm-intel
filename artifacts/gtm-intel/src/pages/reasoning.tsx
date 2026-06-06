@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Brain, Check, Loader2, Sparkles, ArrowRight, Pencil, RotateCcw } from "lucide-react";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   loadYourCompany,
   saveYourCompany,
+  listToLines,
   useIsYourCompanyConfigured,
   useYourCompany,
   yourCompanyForRequest,
@@ -19,12 +20,25 @@ import {
 import { detectSectorPackClient } from "@/lib/research-loading";
 import {
   previewAccountBriefPrompt,
+  suggestCompanyReasoning,
   useListSectorPacks,
   type PreviewPromptResponse,
   type SectorPackOption,
+  type SuggestReasoningResponse,
 } from "@workspace/api-client-react";
 
 const AUTO_DETECT_VALUE = "__auto__";
+
+function confidencePillClass(confidence: SuggestReasoningResponse["confidence"]): string {
+  switch (confidence) {
+    case "high":
+      return "bg-green-500/15 text-green-800 dark:text-green-200";
+    case "medium":
+      return "bg-amber-500/15 text-amber-800 dark:text-amber-200";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
 
 type ReasoningFormState = {
   whyNowPattern: string;
@@ -140,7 +154,7 @@ function ReasoningSummary({
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Reasoning</p>
-                <h2 className="text-2xl font-extrabold text-foreground">Configured</h2>
+                <h2 className="text-2xl font-bold text-foreground">Configured</h2>
               </div>
             </div>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full shrink-0">
@@ -189,6 +203,7 @@ function ReasoningSummary({
 }
 
 function ReasoningEditForm({
+  profile,
   form,
   packOptions,
   clientDetect,
@@ -199,6 +214,7 @@ function ReasoningEditForm({
   previewLoading,
   savedFlash,
 }: {
+  profile: YourCompany;
   form: ReasoningFormState;
   packOptions: SectorPackOption[];
   clientDetect: ReturnType<typeof detectSectorPackClient> | null;
@@ -209,6 +225,61 @@ function ReasoningEditForm({
   previewLoading: boolean;
   savedFlash: boolean;
 }) {
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<SuggestReasoningResponse | null>(null);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [preAutofill, setPreAutofill] = useState<ReasoningFormState | null>(null);
+
+  function clearSuggestionCard() {
+    setSuggestion(null);
+    setSuggestError(null);
+    setPreAutofill(null);
+  }
+
+  function handleUndoAutofill() {
+    if (preAutofill) {
+      onChange("whyNowPattern", preAutofill.whyNowPattern);
+      onChange("reasoningOverrides", preAutofill.reasoningOverrides);
+    }
+    clearSuggestionCard();
+  }
+
+  async function handleAutofillFromWebsite() {
+    const name = profile.companyName.trim();
+    if (!name || suggesting) return;
+    const snapshot = { ...form };
+
+    setSuggesting(true);
+    setSuggestError(null);
+    setSuggestion(null);
+
+    try {
+      const result = await suggestCompanyReasoning({
+        companyName: name,
+        oneLineDescription: profile.oneLineDescription.trim() || undefined,
+        industryServed: profile.industryServed.trim() || undefined,
+      });
+      setPreAutofill(snapshot);
+      onChange(
+        "whyNowPattern",
+        result.whyNowPatterns.length ? listToLines(result.whyNowPatterns) : form.whyNowPattern,
+      );
+      onChange(
+        "reasoningOverrides",
+        result.reasoningOverrides.length
+          ? listToLines(result.reasoningOverrides)
+          : form.reasoningOverrides,
+      );
+      setSuggestion(result);
+    } catch (err) {
+      setSuggestError(
+        err instanceof Error ? err.message : "Could not research your company. Try again.",
+      );
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
   const activePackLabel = packOptions.find(p => p.id === (
     form.sectorPackOverride === AUTO_DETECT_VALUE ? clientDetect?.packId : form.sectorPackOverride
   ))?.name ?? "Default UK/AU research plan";
@@ -220,6 +291,29 @@ function ReasoningEditForm({
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          type="button"
+          size="sm"
+          className="gap-1.5"
+          disabled={!profile.companyName.trim() || suggesting}
+          onClick={() => void handleAutofillFromWebsite()}
+        >
+          {suggesting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Researching your company…
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Autofill from website
+            </>
+          )}
+        </Button>
+        {suggestError && <p className="text-sm text-destructive">{suggestError}</p>}
       </div>
 
       <BriefCard>
@@ -311,6 +405,55 @@ function ReasoningEditForm({
           </div>
         </BriefCardContent>
       </BriefCard>
+
+      {suggestion && (
+        <BriefCard>
+          <BriefCardContent className="pt-5 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm text-foreground">
+                Drafted from your website — review and edit the fields above.
+              </p>
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${confidencePillClass(suggestion.confidence)}`}
+              >
+                {suggestion.confidence} confidence
+              </span>
+            </div>
+            {suggestion.notes?.trim() && (
+              <p className="text-xs text-muted-foreground leading-snug">{suggestion.notes.trim()}</p>
+            )}
+            {suggestion.sources.length > 0 && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {suggestion.sources.map(source => (
+                  <a
+                    key={source.url}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline underline-offset-2 hover:text-primary/80"
+                  >
+                    {source.label || source.url}
+                  </a>
+                ))}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleUndoAutofill}
+                disabled={!preAutofill}
+              >
+                Undo autofill
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={clearSuggestionCard}>
+                Dismiss
+              </Button>
+            </div>
+          </BriefCardContent>
+        </BriefCard>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={onSave} className="gap-1.5">
@@ -417,13 +560,14 @@ export default function ReasoningPage() {
 
   if (!configured) {
     return (
-      <div className="min-h-screen bg-secondary px-8 py-16">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <BearMark size={48} />
-          <h1 className="text-3xl font-extrabold">Set up Your Company first</h1>
-          <p className="text-muted-foreground leading-relaxed">
-            Reasoning uses your seller profile to auto-detect sector packs and compose prompts.
-          </p>
+      <div className="min-h-screen bg-background px-8 py-16">
+        <PageHero
+          showBear
+          bearSize={48}
+          title="Set up Your Company first"
+          subtitle="Reasoning uses your seller profile to auto-detect sector packs and compose prompts."
+        />
+        <div className="max-w-2xl mx-auto mt-8 text-center">
           <Link href="/your-company">
             <Button className="gap-1.5">
               Go to Your Company
@@ -445,21 +589,17 @@ export default function ReasoningPage() {
       : "Auto-detected from Your Company — no changes needed unless the match is wrong for your motion.";
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
-        <div className="max-w-3xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Reasoning</p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            {heroTitle}
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            {heroSubtitle}
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-12 sm:pt-14 pb-8 border-b border-border">
+        <PageHero
+          showBear
+          eyebrow="Reasoning"
+          title={heroTitle}
+          subtitle={heroSubtitle}
+        />
       </div>
 
-      <div className="bg-secondary px-8 py-10 sm:py-12">
+      <div className="px-8 py-10 sm:py-12">
         <div className="max-w-3xl mx-auto space-y-6">
           {!editing ? (
             <ReasoningSummary
@@ -475,6 +615,7 @@ export default function ReasoningPage() {
             />
           ) : (
             <ReasoningEditForm
+              profile={profile}
               form={form}
               packOptions={packOptions}
               clientDetect={editClientDetect}

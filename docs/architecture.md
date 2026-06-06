@@ -178,6 +178,31 @@ Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy
 
 ---
 
+## Account Map (Mapping mode)
+
+Full walkthrough of recent changes (two-pass design, timeouts, lean Pass 1): [`docs/mapping-changes-explained.md`](mapping-changes-explained.md).
+
+`POST /api/account-map` — two-pass Claude + `web_search` for region-scoped enterprise structure, then leadership on top 5 fit-tier entities. Default model: **Sonnet** (`claude-sonnet-4-6`); override with env `MAPPING_MODEL` / `MAPPING_PASS_2_MODEL` (e.g. Haiku for cost experiments — recommended while tuning).
+
+| Pass | Purpose | Timeout | `max_uses` |
+|------|---------|---------|------------|
+| 1 | Structure only (`buyers: []`) — lean snapshot, no `groupBackground` | 120s | 3 |
+| 2 | Leadership (`buyers`, `leadershipNote`) | 90s | ~1 per enriched entity (3–5, dynamic) |
+
+Whole-request budget: 225s server; client abort 235s. Pass 2 skipped if &lt;15s remains after Pass 1.
+
+**Pass 1 scope:** Lean `companySnapshot` (size/industry/location/fundingStage only — no dedicated searches for snapshot). `groupBackground` removed from mapping — deeper company context belongs in Brief mode. Up to 20 entities (8/region) plus `outreachSources[]` pointing to where unmapped entities live. Pass 1 must **not** open PDF filings, SFCR documents, or regulator register exports — those are Pass 2 only (`PASS_1_SEARCH_RULES` + `structurePackExcerpt()` in `account-map.ts`). Per-pass timing logs: `[account-map] Pass 1 (structure) complete in …ms` in server Console.
+
+**Replit deploy check:** After `git pull`, restart the server. Set `MAPPING_MODEL=claude-haiku-4-5-20251001` for Haiku testing. Console must show `[account-map] runtime config` with `pass1.maxSearches: 3`, `leadershipEnrichCap: 8`, `pass2.timeoutMs: 105000`, and `pass2.searchesPerEntity: true` with `pass2.maxSearches: 8`.
+
+**Smoke test:** `MAP_STRUCTURE_ONLY=1` skips Pass 2 (structure-only, cheapest run).
+
+**Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are **name-only** in `unmappedEntities[]`. **Enforced in code** via [`account-map-scope.ts`](../artifacts/api-server/src/lib/account-map-scope.ts) before normalize (demotes out-of-scope `entities[]` rows). Pass 1 prompts avoid global structure searches; Pass 2 defaults to **8** leadership targets (`LEADERSHIP_ENRICH_CAP`). Whole-request budget **225s** server / **235s** client abort. UI: **Map another region** for separate NA/APAC/LATAM runs. `REGION_SCOPES` in `account-map.ts` injects regulator hints and `user_location`.
+
+Cost safeguards: `maxRetries: 0`, SDK `timeout` in RequestOptions (2nd arg), not in body. Timed-out `web_search` still bills for partial work (Issue 2 in `docs/anthropic-sdk-bug-report.md`) — longer Pass 2 timeout only pays off if it converts into returned stakeholders.
+
+---
+
 ## Known gaps / follow-ups
 
 1. **Partial brief JSON** — OpenAPI requires full `AccountBrief` shape; Haiku sometimes omits `recentTriggers.items`. Frontend uses `?? []` fallbacks; backend does not yet normalize responses.
@@ -195,3 +220,4 @@ Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy
 | `66cfe13` | Parked backlog: tones, talk track, prospecting, export, README, battlecard API removal |
 | `c607f95` | Cite tag stripping; distinct cold email tones |
 | `af903c6` | Null-safe Save as ICP when brief omits triggers |
+| `f0bb91c` | Pass 1 search discipline — no PDF/regulator deep-dives in structure pass; per-pass timing logs |

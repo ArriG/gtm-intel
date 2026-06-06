@@ -4,27 +4,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Building2, Star, Users, Newspaper, Mail, Loader2,
   Copy, Check, Globe, Zap, Search,
   Trash2, Clock, ChevronDown, MapPin,
-  Brain, BookOpen, AlertCircle, ExternalLink, Flag,
+  Brain, BookOpen, AlertCircle, ExternalLink,
   Download, FileText, MessageCircle, ClipboardList, ArrowRight, Phone, HelpCircle, Compass
 } from "lucide-react";
-import type { AccountBrief, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
-import { EmailTone as EmailToneValues, useCreateIcp, getListIcpsQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import type { AccountBrief, AccountMapResponse, BriefSource, BuyingCommitteeMember, LinkedInPost, EmailTone, TalkTrack } from "@workspace/api-client-react";
+import { EmailTone as EmailToneValues, generateAccountMap } from "@workspace/api-client-react";
 import { useSearchParams, Link } from "wouter";
 import { loadHistory, saveToHistory, updateHistoryEntry, getHistoryEntry, type HistoryEntry } from "@/lib/history";
 import type { BriefStatus } from "@/lib/brief-status";
 import { BriefStatusSelect } from "@/components/brief-status-select";
 import { NextTouchSection } from "@/components/next-touch-section";
-import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
+import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, useMappingEnabled, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { researchLoadingMessage } from "@/lib/research-loading";
-import { saveBriefSession, loadBriefSession } from "@/lib/brief-session";
+import { mappingLoadingMessage } from "@/lib/mapping-loading-messages";
+import { AccountMapResult } from "@/components/account-map/account-map-result";
+import { SearchModeToggle, type SearchMode } from "@/components/search-mode-toggle";
+import { RegionSelect } from "@/components/region-select";
+import { defaultRegionFromGeographies, type MapRegion } from "@/lib/map-region";
+import { saveBriefSession, loadBriefSession, clearBriefSession } from "@/lib/brief-session";
+import { saveMapSession, loadMapSession, clearMapSession } from "@/lib/map-session";
 import { downloadBriefTxt, formatBriefForExport, printBriefPdf } from "@/lib/brief-export";
 import { stripCitationTags } from "@/lib/strip-citations";
 import { BriefCard, BriefCardHeader, BriefCardTitle, BriefCardContent, briefCardBodyClass, briefCardLabelClass } from "@/components/brief-card";
@@ -40,7 +45,7 @@ import {
 } from "@/lib/brief-helpers";
 import { getValidTriggers } from "@/lib/brief-triggers";
 import { domainFromUrl, clearbitLogoUrl } from "@/lib/company-logo";
-import { BearMark } from "@/components/bear-mark";
+import { PageHero } from "@/components/page-hero";
 import { savePrepContext } from "@/lib/call-prep-context";
 
 const TONE_OPTIONS: { value: EmailTone; label: string }[] = [
@@ -587,12 +592,14 @@ function CompanySearchInput({
   onQueryChange,
   onSearch,
   loading,
+  loadingLabel = "Researching...",
   cooldownSeconds,
 }: {
   query: string;
   onQueryChange: (value: string) => void;
   onSearch: (url: string, label: string) => void;
   loading: boolean;
+  loadingLabel?: string;
   cooldownSeconds: number;
 }) {
   const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
@@ -601,10 +608,16 @@ function CompanySearchInput({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const dropdownLockedRef = useRef(false);
+  // Only show the dropdown when the user has actually clicked into the search bar.
+  // Prevents it auto-opening on page load when a previous query is restored.
+  const focusedRef = useRef(false);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setShowDropdown(false);
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+        focusedRef.current = false;
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -631,7 +644,7 @@ function CompanySearchInput({
           const data = await res.json() as CompanySuggestion[];
           if (!dropdownLockedRef.current) {
             setSuggestions(data.slice(0, 6));
-            setShowDropdown(data.length > 0);
+            setShowDropdown(focusedRef.current && data.length > 0);
           }
         }
       } catch { setSuggestions([]); } finally { setFetching(false); }
@@ -667,21 +680,22 @@ function CompanySearchInput({
   return (
     <div ref={wrapperRef} className="relative z-50">
       <form onSubmit={handleManualSubmit}>
-        <div className="flex gap-2 bg-card border-2 border-foreground/10 rounded-2xl p-2 focus-within:border-foreground/25 transition-all">
+        <div className="flex gap-2 bg-muted/50 border border-border rounded-full p-1.5 pl-4 focus-within:ring-2 focus-within:ring-primary/25 transition-all">
           <div className="flex items-center pl-2 text-muted-foreground">
             {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           </div>
           <Input type="text" value={query} onChange={e => handleQueryChange(e.target.value)}
-            onFocus={() => { if (!dropdownLockedRef.current && suggestions.length > 0) setShowDropdown(true); }}
+            onFocus={() => { focusedRef.current = true; if (!dropdownLockedRef.current && suggestions.length > 0) setShowDropdown(true); }}
             placeholder="Company name or URL"
             className="flex-1 text-sm font-medium border-0 shadow-none focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground"
             disabled={loading} autoComplete="off" />
           <Button
             type="submit"
+            size="pill"
             disabled={loading || cooldownSeconds > 0 || !query.trim()}
-            className="gap-2 shrink-0 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-bold border-0 min-h-10 px-5"
+            className="gap-2 shrink-0"
           >
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Researching...</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />{loadingLabel}</> : cooldownSeconds > 0 ? <><Clock className="w-4 h-4" />Wait {cooldownSeconds}s</> : <><Zap className="w-4 h-4" />Enrich</>}
           </Button>
         </div>
       </form>
@@ -799,19 +813,16 @@ function ContextPanels({ linkedinPosts, setLinkedinPosts, ownIntel, setOwnIntel 
 
 function BriefSetupRequired() {
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16">
-        <div className="max-w-3xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05]">
-            Set up Your Company first
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play. That context shapes every brief, email, and fit score.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-14 sm:pt-16 pb-10">
+        <PageHero
+          showBear
+          bearSize={52}
+          title="Set up Your Company first"
+          subtitle="Before we research an account, GTM Intel needs to know what you sell, who you serve, and where you play. That context shapes every brief, email, and fit score."
+        />
       </div>
-      <div className="bg-secondary px-8 py-10 sm:py-12">
+      <div className="px-8 pb-12">
         <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
             It takes about two minutes. Once saved, Search unlocks and research sources adapt to your market automatically.
@@ -839,130 +850,11 @@ function briefActionBody(brief: AccountBrief, companyName: string, linkedinPosts
   };
 }
 
-function briefToIcpForm(brief: AccountBrief, companyName: string) {
-  const triggerItems = brief.recentTriggers?.items ?? [];
-  const committee = brief.buyingCommittee ?? [];
-  const goals = triggerItems.map(t => t.significance).filter(Boolean);
-  return {
-    name: companyName,
-    industry: brief.companySnapshot?.industry ?? "",
-    companySize: brief.companySnapshot?.size ?? "",
-    jobTitles: committee.map(p => p.title).join("\n"),
-    painPoints: committee.map(p => p.painPoint).join("\n"),
-    goals: goals.length > 0 ? goals.join("\n") : (brief.theirWorld?.narrative ?? ""),
-    channels: "Email\nLinkedIn",
-    notes: `Saved from GTM brief.\n\nICP fit: ${brief.icpFitScore?.score ?? "?"}/10 — ${brief.icpFitScore?.reason ?? ""}`,
-  };
-}
-
-type IcpFormState = ReturnType<typeof briefToIcpForm>;
-
-function SaveAsIcpDialog({ brief, companyName }: { brief: AccountBrief; companyName: string }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<IcpFormState>(() => briefToIcpForm(brief, companyName));
-  const [savedId, setSavedId] = useState<number | null>(null);
-  const mutation = useCreateIcp();
-  const queryClient = useQueryClient();
-
-  function handleOpen(nextOpen: boolean) {
-    if (nextOpen) {
-      setForm(briefToIcpForm(brief, companyName));
-      setSavedId(null);
-    }
-    setOpen(nextOpen);
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    mutation.mutate({
-      data: {
-        name: form.name,
-        industry: form.industry,
-        companySize: form.companySize,
-        jobTitles: form.jobTitles.split("\n").map(s => s.trim()).filter(Boolean),
-        painPoints: form.painPoints.split("\n").map(s => s.trim()).filter(Boolean),
-        goals: form.goals.split("\n").map(s => s.trim()).filter(Boolean),
-        channels: form.channels.split("\n").map(s => s.trim()).filter(Boolean),
-        notes: form.notes || undefined,
-      },
-    }, {
-      onSuccess: (icp) => {
-        queryClient.invalidateQueries({ queryKey: getListIcpsQueryKey() });
-        setSavedId(icp.id);
-      },
-    });
-  }
-
-  return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => handleOpen(true)} className="gap-1.5 text-xs h-7 px-2">
-        <Flag className="w-3 h-3" />Save as ICP
-      </Button>
-      <Dialog open={open} onOpenChange={handleOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Save as ICP Reference</DialogTitle></DialogHeader>
-          {savedId ? (
-            <div className="space-y-4 py-2">
-              <p className="text-sm text-muted-foreground">ICP saved. Future briefs will be scored against it.</p>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => handleOpen(false)}>Close</Button>
-                <Link href={`/icps/${savedId}`}>
-                  <Button>View ICP</Button>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-              <div className="space-y-1.5">
-                <Label>ICP Name *</Label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Industry *</Label>
-                  <Input value={form.industry} onChange={e => setForm(f => ({ ...f, industry: e.target.value }))} required />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Company Size *</Label>
-                  <Input value={form.companySize} onChange={e => setForm(f => ({ ...f, companySize: e.target.value }))} required />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Job Titles (one per line)</Label>
-                <Textarea value={form.jobTitles} onChange={e => setForm(f => ({ ...f, jobTitles: e.target.value }))} rows={2} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Pain Points (one per line) *</Label>
-                <Textarea value={form.painPoints} onChange={e => setForm(f => ({ ...f, painPoints: e.target.value }))} rows={3} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Goals (one per line) *</Label>
-                <Textarea value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} rows={3} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Channels (one per line) *</Label>
-                <Textarea value={form.channels} onChange={e => setForm(f => ({ ...f, channels: e.target.value }))} rows={2} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Notes</Label>
-                <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => handleOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Saving..." : "Save ICP"}</Button>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
 // --- Main page ---
 export default function AccountBriefPage() {
   const companyConfigured = useIsYourCompanyConfigured();
   const yourCompany = useYourCompany();
+  const mappingEnabled = useMappingEnabled();
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState<AccountBrief | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -982,6 +874,14 @@ export default function AccountBriefPage() {
   const [showOptionalContext, setShowOptionalContext] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [briefStatus, setBriefStatus] = useState<BriefStatus>("not_contacted");
+  const [watchingSignals, setWatchingSignals] = useState(true);
+  const [searchMode, setSearchMode] = useState<SearchMode>("brief");
+  const [mapLoading, setMapLoading] = useState(false);
+  const [mapLoadingSeconds, setMapLoadingSeconds] = useState(0);
+  const [accountMap, setAccountMap] = useState<AccountMapResponse | null>(null);
+  const [mapRegion, setMapRegion] = useState<MapRegion>(() =>
+    defaultRegionFromGeographies(loadYourCompany()?.geographies),
+  );
   const [searchParams, setSearchParams] = useSearchParams();
   const historyParam = searchParams.get("h");
   const queryParam = searchParams.get("q");
@@ -991,6 +891,15 @@ export default function AccountBriefPage() {
     const id = setInterval(() => setCooldownSeconds(s => (s <= 1 ? 0 : s - 1)), 1000);
     return () => clearInterval(id);
   }, [cooldownSeconds]);
+
+  useEffect(() => {
+    if (!mapLoading) {
+      setMapLoadingSeconds(0);
+      return;
+    }
+    const id = setInterval(() => setMapLoadingSeconds(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [mapLoading]);
 
   useEffect(() => {
     if (!currentHistoryId) {
@@ -1009,6 +918,7 @@ export default function AccountBriefPage() {
     }
     const session = loadBriefSession();
     if (session) {
+      setSearchMode("brief");
       setLastLabel(session.label);
       setLastUrl(session.url);
       setLastDomain(domainFromUrl(session.url));
@@ -1017,8 +927,27 @@ export default function AccountBriefPage() {
       setCurrentHistoryId(session.currentHistoryId);
       setLinkedinPosts(session.linkedinPosts);
       setOwnIntel(session.ownIntel);
+      return;
+    }
+    const mapSession = loadMapSession();
+    if (mapSession && mappingEnabled) {
+      setSearchMode("mapping");
+      setLastLabel(mapSession.label);
+      setLastUrl(mapSession.url);
+      setLastDomain(domainFromUrl(mapSession.url));
+      setSearchQuery(mapSession.label);
+      if (mapSession.region) setMapRegion(mapSession.region);
+      setAccountMap(mapSession.accountMap);
     }
   }, []);
+
+  useEffect(() => {
+    if (!mappingEnabled && searchMode === "mapping") {
+      setSearchMode("brief");
+      setAccountMap(null);
+      clearMapSession();
+    }
+  }, [mappingEnabled]);
 
   useEffect(() => {
     if (!historyParam) return;
@@ -1027,7 +956,7 @@ export default function AccountBriefPage() {
   }, [historyParam]);
 
   async function handleSearch(url: string, label: string) {
-    setLoading(true); setError(null); setBrief(null); setLastLabel(label); setLastUrl(url); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
+    setLoading(true); setError(null); setBrief(null); setAccountMap(null); setLastLabel(label); setLastUrl(url); setLastDomain(domainFromUrl(url)); setLogoFailed(false); setShowFullEmail(false);
     setSearchQuery(label);
     setTalkTrack(null);
     if (historyParam || queryParam) setSearchParams(new URLSearchParams());
@@ -1050,8 +979,18 @@ export default function AccountBriefPage() {
       const data = await res.json() as AccountBrief;
       setBrief(data);
       const id = Date.now().toString();
-      saveToHistory({ id, label, url, icpScore: data.icpFitScore?.score ?? 0, savedAt: new Date().toISOString(), brief: data });
+      saveToHistory({
+        id,
+        label,
+        url,
+        icpScore: data.icpFitScore?.score ?? 0,
+        savedAt: new Date().toISOString(),
+        brief: data,
+        watched: true,
+      });
+      setWatchingSignals(true);
       setCurrentHistoryId(id);
+      clearMapSession();
       saveBriefSession({
         label,
         url,
@@ -1065,6 +1004,66 @@ export default function AccountBriefPage() {
     } finally { setLoading(false); setCooldownSeconds(30); }
   }
 
+  async function handleMapSearch(company: string) {
+    const yourCompany = yourCompanyForRequest(loadYourCompany());
+    if (!yourCompany) {
+      setError("Complete Your Company setup before running a map.");
+      return;
+    }
+
+    setMapLoading(true);
+    setError(null);
+    setAccountMap(null);
+    setBrief(null);
+    clearBriefSession();
+    const label = company.trim();
+    setLastLabel(label);
+    setSearchQuery(label);
+    const mapUrl = label.startsWith("http") ? label : `https://${label}`;
+    setLastUrl(mapUrl);
+    setLastDomain(domainFromUrl(mapUrl));
+    if (historyParam || queryParam) setSearchParams(new URLSearchParams());
+
+    const controller = new AbortController();
+    // Slightly above server MAPPING_TIMEOUT_MS (225s) so the API error surfaces before client abort.
+    const clientTimeout = setTimeout(() => controller.abort(), 235_000);
+
+    try {
+      const result = await generateAccountMap(
+        { company: label, region: mapRegion, yourCompany },
+        { signal: controller.signal },
+      );
+      setAccountMap(result);
+      saveMapSession({ label, url: mapUrl, region: mapRegion, accountMap: result });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setError("Mapping took too long and was stopped. Try again — or switch to Brief mode for a faster single-company brief.");
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      }
+    } finally {
+      clearTimeout(clientTimeout);
+      setMapLoading(false);
+    }
+  }
+
+  function handleCompanySubmit(url: string, label: string) {
+    if (searchMode === "mapping") {
+      void handleMapSearch(label);
+      return;
+    }
+    void handleSearch(url, label);
+  }
+
+  async function switchToBriefAndSearch() {
+    setSearchMode("brief");
+    setAccountMap(null);
+    if (lastLabel.trim()) {
+      const url = lastUrl || (lastLabel.startsWith("http") ? lastLabel : `https://${lastLabel}`);
+      await handleSearch(url, lastLabel);
+    }
+  }
+
   function handleBriefStatusChange(status: BriefStatus, lastTouchedAt?: string) {
     if (!currentHistoryId) return;
     const touched = lastTouchedAt ?? new Date().toISOString();
@@ -1073,10 +1072,13 @@ export default function AccountBriefPage() {
   }
 
   function handleHistorySelect(entry: HistoryEntry) {
+    setSearchMode("brief");
+    setAccountMap(null);
     setLastLabel(entry.label); setLastUrl(entry.url); setLastDomain(domainFromUrl(entry.url)); setLogoFailed(false); setBrief(entry.brief); setError(null); setTalkTrack(null);
     setSearchQuery(entry.label);
     setCurrentHistoryId(entry.id);
     setBriefStatus(entry.status ?? "not_contacted");
+    setWatchingSignals(entry.watched !== false);
     saveBriefSession({
       label: entry.label,
       url: entry.url,
@@ -1144,39 +1146,67 @@ export default function AccountBriefPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Hero — WTTJ split: yellow top, cream bottom */}
-      <div className="relative z-10">
-        {/* Top half — yellow */}
-        <div className="bg-primary text-foreground px-8 py-14 sm:py-16 lg:py-20">
-          <div className="max-w-5xl mx-auto">
-            <BearMark size={52} className="mb-6" />
-            <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">GTM research</p>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight leading-[1.05] max-w-3xl">
-              Research any company in 30 seconds
-            </h1>
-            <p className="mt-4 text-lg sm:text-xl font-medium text-foreground/85 leading-snug max-w-2xl">
-              {isYourCompanyConfigured(yourCompany)
+    <div className="min-h-screen bg-background">
+      <div className="relative z-10 border-b border-border">
+        <div className="px-8 pt-12 sm:pt-14 pb-8">
+          <PageHero
+            showBear
+            eyebrow="GTM research"
+            title="Company snapshots, buying committees, and triggers"
+            subtitle={
+              isYourCompanyConfigured(yourCompany)
                 ? researchHeroSubtitle(yourCompany)
-                : "Market-specific intel from public sources, LinkedIn, and press. Brief ready to send."}
-            </p>
-          </div>
+                : "Market-specific intel from public sources, LinkedIn, and press. Brief ready to send."
+            }
+          />
         </div>
-
-        {/* Bottom half — cream */}
-        <div className="relative bg-secondary px-8 py-10 sm:py-12 border-b border-border">
+        <div className="px-8 pb-10 sm:pb-12">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-[1.1] max-w-2xl mb-8">
-              Finally, GTM research that works for you.
-            </h2>
-            <CompanySearchInput
-              query={searchQuery}
-              onQueryChange={setSearchQuery}
-              onSearch={handleSearch}
-              loading={loading}
-              cooldownSeconds={cooldownSeconds}
-            />
-            {!brief && !showOptionalContext && (
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+              {mappingEnabled && (
+                <>
+                  <SearchModeToggle
+                    mode={searchMode}
+                    disabled={loading || mapLoading}
+                    onChange={mode => {
+                      setSearchMode(mode);
+                      setError(null);
+                      if (mode === "brief") {
+                        setAccountMap(null);
+                        clearMapSession();
+                      } else {
+                        setBrief(null);
+                        clearBriefSession();
+                      }
+                    }}
+                  />
+                  {searchMode === "mapping" && (
+                    <RegionSelect
+                      region={mapRegion}
+                      onChange={setMapRegion}
+                      disabled={mapLoading}
+                    />
+                  )}
+                </>
+              )}
+              <div className="flex-1 min-w-0">
+                <CompanySearchInput
+                  query={searchQuery}
+                  onQueryChange={setSearchQuery}
+                  onSearch={handleCompanySubmit}
+                  loading={loading || mapLoading}
+                  loadingLabel={searchMode === "mapping" ? "Mapping..." : "Researching..."}
+                  cooldownSeconds={searchMode === "brief" ? cooldownSeconds : 0}
+                />
+              </div>
+            </div>
+            {mappingEnabled && searchMode === "mapping" && (
+              <p className="mt-2 text-xs text-muted-foreground max-w-2xl leading-relaxed">
+                One region per map — full detail and leadership search only here. Other regions appear as names only.
+                For a global group, run a separate map per region (e.g. EMEA, then North America).
+              </p>
+            )}
+            {!brief && !accountMap && !showOptionalContext && searchMode === "brief" && (
               <button
                 type="button"
                 onClick={() => setShowOptionalContext(true)}
@@ -1186,7 +1216,7 @@ export default function AccountBriefPage() {
                 Add LinkedIn signals or your intel <span className="text-muted-foreground/70">(optional)</span>
               </button>
             )}
-            {!brief && showOptionalContext && (
+            {!brief && !accountMap && showOptionalContext && searchMode === "brief" && (
               <div className="mt-5 space-y-3">
                 <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
                 <button
@@ -1198,10 +1228,16 @@ export default function AccountBriefPage() {
                 </button>
               </div>
             )}
-            {loading && (
+            {loading && searchMode === "brief" && (
               <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
                 <Loader2 className="w-3 h-3 animate-spin text-foreground" />
                 {researchLoadingMessage(yourCompany)}
+              </p>
+            )}
+            {mapLoading && searchMode === "mapping" && (
+              <p className="text-xs font-medium text-muted-foreground mt-4 flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin text-foreground" />
+                {mappingLoadingMessage(mapLoadingSeconds)}
               </p>
             )}
           </div>
@@ -1210,10 +1246,40 @@ export default function AccountBriefPage() {
 
       {/* Results */}
       <div className="px-8 py-8 max-w-5xl mx-auto space-y-4">
-        {error && <Card className="border-destructive bg-destructive/5"><CardContent className="p-4 text-sm text-destructive flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{error}</CardContent></Card>}
-        {loading && !brief && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
+        {error && (
+          <Card className="border-destructive bg-destructive/5">
+            <CardContent className="p-4 text-sm text-destructive space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+              </div>
+              {searchMode === "mapping" && (
+                <p className="text-xs text-destructive/80">
+                  If the company is small or single-entity, switch to Brief mode.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        {loading && !brief && searchMode === "brief" && <div className="space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
+        {mapLoading && !accountMap && searchMode === "mapping" && <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}</div>}
 
-        {brief && (() => {
+        {accountMap && searchMode === "mapping" && (
+          <AccountMapResult
+            map={accountMap}
+            companyLabel={lastLabel}
+            currentRegion={mapRegion}
+            onSwitchToBrief={() => { void switchToBriefAndSearch(); }}
+            onMapAnotherRegion={nextRegion => {
+              setMapRegion(nextRegion);
+              setAccountMap(null);
+              setError(null);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              void handleMapSearch(lastLabel);
+            }}
+          />
+        )}
+
+        {brief && searchMode === "brief" && (() => {
           const validTriggers = getValidTriggers(brief.recentTriggers?.items);
           const hasTriggers = validTriggers.length > 0;
           const companyLogo = lastDomain ? clearbitLogoUrl(lastDomain) : "";
@@ -1250,6 +1316,22 @@ export default function AccountBriefPage() {
                           disabled={!currentHistoryId}
                         />
                       </div>
+                      {currentHistoryId && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <Switch
+                            id="watching-signals"
+                            checked={watchingSignals}
+                            onCheckedChange={checked => {
+                              const watched = checked === true;
+                              setWatchingSignals(watched);
+                              updateHistoryEntry(currentHistoryId, { watched });
+                            }}
+                          />
+                          <Label htmlFor="watching-signals" className="text-xs text-muted-foreground cursor-pointer">
+                            Watching for signals: {watchingSignals ? "ON" : "OFF"}
+                          </Label>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap sm:justify-end shrink-0">
@@ -1269,7 +1351,6 @@ export default function AccountBriefPage() {
                     <Button variant="outline" size="sm" onClick={() => printBriefPdf(brief, lastLabel, talkTrack)} className="gap-1.5 text-xs h-8 px-3 rounded-xl border-border">
                       <FileText className="w-3 h-3" />PDF
                     </Button>
-                    <SaveAsIcpDialog brief={brief} companyName={lastLabel} />
                     <CopyButton getText={() => exportText()} />
                   </div>
                 </div>

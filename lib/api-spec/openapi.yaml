@@ -10,8 +10,6 @@ servers:
 tags:
   - name: health
     description: Health operations
-  - name: icps
-    description: Ideal Customer Profiles
   - name: signals
     description: Automated ICP signal radar
   - name: dashboard
@@ -98,6 +96,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/CallPrep"
 
+  /account-map:
+    post:
+      operationId: generateAccountMap
+      tags: [account-brief]
+      summary: Map a global enterprise structure by geographic region
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountMapRequest"
+      responses:
+        "200":
+          description: Enterprise account map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountMapResponse"
+        "400":
+          description: Invalid request
+
   /next-touch:
     post:
       operationId: generateNextTouch
@@ -149,24 +168,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/PreviewPromptResponse"
 
-  /market-prospect:
+  /your-company/suggest-profile:
     post:
-      operationId: prospectMarket
-      tags: [account-brief]
-      summary: Find matching companies for a target market description
+      operationId: suggestCompanyProfile
+      tags: [your-company]
+      summary: Suggest Your Company profile fields by researching the seller's own website
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MarketProspectInput"
+              $ref: "#/components/schemas/SuggestProfileRequest"
       responses:
         "200":
-          description: Matching prospect companies
+          description: Suggested seller profile fields
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MarketProspectResponse"
+                $ref: "#/components/schemas/SuggestProfileResponse"
+
+  /your-company/suggest-reasoning:
+    post:
+      operationId: suggestCompanyReasoning
+      tags: [your-company]
+      summary: Suggest Reasoning fields by researching the seller's own website
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuggestReasoningRequest"
+      responses:
+        "200":
+          description: Suggested why-now patterns and reasoning overrides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestReasoningResponse"
 
   /healthz:
     get:
@@ -182,180 +220,47 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /dashboard:
-    get:
-      operationId: getDashboard
-      tags: [dashboard]
-      summary: Get dashboard summary
-      responses:
-        "200":
-          description: Dashboard summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardSummary"
-
-  /icps:
-    get:
-      operationId: listIcps
-      tags: [icps]
-      summary: List all ICPs
-      responses:
-        "200":
-          description: List of ICPs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Icp"
+  /signals/scan:
     post:
-      operationId: createIcp
-      tags: [icps]
-      summary: Create an ICP
+      operationId: scanAccountSignals
+      tags: [signals]
+      summary: Scan a researched account for Tier 1 and Tier 2 buying signals
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IcpInput"
-      responses:
-        "201":
-          description: Created ICP
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Icp"
-
-  /icps/{id}:
-    get:
-      operationId: getIcp
-      tags: [icps]
-      summary: Get ICP by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+              $ref: "#/components/schemas/ScanAccountSignalsInput"
       responses:
         "200":
-          description: ICP
+          description: Up to five account signals from the last 90 days
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Icp"
-        "404":
-          description: Not found
-    patch:
-      operationId: updateIcp
-      tags: [icps]
-      summary: Update ICP
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/IcpUpdate"
-      responses:
-        "200":
-          description: Updated ICP
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Icp"
-    delete:
-      operationId: deleteIcp
-      tags: [icps]
-      summary: Delete ICP
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-
-  /signals:
-    get:
-      operationId: listSignals
-      tags: [signals]
-      summary: List radar signals
-      responses:
-        "200":
-          description: List of signals
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Signal"
-
-  /signal-radar:
-    post:
-      operationId: runSignalRadar
-      tags: [signals]
-      summary: Scan the web for ICP-matching buying signals
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SignalScanInput"
-      responses:
-        "200":
-          description: Newly discovered signals
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SignalScanResponse"
+                $ref: "#/components/schemas/ScanAccountSignalsResponse"
         "400":
-          description: No ICPs defined or invalid request
+          description: Invalid request
 
-  /signals/{id}:
-    patch:
-      operationId: updateSignal
+  /signal-opener:
+    post:
+      operationId: generateSignalOpener
       tags: [signals]
-      summary: Update signal
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      summary: Draft a cold email opener anchored on a buying signal
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignalUpdate"
+              $ref: "#/components/schemas/SignalOpenerInput"
       responses:
         "200":
-          description: Updated signal
+          description: Generated opener
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Signal"
-    delete:
-      operationId: deleteSignal
-      tags: [signals]
-      summary: Delete signal
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
+                $ref: "#/components/schemas/SignalOpenerResponse"
+        "400":
+          description: Invalid request
 
 components:
   schemas:
@@ -367,208 +272,116 @@ components:
       required:
         - status
 
-    DashboardSummary:
-      type: object
-      required:
-        - icpCount
-        - unreadSignalCount
-        - recentSignals
-      properties:
-        icpCount:
-          type: integer
-        unreadSignalCount:
-          type: integer
-        recentSignals:
-          type: array
-          items:
-            $ref: "#/components/schemas/Signal"
+    AccountSignalType:
+      type: string
+      description: Tier 1 and Tier 2 buying signal categories for account scans
+      enum:
+        - leadership_hire
+        - job_posting
+        - exec_post
+        - funding
+        - regulation
+        - earnings
+        - expansion
+        - ma
+        - hiring_spike
+        - product_launch
 
-    Icp:
-      type: object
-      required:
-        - id
-        - name
-        - industry
-        - companySize
-        - painPoints
-        - goals
-        - channels
-        - createdAt
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        industry:
-          type: string
-        companySize:
-          type: string
-        jobTitles:
-          type: array
-          items:
-            type: string
-        painPoints:
-          type: array
-          items:
-            type: string
-        goals:
-          type: array
-          items:
-            type: string
-        channels:
-          type: array
-          items:
-            type: string
-        notes:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-
-    IcpInput:
-      type: object
-      required:
-        - name
-        - industry
-        - companySize
-        - painPoints
-        - goals
-        - channels
-      properties:
-        name:
-          type: string
-        industry:
-          type: string
-        companySize:
-          type: string
-        jobTitles:
-          type: array
-          items:
-            type: string
-        painPoints:
-          type: array
-          items:
-            type: string
-        goals:
-          type: array
-          items:
-            type: string
-        channels:
-          type: array
-          items:
-            type: string
-        notes:
-          type: string
-
-    IcpUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        industry:
-          type: string
-        companySize:
-          type: string
-        jobTitles:
-          type: array
-          items:
-            type: string
-        painPoints:
-          type: array
-          items:
-            type: string
-        goals:
-          type: array
-          items:
-            type: string
-        channels:
-          type: array
-          items:
-            type: string
-        notes:
-          type: string
-
-    Signal:
+    AccountSignal:
       type: object
       required:
         - id
-        - title
         - type
-        - source
-        - importance
-        - reviewed
-        - createdAt
+        - tier
+        - headline
+        - summary
+        - whyItMatters
+        - sourceUrl
+        - sourceTitle
+        - scannedAt
       properties:
         id:
-          type: integer
-        title:
           type: string
-        description:
-          type: ["string", "null"]
+          format: uuid
         type:
+          $ref: "#/components/schemas/AccountSignalType"
+        tier:
+          type: integer
+          enum: [1, 2]
+        headline:
           type: string
-          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
-        source:
+        summary:
           type: string
-        importance:
+        whyItMatters:
           type: string
-          enum: [high, medium, low]
-        companyName:
+        sourceUrl:
+          type: string
+        sourceTitle:
+          type: string
+        occurredAt:
           type: ["string", "null"]
-        companyDomain:
-          type: ["string", "null"]
-        icpName:
-          type: ["string", "null"]
-        icpId:
-          type: ["integer", "null"]
-        reviewed:
-          type: boolean
-        createdAt:
+          description: ISO date when the event happened, if extractable
+        scannedAt:
           type: string
+          description: ISO date when the scan ran
 
-    SignalScanInput:
+    ScanAccountSignalsInput:
       type: object
+      required:
+        - company
+        - yourCompany
       properties:
+        company:
+          type: string
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
         yourCompany:
           $ref: "#/components/schemas/YourCompany"
+        sectorPackOverride:
+          type: string
+          description: Optional sector pack id override — same pattern as Reasoning page
 
-    SignalScanResponse:
+    ScanAccountSignalsResponse:
       type: object
       required:
         - signals
-        - added
+        - scannedAt
+        - sectorPackUsed
       properties:
         signals:
           type: array
           items:
-            $ref: "#/components/schemas/Signal"
-        added:
-          type: integer
+            $ref: "#/components/schemas/AccountSignal"
+        scannedAt:
+          type: string
+        sectorPackUsed:
+          type: string
 
-    SignalUpdate:
+    SignalOpenerInput:
       type: object
+      required:
+        - signal
+        - yourCompany
       properties:
-        title:
+        signal:
+          $ref: "#/components/schemas/AccountSignal"
+        brief:
+          $ref: "#/components/schemas/AccountBrief"
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+        tone:
+          $ref: "#/components/schemas/EmailTone"
+
+    SignalOpenerResponse:
+      type: object
+      required:
+        - opener
+        - generatedAt
+      properties:
+        opener:
           type: string
-        description:
+        generatedAt:
           type: string
-        type:
-          type: string
-          enum: [pricing_change, product_launch, funding, hiring, partnership, other]
-        source:
-          type: string
-        importance:
-          type: string
-          enum: [high, medium, low]
-        companyName:
-          type: string
-        companyDomain:
-          type: string
-        icpName:
-          type: string
-        icpId:
-          type: integer
-        reviewed:
-          type: boolean
 
     BriefSourceType:
       type: string
@@ -778,6 +591,113 @@ components:
           items:
             $ref: "#/components/schemas/SectorPackOption"
 
+    SuggestProfileRequest:
+      type: object
+      required:
+        - companyName
+      properties:
+        companyName:
+          type: string
+        website:
+          type: string
+
+    ProfileSource:
+      type: object
+      required:
+        - label
+        - url
+      properties:
+        label:
+          type: string
+        url:
+          type: string
+
+    SuggestProfileResponse:
+      type: object
+      required:
+        - oneLineDescription
+        - industryServed
+        - geographies
+        - buyerTitles
+        - painPointsSolved
+        - customerOutcomes
+        - confidence
+        - sources
+        - researchedAt
+      properties:
+        oneLineDescription:
+          type: string
+        industryServed:
+          type: string
+        geographies:
+          type: array
+          items:
+            type: string
+        buyerTitles:
+          type: array
+          items:
+            type: string
+        painPointsSolved:
+          type: array
+          items:
+            type: string
+        customerOutcomes:
+          type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileSource"
+        notes:
+          type: string
+        researchedAt:
+          type: string
+
+    SuggestReasoningRequest:
+      type: object
+      required:
+        - companyName
+      properties:
+        companyName:
+          type: string
+        website:
+          type: string
+        oneLineDescription:
+          type: string
+        industryServed:
+          type: string
+
+    SuggestReasoningResponse:
+      type: object
+      required:
+        - whyNowPatterns
+        - reasoningOverrides
+        - confidence
+        - sources
+        - researchedAt
+      properties:
+        whyNowPatterns:
+          type: array
+          items:
+            type: string
+        reasoningOverrides:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileSource"
+        notes:
+          type: string
+        researchedAt:
+          type: string
+
     EmailTone:
       type: string
       enum: [formal, direct, conversational]
@@ -932,41 +852,293 @@ components:
             meetingType:
               $ref: "#/components/schemas/MeetingType"
 
-    MarketProspectInput:
-      type: object
-      required:
-        - description
-      properties:
-        description:
-          type: string
-        yourCompany:
-          $ref: "#/components/schemas/YourCompany"
+    MapRegion:
+      type: string
+      enum:
+        - europe
+        - north_america
+        - asia_pacific
+        - latin_america
+        - middle_east_africa
+        - group_unallocated
 
-    ProspectCompany:
+    EntityParentRelationship:
+      type: string
+      enum:
+        - subsidiary
+        - branch
+        - affiliate
+        - division
+        - joint_venture
+
+    EntityBuyingAutonomy:
+      type: string
+      enum:
+        - independent
+        - group_gated
+        - mixed
+        - unknown
+
+    EntityFitTier:
+      type: string
+      enum:
+        - strong
+        - moderate
+        - skip
+
+    EntityBuyer:
       type: object
       required:
         - name
-        - domain
-        - reason
+        - role
+        - sourceUrl
+        - sourceTitle
       properties:
         name:
           type: string
-        domain:
+        role:
           type: string
-        reason:
+        sourceUrl:
           type: string
-        estimatedSize:
+        sourceTitle:
+          type: string
+        tenureNote:
+          type: string
+        reportsTo:
           type: string
 
-    MarketProspectResponse:
+    MapEntity:
       type: object
       required:
-        - companies
+        - id
+        - name
+        - country
+        - region
+        - businessLine
+        - parentRelationship
+        - context
+        - buyingAutonomy
+        - fitTier
+        - fitReason
+        - buyers
+        - sources
       properties:
-        companies:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        country:
+          type: string
+        region:
+          $ref: "#/components/schemas/MapRegion"
+        businessLine:
+          type: string
+        parentRelationship:
+          $ref: "#/components/schemas/EntityParentRelationship"
+        context:
+          type: string
+        buyingAutonomy:
+          $ref: "#/components/schemas/EntityBuyingAutonomy"
+        autonomyReason:
+          type: string
+        fitTier:
+          $ref: "#/components/schemas/EntityFitTier"
+        fitReason:
+          type: string
+        buyers:
           type: array
           items:
-            $ref: "#/components/schemas/ProspectCompany"
+            $ref: "#/components/schemas/EntityBuyer"
+        leadershipNote:
+          type: string
+          description: |
+            Honest one-liner explaining what was searched for leadership and what gaps remain.
+            Populated when the model could not surface a full executive committee for this entity.
+            Format: "Searched [sources] — [what was found / what to check next]".
+        sources:
+          type: array
+          items:
+            type: string
+
+    AccountMapParent:
+      type: object
+      required:
+        - name
+        - description
+        - headquartersCountry
+        - industry
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        headquartersCountry:
+          type: string
+        industry:
+          type: string
+
+    AccountMapRequest:
+      type: object
+      required:
+        - company
+        - yourCompany
+      properties:
+        company:
+          type: string
+        region:
+          type: string
+          description: Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA.
+          enum:
+            - emea
+            - apac
+            - north_america
+            - latam
+        yourCompany:
+          $ref: "#/components/schemas/YourCompany"
+
+    AccountMapResponse:
+      type: object
+      required:
+        - parent
+        - entities
+        - unmappedEntities
+        - limitations
+        - isSingleEntity
+        - generatedAt
+        - sectorPackUsed
+        - companySnapshot
+        - outreachSources
+      properties:
+        parent:
+          $ref: "#/components/schemas/AccountMapParent"
+        entities:
+          type: array
+          items:
+            $ref: "#/components/schemas/MapEntity"
+        unmappedEntities:
+          type: array
+          items:
+            type: string
+        limitations:
+          type: string
+        isSingleEntity:
+          type: boolean
+        generatedAt:
+          type: string
+        sectorPackUsed:
+          type: string
+        companySnapshot:
+          $ref: "#/components/schemas/MapCompanySnapshot"
+        outreachSources:
+          type: array
+          items:
+            $ref: "#/components/schemas/MapOutreachSource"
+        meta:
+          $ref: "#/components/schemas/AccountMapResponseMeta"
+
+    AccountMapPassMeta:
+      type: object
+      required:
+        - model
+        - maxSearches
+        - searchesUsed
+        - elapsedMs
+      properties:
+        model:
+          type: string
+        maxSearches:
+          type: integer
+        searchesUsed:
+          type: integer
+        elapsedMs:
+          type: integer
+        allowedDomains:
+          type: boolean
+          description: True when Pass 2 used MAP_DOMAIN_FILTER allowed_domains.
+
+    AccountMapResponseMeta:
+      type: object
+      required:
+        - region
+        - totalElapsedMs
+        - entityCount
+        - sourcedLeaderCount
+        - pass2Status
+        - pass1
+        - domainFilterEnabled
+      properties:
+        region:
+          type: string
+          enum:
+            - emea
+            - apac
+            - north_america
+            - latam
+        totalElapsedMs:
+          type: integer
+        entityCount:
+          type: integer
+        sourcedLeaderCount:
+          type: integer
+          description: Buyers with a non-empty sourceUrl across all entities.
+        pass2Status:
+          type: string
+          enum:
+            - structure_only
+            - skipped_insufficient_time
+            - completed
+            - failed
+            - not_needed
+        pass1:
+          $ref: "#/components/schemas/AccountMapPassMeta"
+        pass2:
+          $ref: "#/components/schemas/AccountMapPassMeta"
+        domainFilterEnabled:
+          type: boolean
+          description: Whether MAP_DOMAIN_FILTER was active for this run.
+
+    MapCompanySnapshot:
+      type: object
+      required:
+        - size
+        - industry
+        - location
+        - fundingStage
+      properties:
+        size:
+          type: string
+        industry:
+          type: string
+        location:
+          type: string
+        fundingStage:
+          type: string
+        techStack:
+          type: string
+        possiblePainPoints:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/BriefSource"
+
+    MapOutreachSource:
+      type: object
+      required:
+        - label
+        - detail
+      properties:
+        label:
+          type: string
+        detail:
+          type: string
+        url:
+          type: string
+        relatedEntity:
+          type: string
 
     AccountBriefInput:
       type: object

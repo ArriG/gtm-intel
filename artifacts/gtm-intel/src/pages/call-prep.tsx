@@ -154,7 +154,7 @@ export default function CallPrepPage() {
 
         <div>
           <p className="text-sm font-medium text-primary mb-1">Call prep</p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground leading-tight">{entry.label}</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground leading-tight">{entry.label}</h1>
           <p className="mt-2 text-base text-muted-foreground">
             {entry.brief.companySnapshot?.industry} · {entry.brief.companySnapshot?.location}
           </p>
@@ -171,7 +171,7 @@ export default function CallPrepPage() {
                 className={cn(
                   "text-left rounded-xl border px-4 py-3 transition-colors",
                   meetingType === opt.value
-                    ? "border-foreground bg-foreground/[0.04] ring-1 ring-foreground"
+                    ? "border-primary bg-primary/10 ring-1 ring-primary"
                     : "border-border bg-card hover:bg-secondary",
                 )}
               >
@@ -184,7 +184,8 @@ export default function CallPrepPage() {
           <Button
             onClick={generatePrep}
             disabled={loading}
-            className="w-full sm:w-auto rounded-xl h-11 px-6 font-bold gap-2"
+            size="pill"
+            className="w-full sm:w-auto gap-2"
           >
             {loading
               ? <><Loader2 className="w-4 h-4 animate-spin" />Generating prep card...</>

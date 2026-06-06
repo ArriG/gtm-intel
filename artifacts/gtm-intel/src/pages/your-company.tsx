@@ -1,16 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, Pencil, Building2, Brain } from "lucide-react";
-import { BearMark } from "@/components/bear-mark";
+import { Check, ArrowRight, Pencil, Building2, Brain, Loader2, Sparkles } from "lucide-react";
+import { suggestCompanyProfile, type SuggestProfileResponse } from "@workspace/api-client-react";
+import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { BriefCard, BriefCardContent } from "@/components/brief-card";
 import {
   loadYourCompany,
   saveYourCompany,
+  getMappingPreference,
+  isMappingEnabled,
+  setMappingPreference,
   useIsYourCompanyConfigured,
   useYourCompany,
   linesToList,
@@ -48,6 +53,17 @@ function toFormState(data: YourCompany): FormState {
   };
 }
 
+function confidencePillClass(confidence: SuggestProfileResponse["confidence"]): string {
+  switch (confidence) {
+    case "high":
+      return "bg-green-500/15 text-green-800 dark:text-green-200";
+    case "medium":
+      return "bg-amber-500/15 text-amber-800 dark:text-amber-200";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
+
 function formToYourCompany(form: FormState, existing?: YourCompany): YourCompany {
   return {
     companyName: form.companyName.trim(),
@@ -76,7 +92,7 @@ function ProfileSummary({ profile, onEdit }: { profile: YourCompany; onEdit: () 
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Your company</p>
-                <h2 className="text-2xl font-extrabold text-foreground">{profile.companyName}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{profile.companyName}</h2>
               </div>
             </div>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full shrink-0">
@@ -142,12 +158,72 @@ export default function YourCompanyPage() {
   const [form, setForm] = useState<FormState>(() => toFormState(loadYourCompany()));
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<SuggestProfileResponse | null>(null);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [preAutofill, setPreAutofill] = useState<FormState | null>(null);
+  const [mappingOn, setMappingOn] = useState<boolean>(() => isMappingEnabled(loadYourCompany()));
+
+  useEffect(() => {
+    if (getMappingPreference() !== null) return;
+    setMappingOn(form.dealSize.includes("enterprise"));
+  }, [form.dealSize]);
+
+  function clearSuggestionCard() {
+    setSuggestion(null);
+    setSuggestError(null);
+    setPreAutofill(null);
+  }
+
+  function handleUndoAutofill() {
+    if (preAutofill) setForm(preAutofill);
+    clearSuggestionCard();
+  }
 
   function startEditing() {
     setForm(toFormState(loadYourCompany()));
     setErrors([]);
     setSaved(false);
+    clearSuggestionCard();
+    setMappingOn(isMappingEnabled(loadYourCompany()));
     setEditing(true);
+  }
+
+  async function handleAutofillFromWebsite() {
+    const name = form.companyName.trim();
+    if (!name || suggesting) return;
+    const snapshot = { ...form };
+
+    setSuggesting(true);
+    setSuggestError(null);
+    setSuggestion(null);
+
+    try {
+      const result = await suggestCompanyProfile({ companyName: name });
+      setPreAutofill(snapshot);
+      setForm(current => ({
+        ...current,
+        oneLineDescription: result.oneLineDescription.trim() || current.oneLineDescription,
+        industryServed: result.industryServed.trim() || current.industryServed,
+        geographiesText: result.geographies.length
+          ? formatGeographies(result.geographies)
+          : current.geographiesText,
+        buyerTitlesText: result.buyerTitles.length ? listToLines(result.buyerTitles) : current.buyerTitlesText,
+        painPointsText: result.painPointsSolved.length
+          ? listToLines(result.painPointsSolved)
+          : current.painPointsText,
+        customerOutcomes: result.customerOutcomes.trim() || current.customerOutcomes,
+      }));
+      setSaved(false);
+      setErrors([]);
+      setSuggestion(result);
+    } catch (err) {
+      setSuggestError(
+        err instanceof Error ? err.message : "Could not research your company. Try again.",
+      );
+    } finally {
+      setSuggesting(false);
+    }
   }
 
   function handleChange<K extends keyof FormState>(field: K, value: FormState[K]) {
@@ -192,21 +268,17 @@ export default function YourCompanyPage() {
     : "Tell us what you sell, who you serve, and where you play. Every brief, email, and fit score uses this as its foundation.";
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-primary text-foreground px-8 py-14 sm:py-16 lg:py-20">
-        <div className="max-w-3xl mx-auto">
-          <BearMark size={52} className="mb-6" />
-          <p className="text-sm font-bold tracking-wide text-foreground/80 mb-3">Your company</p>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05] max-w-2xl">
-            {heroTitle}
-          </h1>
-          <p className="mt-4 text-lg font-medium text-foreground/85 leading-snug max-w-2xl">
-            {heroSubtitle}
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-8 pt-12 sm:pt-14 pb-8 border-b border-border">
+        <PageHero
+          showBear
+          eyebrow="Your company"
+          title={heroTitle}
+          subtitle={heroSubtitle}
+        />
       </div>
 
-      <div className="bg-secondary px-8 py-10 sm:py-12 border-b border-border">
+      <div className="px-8 py-10 sm:py-12 border-b border-border">
         <div className="max-w-3xl mx-auto">
           {savedConfigured && !editing ? (
             <ProfileSummary profile={savedProfile} onEdit={startEditing} />
@@ -228,6 +300,31 @@ export default function YourCompanyPage() {
                   onChange={e => handleChange("companyName", e.target.value)}
                   placeholder='e.g. Optalitix'
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={!form.companyName.trim() || suggesting}
+                  onClick={() => void handleAutofillFromWebsite()}
+                >
+                  {suggesting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Researching your company…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Autofill from website
+                    </>
+                  )}
+                </Button>
+                {suggestError && (
+                  <p className="text-sm text-destructive">{suggestError}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -289,6 +386,34 @@ export default function YourCompanyPage() {
                 </div>
               </div>
 
+              <div className="space-y-3">
+                <Label htmlFor="accountMapping">Account mapping</Label>
+                <div className="rounded-xl border border-border bg-secondary/40 p-4">
+                  <div className="flex items-start gap-3">
+                    <Switch
+                      id="accountMapping"
+                      checked={mappingOn}
+                      onCheckedChange={checked => {
+                        const next = checked === true;
+                        setMappingOn(next);
+                        setMappingPreference(next ? "on" : "off");
+                      }}
+                      className="mt-0.5"
+                    />
+                    <div className="space-y-1 min-w-0">
+                      <Label htmlFor="accountMapping" className="text-sm font-medium cursor-pointer">
+                        Enable account mapping
+                      </Label>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        For sellers targeting large, multi-entity organisations (e.g. Zurich, Aviva). Maps the
+                        group into its divisions and the leaders of each. Leave off if you sell to single-site
+                        or SMB accounts — your standard Brief stays primary either way.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="buyerTitles">Typical buyer job titles</Label>
                 <Textarea
@@ -323,6 +448,55 @@ export default function YourCompanyPage() {
                   placeholder="Specific results from existing customers — e.g. 40% faster quote turnaround within 90 days."
                 />
               </div>
+
+              {suggestion && (
+                <BriefCard>
+                  <BriefCardContent className="pt-5 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm text-foreground">
+                        Drafted from your website — review and edit the fields above.
+                      </p>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${confidencePillClass(suggestion.confidence)}`}
+                      >
+                        {suggestion.confidence} confidence
+                      </span>
+                    </div>
+                    {suggestion.notes?.trim() && (
+                      <p className="text-xs text-muted-foreground leading-snug">{suggestion.notes.trim()}</p>
+                    )}
+                    {suggestion.sources.length > 0 && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                        {suggestion.sources.map(source => (
+                          <a
+                            key={source.url}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline underline-offset-2 hover:text-primary/80"
+                          >
+                            {source.label || source.url}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleUndoAutofill}
+                        disabled={!preAutofill}
+                      >
+                        Undo autofill
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={clearSuggestionCard}>
+                        Dismiss
+                      </Button>
+                    </div>
+                  </BriefCardContent>
+                </BriefCard>
+              )}
 
               {errors.length > 0 && (
                 <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive space-y-1">

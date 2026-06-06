@@ -4,12 +4,41 @@ An AI-powered research tool for AEs and SDRs. Type a company name, get a sourced
 
 ![GTM Intelligence app — generated account brief](https://github.com/user-attachments/assets/18da5e7d-8a1f-4f2f-aa09-16c544a38169)
 
+### Latest UI (Kraken-style refresh)
+
+<!-- Drag-and-drop your new screenshot here on GitHub to generate the URL -->
+![GTM Intelligence — refreshed search and account map](REPLACE_WITH_UPLOADED_URL)
+
 Built by a Salesman with 15+ years SaaS experience and zero prior coding background — a portfolio piece demonstrating full-stack product thinking from the seller's chair.
 
 ## Live demo
 GTM Intelligence — refreshed search and account map]!<img width="1688" height="588" alt="GTM Intel 2" src="https://github.com/user-attachments/assets/b33ea875-19e5-4f01-8bb3-7e67d7ba3bc0" />
 
 Deploy on [Replit](https://replit.com) — pull from this repo and set `ANTHROPIC_API_KEY` in Secrets.
+
+## What's new
+
+**Focus and simplification**
+- Removed the Dashboard entirely (frontend page, backend route, and legacy Postgres CRUD) — Signals is now the research home, with a clearer tagline.
+- Fixed a route collision so account-signal scans run through a single handler.
+
+**Search page**
+- Search now only fires when you click — the company suggestions dropdown opens on focus instead of auto-opening on page load with a restored query.
+- Resized and decluttered the hero; a single horizontal row for mode, region, and search bar.
+- Account maps redesigned: entity cards coloured consistently by business line across regions, the company snapshot inlined under the parent, and sources moved below limitations.
+
+**Account mapping made optional**
+- New "Account mapping" toggle on Your Company (defaults on for Enterprise sellers).
+- Search now defaults to Brief; the Brief/Mapping toggle only appears when mapping is enabled, so SMB and mid-market users get a simpler experience.
+
+**Autofill from website**
+- "Autofill from website" on Your Company researches the seller's own company in one web search and proposes profile fields with sources and a confidence pill — the user ticks what to apply. Nothing saves automatically.
+
+**Mapping research tuning**
+- Region-scoped searches with per-region locality, env-tunable caps and timeouts, stricter region filtering, and telemetry on each pass.
+
+**Design system**
+- Kraken-style refresh: Inter font, a lighter neutral canvas, a shared page hero, a restyled sidebar, and a purple accent with a new bear logo.
 
 ## What it does
 

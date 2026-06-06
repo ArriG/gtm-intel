@@ -9,179 +9,49 @@ export interface HealthStatus {
   status: string;
 }
 
-export type SignalType = typeof SignalType[keyof typeof SignalType];
+/**
+ * Tier 1 and Tier 2 buying signal categories for account scans
+ */
+export type AccountSignalType = typeof AccountSignalType[keyof typeof AccountSignalType];
 
 
-export const SignalType = {
-  pricing_change: 'pricing_change',
-  product_launch: 'product_launch',
+export const AccountSignalType = {
+  leadership_hire: 'leadership_hire',
+  job_posting: 'job_posting',
+  exec_post: 'exec_post',
   funding: 'funding',
-  hiring: 'hiring',
-  partnership: 'partnership',
-  other: 'other',
+  regulation: 'regulation',
+  earnings: 'earnings',
+  expansion: 'expansion',
+  ma: 'ma',
+  hiring_spike: 'hiring_spike',
+  product_launch: 'product_launch',
 } as const;
 
-export type SignalImportance = typeof SignalImportance[keyof typeof SignalImportance];
+export type AccountSignalTier = typeof AccountSignalTier[keyof typeof AccountSignalTier];
 
 
-export const SignalImportance = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
+export const AccountSignalTier = {
+  NUMBER_1: 1,
+  NUMBER_2: 2,
 } as const;
 
-export interface Signal {
-  id: number;
-  title: string;
-  /** @nullable */
-  description?: string | null;
-  type: SignalType;
-  source: string;
-  importance: SignalImportance;
-  /** @nullable */
-  companyName?: string | null;
-  /** @nullable */
-  companyDomain?: string | null;
-  /** @nullable */
-  icpName?: string | null;
-  /** @nullable */
-  icpId?: number | null;
-  reviewed: boolean;
-  createdAt: string;
-}
-
-export interface DashboardSummary {
-  icpCount: number;
-  unreadSignalCount: number;
-  recentSignals: Signal[];
-}
-
-export interface Icp {
-  id: number;
-  name: string;
-  industry: string;
-  companySize: string;
-  jobTitles?: string[];
-  painPoints: string[];
-  goals: string[];
-  channels: string[];
-  /** @nullable */
-  notes?: string | null;
-  createdAt: string;
-}
-
-export interface IcpInput {
-  name: string;
-  industry: string;
-  companySize: string;
-  jobTitles?: string[];
-  painPoints: string[];
-  goals: string[];
-  channels: string[];
-  notes?: string;
-}
-
-export interface IcpUpdate {
-  name?: string;
-  industry?: string;
-  companySize?: string;
-  jobTitles?: string[];
-  painPoints?: string[];
-  goals?: string[];
-  channels?: string[];
-  notes?: string;
-}
-
-/**
- * Deal size motion — SMB, mid-market, or enterprise
- */
-export type DealSize = typeof DealSize[keyof typeof DealSize];
-
-
-export const DealSize = {
-  smb: 'smb',
-  'mid-market': 'mid-market',
-  enterprise: 'enterprise',
-} as const;
-
-/**
- * Seller profile stored client-side; sent per request for prompt context
- */
-export interface YourCompany {
-  /** Seller company name, e.g. "Optalitix" */
-  companyName: string;
-  /** What we sell, in one sentence */
-  oneLineDescription: string;
-  /** Industry or vertical our customers operate in */
-  industryServed: string;
-  /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
-  geographies: string[];
+export interface AccountSignal {
+  id: string;
+  type: AccountSignalType;
+  tier: AccountSignalTier;
+  headline: string;
+  summary: string;
+  whyItMatters: string;
+  sourceUrl: string;
+  sourceTitle: string;
   /**
-     * Typical deal size motions the seller sells into — tick all that apply
-     * @minItems 1
+     * ISO date when the event happened, if extractable
+     * @nullable
      */
-  dealSize: DealSize[];
-  /** Typical decision-maker job titles */
-  buyerTitles: string[];
-  /** Pain points our product addresses */
-  painPointsSolved: string[];
-  /** Legacy field — mirrors oneLineDescription when present */
-  whatYouSell?: string;
-  /** Legacy field — mirrors industryServed and geographies when present */
-  whoYouSellTo?: string;
-  /** Legacy field — newline-joined painPointsSolved when present */
-  painPoints?: string;
-  /** Optional customer outcomes the AE can cite in outreach */
-  customerOutcomes?: string;
-  /** Patterns that make accounts worth calling now for this seller */
-  whyNowPattern?: string;
-  /** Free-text reasoning rules appended to the system prompt */
-  reasoningOverrides?: string;
-  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
-  sectorPackOverride?: string;
-}
-
-export interface SignalScanInput {
-  yourCompany?: YourCompany;
-}
-
-export interface SignalScanResponse {
-  signals: Signal[];
-  added: number;
-}
-
-export type SignalUpdateType = typeof SignalUpdateType[keyof typeof SignalUpdateType];
-
-
-export const SignalUpdateType = {
-  pricing_change: 'pricing_change',
-  product_launch: 'product_launch',
-  funding: 'funding',
-  hiring: 'hiring',
-  partnership: 'partnership',
-  other: 'other',
-} as const;
-
-export type SignalUpdateImportance = typeof SignalUpdateImportance[keyof typeof SignalUpdateImportance];
-
-
-export const SignalUpdateImportance = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-} as const;
-
-export interface SignalUpdate {
-  title?: string;
-  description?: string;
-  type?: SignalUpdateType;
-  source?: string;
-  importance?: SignalUpdateImportance;
-  companyName?: string;
-  companyDomain?: string;
-  icpName?: string;
-  icpId?: number;
-  reviewed?: boolean;
+  occurredAt?: string | null;
+  /** ISO date when the scan ran */
+  scannedAt: string;
 }
 
 export type BriefSourceType = typeof BriefSourceType[keyof typeof BriefSourceType];
@@ -219,72 +89,6 @@ export interface BriefSource {
   url?: string;
   confidence: BriefSourceConfidence;
 }
-
-export interface LinkedInPost {
-  role: string;
-  content: string;
-}
-
-export interface SectorPackOption {
-  id: string;
-  name: string;
-  version: number;
-  geographies?: string[];
-}
-
-export type SectorPackSelectionMetaMode = typeof SectorPackSelectionMetaMode[keyof typeof SectorPackSelectionMetaMode];
-
-
-export const SectorPackSelectionMetaMode = {
-  auto: 'auto',
-  override: 'override',
-  legacy: 'legacy',
-} as const;
-
-export interface SectorPackSelectionMeta {
-  mode: SectorPackSelectionMetaMode;
-  packId?: string | null;
-  packName?: string | null;
-  /** Auto-detected pack id when override is set */
-  autoDetectedId?: string | null;
-  autoDetectedName?: string | null;
-  matchScore: number;
-  matchedKeywords: string[];
-}
-
-export interface SectorPackListResponse {
-  packs: SectorPackOption[];
-}
-
-export interface PreviewPromptInput {
-  yourCompany: YourCompany;
-}
-
-export interface ResearchPackMeta {
-  /** Sector pack identifier, e.g. uk-dental */
-  id: string;
-  name: string;
-  version: number;
-  lastReviewed?: string;
-  loadingLabel: string;
-  expectedSeconds: number;
-}
-
-export interface PreviewPromptResponse {
-  systemPrompt: string;
-  sectorPackSelection: SectorPackSelectionMeta;
-  researchPack?: ResearchPackMeta;
-  availablePacks: SectorPackOption[];
-}
-
-export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
-
-
-export const EmailTone = {
-  formal: 'formal',
-  direct: 'direct',
-  conversational: 'conversational',
-} as const;
 
 /**
  * Optional role in the buying process when inferrable from research
@@ -343,6 +147,16 @@ export interface DiscoveryQuestion {
 export interface ManualResearchTip {
   tip: string;
   reason?: string;
+}
+
+export interface ResearchPackMeta {
+  /** Sector pack identifier, e.g. uk-dental */
+  id: string;
+  name: string;
+  version: number;
+  lastReviewed?: string;
+  loadingLabel: string;
+  expectedSeconds: number;
 }
 
 export type AccountBriefCompanySnapshot = {
@@ -410,6 +224,194 @@ export interface AccountBrief {
   sourceSummary?: AccountBriefSourceSummary;
   /** Sector reasoning pack used to generate this brief */
   researchPack?: ResearchPackMeta;
+}
+
+/**
+ * Deal size motion — SMB, mid-market, or enterprise
+ */
+export type DealSize = typeof DealSize[keyof typeof DealSize];
+
+
+export const DealSize = {
+  smb: 'smb',
+  'mid-market': 'mid-market',
+  enterprise: 'enterprise',
+} as const;
+
+/**
+ * Seller profile stored client-side; sent per request for prompt context
+ */
+export interface YourCompany {
+  /** Seller company name, e.g. "Optalitix" */
+  companyName: string;
+  /** What we sell, in one sentence */
+  oneLineDescription: string;
+  /** Industry or vertical our customers operate in */
+  industryServed: string;
+  /** Markets we sell into, e.g. ["UK"], ["AU", "NZ"] */
+  geographies: string[];
+  /**
+     * Typical deal size motions the seller sells into — tick all that apply
+     * @minItems 1
+     */
+  dealSize: DealSize[];
+  /** Typical decision-maker job titles */
+  buyerTitles: string[];
+  /** Pain points our product addresses */
+  painPointsSolved: string[];
+  /** Legacy field — mirrors oneLineDescription when present */
+  whatYouSell?: string;
+  /** Legacy field — mirrors industryServed and geographies when present */
+  whoYouSellTo?: string;
+  /** Legacy field — newline-joined painPointsSolved when present */
+  painPoints?: string;
+  /** Optional customer outcomes the AE can cite in outreach */
+  customerOutcomes?: string;
+  /** Patterns that make accounts worth calling now for this seller */
+  whyNowPattern?: string;
+  /** Free-text reasoning rules appended to the system prompt */
+  reasoningOverrides?: string;
+  /** Sector pack id to use instead of auto-detect; omit or empty for automatic matching */
+  sectorPackOverride?: string;
+}
+
+export interface ScanAccountSignalsInput {
+  company: string;
+  brief?: AccountBrief;
+  yourCompany: YourCompany;
+  /** Optional sector pack id override — same pattern as Reasoning page */
+  sectorPackOverride?: string;
+}
+
+export interface ScanAccountSignalsResponse {
+  signals: AccountSignal[];
+  scannedAt: string;
+  sectorPackUsed: string;
+}
+
+export type EmailTone = typeof EmailTone[keyof typeof EmailTone];
+
+
+export const EmailTone = {
+  formal: 'formal',
+  direct: 'direct',
+  conversational: 'conversational',
+} as const;
+
+export interface SignalOpenerInput {
+  signal: AccountSignal;
+  brief?: AccountBrief;
+  yourCompany: YourCompany;
+  tone?: EmailTone;
+}
+
+export interface SignalOpenerResponse {
+  opener: string;
+  generatedAt: string;
+}
+
+export interface LinkedInPost {
+  role: string;
+  content: string;
+}
+
+export interface SectorPackOption {
+  id: string;
+  name: string;
+  version: number;
+  geographies?: string[];
+}
+
+export type SectorPackSelectionMetaMode = typeof SectorPackSelectionMetaMode[keyof typeof SectorPackSelectionMetaMode];
+
+
+export const SectorPackSelectionMetaMode = {
+  auto: 'auto',
+  override: 'override',
+  legacy: 'legacy',
+} as const;
+
+export interface SectorPackSelectionMeta {
+  mode: SectorPackSelectionMetaMode;
+  packId?: string | null;
+  packName?: string | null;
+  /** Auto-detected pack id when override is set */
+  autoDetectedId?: string | null;
+  autoDetectedName?: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
+}
+
+export interface SectorPackListResponse {
+  packs: SectorPackOption[];
+}
+
+export interface PreviewPromptInput {
+  yourCompany: YourCompany;
+}
+
+export interface PreviewPromptResponse {
+  systemPrompt: string;
+  sectorPackSelection: SectorPackSelectionMeta;
+  researchPack?: ResearchPackMeta;
+  availablePacks: SectorPackOption[];
+}
+
+export interface SuggestProfileRequest {
+  companyName: string;
+  website?: string;
+}
+
+export interface ProfileSource {
+  label: string;
+  url: string;
+}
+
+export type SuggestProfileResponseConfidence = typeof SuggestProfileResponseConfidence[keyof typeof SuggestProfileResponseConfidence];
+
+
+export const SuggestProfileResponseConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface SuggestProfileResponse {
+  oneLineDescription: string;
+  industryServed: string;
+  geographies: string[];
+  buyerTitles: string[];
+  painPointsSolved: string[];
+  customerOutcomes: string;
+  confidence: SuggestProfileResponseConfidence;
+  sources: ProfileSource[];
+  notes?: string;
+  researchedAt: string;
+}
+
+export interface SuggestReasoningRequest {
+  companyName: string;
+  website?: string;
+  oneLineDescription?: string;
+  industryServed?: string;
+}
+
+export type SuggestReasoningResponseConfidence = typeof SuggestReasoningResponseConfidence[keyof typeof SuggestReasoningResponseConfidence];
+
+
+export const SuggestReasoningResponseConfidence = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface SuggestReasoningResponse {
+  whyNowPatterns: string[];
+  reasoningOverrides: string[];
+  confidence: SuggestReasoningResponseConfidence;
+  sources: ProfileSource[];
+  notes?: string;
+  researchedAt: string;
 }
 
 export interface BriefActionInput {
@@ -488,20 +490,176 @@ export type CallPrepInput = BriefActionInput & {
   meetingType: MeetingType;
 };
 
-export interface MarketProspectInput {
-  description: string;
-  yourCompany?: YourCompany;
-}
+export type MapRegion = typeof MapRegion[keyof typeof MapRegion];
 
-export interface ProspectCompany {
+
+export const MapRegion = {
+  europe: 'europe',
+  north_america: 'north_america',
+  asia_pacific: 'asia_pacific',
+  latin_america: 'latin_america',
+  middle_east_africa: 'middle_east_africa',
+  group_unallocated: 'group_unallocated',
+} as const;
+
+export type EntityParentRelationship = typeof EntityParentRelationship[keyof typeof EntityParentRelationship];
+
+
+export const EntityParentRelationship = {
+  subsidiary: 'subsidiary',
+  branch: 'branch',
+  affiliate: 'affiliate',
+  division: 'division',
+  joint_venture: 'joint_venture',
+} as const;
+
+export type EntityBuyingAutonomy = typeof EntityBuyingAutonomy[keyof typeof EntityBuyingAutonomy];
+
+
+export const EntityBuyingAutonomy = {
+  independent: 'independent',
+  group_gated: 'group_gated',
+  mixed: 'mixed',
+  unknown: 'unknown',
+} as const;
+
+export type EntityFitTier = typeof EntityFitTier[keyof typeof EntityFitTier];
+
+
+export const EntityFitTier = {
+  strong: 'strong',
+  moderate: 'moderate',
+  skip: 'skip',
+} as const;
+
+export interface EntityBuyer {
   name: string;
-  domain: string;
-  reason: string;
-  estimatedSize?: string;
+  role: string;
+  sourceUrl: string;
+  sourceTitle: string;
+  tenureNote?: string;
+  reportsTo?: string;
 }
 
-export interface MarketProspectResponse {
-  companies: ProspectCompany[];
+export interface MapEntity {
+  id: string;
+  name: string;
+  country: string;
+  region: MapRegion;
+  businessLine: string;
+  parentRelationship: EntityParentRelationship;
+  context: string;
+  buyingAutonomy: EntityBuyingAutonomy;
+  autonomyReason?: string;
+  fitTier: EntityFitTier;
+  fitReason: string;
+  buyers: EntityBuyer[];
+  /** Honest one-liner explaining what was searched for leadership and what gaps remain.
+  Populated when the model could not surface a full executive committee for this entity.
+  Format: "Searched [sources] — [what was found / what to check next]".
+   */
+  leadershipNote?: string;
+  sources: string[];
+}
+
+export interface AccountMapParent {
+  name: string;
+  description: string;
+  headquartersCountry: string;
+  industry: string;
+}
+
+/**
+ * Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA.
+ */
+export type AccountMapRequestRegion = typeof AccountMapRequestRegion[keyof typeof AccountMapRequestRegion];
+
+
+export const AccountMapRequestRegion = {
+  emea: 'emea',
+  apac: 'apac',
+  north_america: 'north_america',
+  latam: 'latam',
+} as const;
+
+export interface AccountMapRequest {
+  company: string;
+  /** Region scope for the map. The selected region is mapped in full depth; other regions appear as a name-only overview. Defaults to EMEA. */
+  region?: AccountMapRequestRegion;
+  yourCompany: YourCompany;
+}
+
+export interface MapCompanySnapshot {
+  size: string;
+  industry: string;
+  location: string;
+  fundingStage: string;
+  techStack?: string;
+  possiblePainPoints?: string[];
+  sources?: BriefSource[];
+}
+
+export interface MapOutreachSource {
+  label: string;
+  detail: string;
+  url?: string;
+  relatedEntity?: string;
+}
+
+export type AccountMapResponseMetaRegion = typeof AccountMapResponseMetaRegion[keyof typeof AccountMapResponseMetaRegion];
+
+
+export const AccountMapResponseMetaRegion = {
+  emea: 'emea',
+  apac: 'apac',
+  north_america: 'north_america',
+  latam: 'latam',
+} as const;
+
+export type AccountMapResponseMetaPass2Status = typeof AccountMapResponseMetaPass2Status[keyof typeof AccountMapResponseMetaPass2Status];
+
+
+export const AccountMapResponseMetaPass2Status = {
+  structure_only: 'structure_only',
+  skipped_insufficient_time: 'skipped_insufficient_time',
+  completed: 'completed',
+  failed: 'failed',
+  not_needed: 'not_needed',
+} as const;
+
+export interface AccountMapPassMeta {
+  model: string;
+  maxSearches: number;
+  searchesUsed: number;
+  elapsedMs: number;
+  /** True when Pass 2 used MAP_DOMAIN_FILTER allowed_domains. */
+  allowedDomains?: boolean;
+}
+
+export interface AccountMapResponseMeta {
+  region: AccountMapResponseMetaRegion;
+  totalElapsedMs: number;
+  entityCount: number;
+  /** Buyers with a non-empty sourceUrl across all entities. */
+  sourcedLeaderCount: number;
+  pass2Status: AccountMapResponseMetaPass2Status;
+  pass1: AccountMapPassMeta;
+  pass2?: AccountMapPassMeta;
+  /** Whether MAP_DOMAIN_FILTER was active for this run. */
+  domainFilterEnabled: boolean;
+}
+
+export interface AccountMapResponse {
+  parent: AccountMapParent;
+  entities: MapEntity[];
+  unmappedEntities: string[];
+  limitations: string;
+  isSingleEntity: boolean;
+  generatedAt: string;
+  sectorPackUsed: string;
+  companySnapshot: MapCompanySnapshot;
+  outreachSources: MapOutreachSource[];
+  meta?: AccountMapResponseMeta;
 }
 
 export interface AccountBriefInput {

@@ -1,21 +1,18 @@
 import { useEffect, useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Building2, Sparkles, Users, Newspaper, Radio, ChevronRight, ChevronDown, Target, Brain, FolderOpen, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Radio, ChevronRight, ChevronDown, Brain, FolderOpen, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { BriefStatusPill } from "@/components/brief-status-pill";
-import { useHistory, clearHistory } from "@/lib/history";
+import { useHistory, clearHistory, getWatchedBriefs } from "@/lib/history";
+import { countScanDue } from "@/lib/signal-tracking";
 import { useIsYourCompanyConfigured } from "@/lib/your-company";
 
 import AccountBriefPage from "./pages/account-brief";
 import YourCompany from "./pages/your-company";
 import ReasoningPage from "./pages/reasoning";
-import ICPs from "./pages/icps";
-import ICPDetail from "./pages/icp-detail";
-import Dashboard from "./pages/dashboard";
 import Signals from "./pages/signals";
-import MarketProspect from "./pages/market-prospect";
 import CallPrepPage from "./pages/call-prep";
 import MyBriefsPage from "./pages/my-briefs";
 import NotFound from "./pages/not-found";
@@ -27,17 +24,11 @@ const NAV_SETUP = [
   { href: "/reasoning", label: "Reasoning", icon: Brain },
 ];
 
-const NAV_RESEARCH = [
+const NAV_RESEARCH_BASE = [
   { href: "/", label: "Search", icon: Sparkles },
-  { href: "/my-briefs", label: "My briefs", icon: FolderOpen },
-  { href: "/prospect", label: "Prospect", icon: Target },
-];
-
-const NAV_WORKSPACE = [
-  { href: "/icps", label: "ICPs", icon: Users },
+  { href: "/my-briefs", label: "My list", icon: FolderOpen },
   { href: "/signals", label: "Signals", icon: Radio },
-  { href: "/dashboard", label: "Dashboard", icon: Newspaper },
-];
+] as const;
 
 function RecentSearches() {
   const history = useHistory();
@@ -81,37 +72,57 @@ function RecentSearches() {
 
 function NavSectionLabel({ children }: { children: string }) {
   return (
-    <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+    <p className="px-4 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
       {children}
     </p>
   );
 }
 
-function SidebarNavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+function SidebarNavLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  badge,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  active: boolean;
+  badge?: number;
+}) {
   return (
     <Link
       href={href}
       className={cn(
         "flex items-center gap-2.5 pl-2.5 pr-3 py-2 rounded-r-md text-sm transition-colors border-l-2",
         active
-          ? "border-foreground bg-foreground/[0.06] text-foreground font-bold"
-          : "border-transparent text-muted-foreground font-medium hover:bg-background/60 hover:text-foreground",
+          ? "border-primary bg-primary/10 text-foreground font-semibold"
+          : "border-transparent text-muted-foreground font-medium hover:bg-background/80 hover:text-foreground",
       )}
     >
-      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-foreground" : "text-muted-foreground")} />
-      {label}
+      <Icon className={cn("w-4 h-4 shrink-0", active ? "text-foreground" : "text-muted-foreground/80")} />
+      <span className="flex-1">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="min-w-[1.25rem] rounded-full bg-amber-500/20 px-1.5 py-0.5 text-center text-[10px] font-bold text-amber-900 dark:text-amber-100">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
 
 function Sidebar() {
   const [location] = useLocation();
+  const history = useHistory();
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
+  const scanDueCount = countScanDue(getWatchedBriefs());
+  const researchNav = NAV_RESEARCH_BASE;
 
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-sidebar flex flex-col">
-      <div className="px-5 py-5 border-b border-border bg-sidebar">
-        <Link href="/your-company" className="flex items-center gap-2.5 font-extrabold tracking-tight text-foreground">
+      <div className="px-4 py-4 border-b border-border bg-sidebar">
+        <Link href="/your-company" className="flex items-center gap-2.5 font-bold tracking-tight text-foreground">
           <BearMark size={32} />
           <span>GTM Intel</span>
         </Link>
@@ -128,20 +139,17 @@ function Sidebar() {
 
         <NavSectionLabel>Research</NavSectionLabel>
         <div className="space-y-0.5">
-          {NAV_RESEARCH.map(({ href, label, icon }) => (
+          {researchNav.map(({ href, label, icon }) => (
             <div key={href}>
-              <SidebarNavLink href={href} label={label} icon={icon} active={isActive(href)} />
+              <SidebarNavLink
+                href={href}
+                label={label}
+                icon={icon}
+                active={isActive(href)}
+                badge={href === "/signals" ? scanDueCount : undefined}
+              />
               {href === "/" && <RecentSearches />}
             </div>
-          ))}
-        </div>
-
-        <div className="my-3 mx-3 border-t border-border" />
-
-        <NavSectionLabel>Workspace</NavSectionLabel>
-        <div className="space-y-0.5">
-          {NAV_WORKSPACE.map(({ href, label, icon }) => (
-            <SidebarNavLink key={href} href={href} label={label} icon={icon} active={isActive(href)} />
           ))}
         </div>
       </nav>
@@ -174,12 +182,8 @@ export default function App() {
             <Route path="/" component={AccountBriefPage} />
             <Route path="/my-briefs" component={MyBriefsPage} />
             <Route path="/prep" component={CallPrepPage} />
-            <Route path="/prospect" component={MarketProspect} />
             <Route path="/your-company" component={YourCompany} />
             <Route path="/reasoning" component={ReasoningPage} />
-            <Route path="/icps" component={ICPs} />
-            <Route path="/icps/:id" component={ICPDetail} />
-            <Route path="/dashboard" component={Dashboard} />
             <Route path="/signals" component={Signals} />
             <Route component={NotFound} />
           </Switch>
