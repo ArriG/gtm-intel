@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Loader2, Radio, Search } from "lucide-react";
 import { scanAccountSignals } from "@workspace/api-client-react";
+import { track } from "@/lib/analytics";
 import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { BriefCard, BriefCardContent } from "@/components/brief-card";
@@ -71,6 +72,7 @@ export default function SignalsPage() {
         signals: result.signals,
         lastScannedAt: result.scannedAt,
       });
+      track("signals_scanned", { company });
       setRefreshKey(key => key + 1);
     } catch (err) {
       setScanErrors(current => ({

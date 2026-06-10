@@ -29,6 +29,7 @@ import type {
   CallPrep,
   CallPrepInput,
   ColdEmailRegenerateInput,
+  CreateFeedbackBody,
   HealthStatus,
   NextTouchInput,
   NextTouchResponse,
@@ -39,6 +40,7 @@ import type {
   SectorPackListResponse,
   SignalOpenerInput,
   SignalOpenerResponse,
+  SubmitFeedbackResponse,
   SuggestProfileRequest,
   SuggestProfileResponse,
   SuggestReasoningRequest,
@@ -851,6 +853,77 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
+
+export const getSubmitFeedbackUrl = () => {
+
+
+
+
+  return `/api/feedback`
+}
+
+/**
+ * @summary Submit thumbs-up or thumbs-down feedback on a feature
+ */
+export const submitFeedback = async (createFeedbackBody: CreateFeedbackBody, options?: RequestInit): Promise<SubmitFeedbackResponse> => {
+
+  return customFetch<SubmitFeedbackResponse>(getSubmitFeedbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createFeedbackBody,)
+  }
+);}
+
+
+
+
+export const getSubmitFeedbackMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitFeedback>>, TError,{data: BodyType<CreateFeedbackBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitFeedback>>, TError,{data: BodyType<CreateFeedbackBody>}, TContext> => {
+
+const mutationKey = ['submitFeedback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitFeedback>>, {data: BodyType<CreateFeedbackBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitFeedback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof submitFeedback>>>
+    export type SubmitFeedbackMutationBody = BodyType<CreateFeedbackBody>
+    export type SubmitFeedbackMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit thumbs-up or thumbs-down feedback on a feature
+ */
+export const useSubmitFeedback = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitFeedback>>, TError,{data: BodyType<CreateFeedbackBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitFeedback>>,
+        TError,
+        {data: BodyType<CreateFeedbackBody>},
+        TContext
+      > => {
+      return useMutation(getSubmitFeedbackMutationOptions(options));
+    }
 
 export const getScanAccountSignalsUrl = () => {
 

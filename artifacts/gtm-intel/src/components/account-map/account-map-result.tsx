@@ -8,6 +8,7 @@ import { MapBackgroundSection } from "./map-background-section";
 import { MapUnmappedSection } from "./map-unmapped-section";
 import { ParentSummaryCard } from "./parent-summary-card";
 import { SingleEntityFallback } from "./single-entity-fallback";
+import { FeedbackWidget } from "@/components/feedback-widget";
 
 export function AccountMapResult({
   map,
@@ -73,6 +74,7 @@ export function AccountMapResult({
       <p className="text-xs text-muted-foreground">
         Generated {new Date(map.generatedAt).toLocaleString("en-GB")} · Sector pack: {map.sectorPackUsed}
       </p>
+      <FeedbackWidget feature="map" company={companyLabel} />
     </div>
   );
 }

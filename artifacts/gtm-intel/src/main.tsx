@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { setBaseUrl } from "@workspace/api-client-react";
 import { getBetaCode } from "@/lib/beta-code";
+import { init as initAnalytics } from "@/lib/analytics";
 import App from "./App";
 import "./index.css";
 
@@ -26,5 +27,7 @@ window.fetch = (input, init = {}) => {
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 if (base) setBaseUrl(base);
+
+initAnalytics();
 
 createRoot(document.getElementById("root")!).render(<App />);

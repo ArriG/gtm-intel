@@ -1029,6 +1029,17 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Submit thumbs-up or thumbs-down feedback on a feature
+ */
+export const SubmitFeedbackBody = zod.object({
+  "rating": zod.enum(['up', 'down']),
+  "comment": zod.string().optional(),
+  "feature": zod.enum(['brief', 'map', 'signals', 'general']),
+  "company": zod.string().optional()
+})
+
+
+/**
  * @summary Scan a researched account for Tier 1 and Tier 2 buying signals
  */
 

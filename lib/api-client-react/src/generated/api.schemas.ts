@@ -9,6 +9,35 @@ export interface HealthStatus {
   status: string;
 }
 
+export type FeedbackRating = typeof FeedbackRating[keyof typeof FeedbackRating];
+
+
+export const FeedbackRating = {
+  up: 'up',
+  down: 'down',
+} as const;
+
+export type FeedbackFeature = typeof FeedbackFeature[keyof typeof FeedbackFeature];
+
+
+export const FeedbackFeature = {
+  brief: 'brief',
+  map: 'map',
+  signals: 'signals',
+  general: 'general',
+} as const;
+
+export interface CreateFeedbackBody {
+  rating: FeedbackRating;
+  comment?: string;
+  feature: FeedbackFeature;
+  company?: string;
+}
+
+export interface SubmitFeedbackResponse {
+  ok: boolean;
+}
+
 /**
  * Tier 1 and Tier 2 buying signal categories for account scans
  */

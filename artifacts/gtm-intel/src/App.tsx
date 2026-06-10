@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Route, Switch, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Building2, Sparkles, Radio, ChevronRight, ChevronDown, Brain, FolderOpen, type LucideIcon } from "lucide-react";
+import { Building2, Sparkles, Radio, ChevronRight, ChevronDown, Brain, FolderOpen, MessageSquare, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
 import { BetaGate } from "@/components/beta-gate";
+import { FeedbackWidget } from "@/components/feedback-widget";
 import { BriefStatusPill } from "@/components/brief-status-pill";
 import { useHistory, clearHistory, getWatchedBriefs } from "@/lib/history";
 import { countScanDue } from "@/lib/signal-tracking";
@@ -116,6 +117,7 @@ function SidebarNavLink({
 function Sidebar() {
   const [location] = useLocation();
   const history = useHistory();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const isActive = (href: string) => href === "/" ? location === "/" : location.startsWith(href);
   const scanDueCount = countScanDue(getWatchedBriefs());
   const researchNav = NAV_RESEARCH_BASE;
@@ -154,6 +156,17 @@ function Sidebar() {
           ))}
         </div>
       </nav>
+      <div className="p-3 border-t border-border mt-auto space-y-2">
+        <button
+          type="button"
+          onClick={() => setFeedbackOpen(open => !open)}
+          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-md transition-colors"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          Send feedback
+        </button>
+        {feedbackOpen && <FeedbackWidget feature="general" className="border-0 bg-transparent p-0" />}
+      </div>
     </aside>
   );
 }

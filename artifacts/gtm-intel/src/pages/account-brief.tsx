@@ -23,6 +23,8 @@ import { BriefStatusSelect } from "@/components/brief-status-select";
 import { NextTouchSection } from "@/components/next-touch-section";
 import { loadYourCompany, yourCompanyForRequest, useIsYourCompanyConfigured, useYourCompany, useMappingEnabled, researchHeroSubtitle, isYourCompanyConfigured } from "@/lib/your-company";
 import { researchLoadingMessage } from "@/lib/research-loading";
+import { track } from "@/lib/analytics";
+import { FeedbackWidget } from "@/components/feedback-widget";
 import { mappingLoadingMessage } from "@/lib/mapping-loading-messages";
 import { AccountMapResult } from "@/components/account-map/account-map-result";
 import { SearchModeToggle, type SearchMode } from "@/components/search-mode-toggle";
@@ -978,6 +980,7 @@ export default function AccountBriefPage() {
       if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error((body as { error?: string }).error || `Request failed (${res.status})`); }
       const data = await res.json() as AccountBrief;
       setBrief(data);
+      track("brief_generated", { company: label });
       const id = Date.now().toString();
       saveToHistory({
         id,
@@ -1034,6 +1037,7 @@ export default function AccountBriefPage() {
         { signal: controller.signal },
       );
       setAccountMap(result);
+      track("map_generated", { company: label, region: mapRegion });
       saveMapSession({ label, url: mapUrl, region: mapRegion, accountMap: result });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
@@ -1132,6 +1136,7 @@ export default function AccountBriefPage() {
         throw new Error((body as { error?: string }).error || `Request failed (${res.status})`);
       }
       setTalkTrack(await res.json() as TalkTrack);
+      track("talk_track_generated", { company: lastLabel });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate talk track.");
     } finally {
@@ -1422,6 +1427,7 @@ export default function AccountBriefPage() {
             </BriefCard>
 
             <ContextPanels linkedinPosts={linkedinPosts} setLinkedinPosts={setLinkedinPosts} ownIntel={ownIntel} setOwnIntel={setOwnIntel} />
+            <FeedbackWidget feature="brief" company={lastLabel} />
           </div>
           );
         })()}

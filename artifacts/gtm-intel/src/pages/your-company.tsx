@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Check, ArrowRight, Pencil, Building2, Brain, Loader2, Sparkles } from "lucide-react";
 import { suggestCompanyProfile, type SuggestProfileResponse } from "@workspace/api-client-react";
+import { track } from "@/lib/analytics";
 import { PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -217,6 +218,7 @@ export default function YourCompanyPage() {
       setSaved(false);
       setErrors([]);
       setSuggestion(result);
+      track("profile_autofilled");
     } catch (err) {
       setSuggestError(
         err instanceof Error ? err.message : "Could not research your company. Try again.",
