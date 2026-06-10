@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Building2, Sparkles, Radio, ChevronRight, ChevronDown, Brain, FolderOpen, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BearMark } from "@/components/bear-mark";
+import { BetaGate } from "@/components/beta-gate";
 import { BriefStatusPill } from "@/components/brief-status-pill";
 import { useHistory, clearHistory, getWatchedBriefs } from "@/lib/history";
 import { countScanDue } from "@/lib/signal-tracking";
@@ -173,22 +174,24 @@ function FirstRunRedirect() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <FirstRunRedirect />
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 min-w-0">
-          <Switch>
-            <Route path="/" component={AccountBriefPage} />
-            <Route path="/my-briefs" component={MyBriefsPage} />
-            <Route path="/prep" component={CallPrepPage} />
-            <Route path="/your-company" component={YourCompany} />
-            <Route path="/reasoning" component={ReasoningPage} />
-            <Route path="/signals" component={Signals} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-      </div>
-    </QueryClientProvider>
+    <BetaGate>
+      <QueryClientProvider client={queryClient}>
+        <FirstRunRedirect />
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <main className="flex-1 min-w-0">
+            <Switch>
+              <Route path="/" component={AccountBriefPage} />
+              <Route path="/my-briefs" component={MyBriefsPage} />
+              <Route path="/prep" component={CallPrepPage} />
+              <Route path="/your-company" component={YourCompany} />
+              <Route path="/reasoning" component={ReasoningPage} />
+              <Route path="/signals" component={Signals} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
+        </div>
+      </QueryClientProvider>
+    </BetaGate>
   );
 }

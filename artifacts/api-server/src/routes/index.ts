@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import betaRouter from "./beta";
 import accountBriefRouter from "./account-brief";
 import nextTouchRouter from "./next-touch";
 import accountMapRouter from "./account-map";
@@ -9,6 +10,7 @@ import yourCompanyRouter from "./your-company";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(betaRouter);
 router.use(yourCompanyRouter);
 router.use(accountBriefRouter);
 router.use(accountMapRouter);
