@@ -16,10 +16,13 @@ window.fetch = (input, init = {}) => {
   if (url.includes("/api")) {
     const code = getBetaCode();
     if (code) {
-      init.headers = {
-        ...(init.headers as Record<string, string>),
-        "x-beta-code": code,
-      };
+      // Build from existing headers via the Headers constructor — spreading a
+      // Headers instance yields {} and silently drops content-type.
+      const headers = new Headers(
+        init.headers ?? (input instanceof Request ? input.headers : undefined),
+      );
+      headers.set("x-beta-code", code);
+      init = { ...init, headers };
     }
   }
   return originalFetch(input, init);
