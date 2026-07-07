@@ -182,7 +182,7 @@ Clearbit autocomplete: browser → `autocomplete.clearbit.com` (no backend proxy
 
 Full walkthrough of recent changes (two-pass design, timeouts, lean Pass 1): [`docs/mapping-changes-explained.md`](mapping-changes-explained.md).
 
-`POST /api/account-map` — two-pass Claude + `web_search` for region-scoped enterprise structure, then leadership on top 5 fit-tier entities. Default model: **Sonnet** (`claude-sonnet-4-6`); override with env `MAPPING_MODEL` / `MAPPING_PASS_2_MODEL` (e.g. Haiku for cost experiments — recommended while tuning).
+`POST /api/account-map` — region-scoped enterprise structure via Claude + `web_search`, with an optional leadership pass on top fit-tier entities. **Cheap by default:** model is **Haiku** (`claude-haiku-4-5-20251001`) and the run is **structure-only** (Pass 1 only, no leadership). Opt into the expensive path with env: `MAPPING_MODEL=claude-sonnet-4-6` and/or `MAP_STRUCTURE_ONLY=0` (re-enables Pass 2); `MAPPING_PASS_2_MODEL` overrides Pass 2 separately.
 
 | Pass | Purpose | Timeout | `max_uses` |
 |------|---------|---------|------------|
@@ -193,9 +193,11 @@ Whole-request budget: 225s server; client abort 235s. Pass 2 skipped if &lt;15s 
 
 **Pass 1 scope:** Lean `companySnapshot` (size/industry/location/fundingStage only — no dedicated searches for snapshot). `groupBackground` removed from mapping — deeper company context belongs in Brief mode. Up to 20 entities (8/region) plus `outreachSources[]` pointing to where unmapped entities live. Pass 1 must **not** open PDF filings, SFCR documents, or regulator register exports — those are Pass 2 only (`PASS_1_SEARCH_RULES` + `structurePackExcerpt()` in `account-map.ts`). Per-pass timing logs: `[account-map] Pass 1 (structure) complete in …ms` in server Console.
 
-**Replit deploy check:** After `git pull`, restart the server. Set `MAPPING_MODEL=claude-haiku-4-5-20251001` for Haiku testing. Console must show `[account-map] runtime config` with `pass1.maxSearches: 3`, `leadershipEnrichCap: 8`, `pass2.timeoutMs: 105000`, and `pass2.searchesPerEntity: true` with `pass2.maxSearches: 8`.
+**Replit deploy check:** After `git pull`, restart the server. Console must show `[account-map] runtime config` with `structureOnly: true` and `pass1Model: "claude-haiku-4-5-20251001"` (the cheap defaults) unless env overrides are set. Two-pass configs to confirm when leadership is enabled: `pass1.maxSearches: 3`, `leadershipEnrichCap: 8`, `pass2.timeoutMs: 105000`, `pass2.searchesPerEntity: true`, `pass2.maxSearches: 8`.
 
-**Smoke test:** `MAP_STRUCTURE_ONLY=1` skips Pass 2 (structure-only, cheapest run).
+**Leadership opt-in:** `MAP_STRUCTURE_ONLY=0` (or `false`) re-enables the Pass 2 leadership run. Anything else (including unset) = structure-only.
+
+**Route deadline guard:** the whole request is raced against `MAPPING_TIMEOUT_MS - 2s` with a per-request `AbortController` whose `signal` is passed to the SDK (RequestOptions, 2nd arg). On deadline the server aborts in-flight calls and returns **504** — it never hangs until the client abort fires.
 
 **Region scope (`region` in request):** AE manually picks a region (`emea`, `apac`, `north_america`, `latam`; default `emea`). The selected region is mapped in **full depth** in `entities[]`; other-region entities are **name-only** in `unmappedEntities[]`. **Enforced in code** via [`account-map-scope.ts`](../artifacts/api-server/src/lib/account-map-scope.ts) before normalize (demotes out-of-scope `entities[]` rows). Pass 1 prompts avoid global structure searches; Pass 2 defaults to **8** leadership targets (`LEADERSHIP_ENRICH_CAP`). Whole-request budget **225s** server / **235s** client abort. UI: **Map another region** for separate NA/APAC/LATAM runs. `REGION_SCOPES` in `account-map.ts` injects regulator hints and `user_location`.
 

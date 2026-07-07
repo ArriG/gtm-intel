@@ -339,7 +339,7 @@ export function parseJsonFromResponse(text: string): unknown {
 export const DEFAULT_SEARCH_MAX_USES = 6;
 
 /** Turn SDK timeout/abort errors into a friendly, user-facing message. */
-function friendlyAiError(err: unknown): Error {
+export function friendlyAiError(err: unknown): Error {
   const name = (err as { name?: string })?.name ?? "";
   const message = err instanceof Error ? err.message : String(err);
   if (

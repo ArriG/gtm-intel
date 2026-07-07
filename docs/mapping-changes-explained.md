@@ -236,9 +236,9 @@ flowchart TB
 
 | Secret | Purpose |
 |--------|---------|
-| `MAPPING_MODEL=claude-haiku-4-5-20251001` | Cheaper/faster while tuning (Pass 1 + Pass 2) |
+| `MAPPING_MODEL=claude-sonnet-4-6` | Opt into Sonnet (default is Haiku — cheap by default) |
 | `MAPPING_PASS_2_MODEL=claude-sonnet-4-6` | Optional: Haiku structure + Sonnet leaders |
-| `MAP_STRUCTURE_ONLY=1` | Skip Pass 2 entirely — cheapest smoke test |
+| `MAP_STRUCTURE_ONLY=0` | Re-enable Pass 2 leadership (default is structure-only — Pass 2 skipped) |
 | `MAP_DOMAIN_FILTER=1` | Pass 2 `allowed_domains` allowlist (regulators + IR anchors); default off |
 | `PASS_1_MAX_SEARCHES`, `MAPPING_TIMEOUT_MS`, etc. | Tune caps/timeouts without code deploy (see `account-map.ts`) |
 

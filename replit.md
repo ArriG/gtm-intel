@@ -38,7 +38,7 @@ An AI-powered research tool for AEs and SDRs — type a company name and get a s
 - ICP scoring is dynamic: the backend fetches your defined ICPs from Postgres at request time and injects them into the Claude prompt for company-specific scoring.
 - Clearbit autocomplete is called directly from the browser (public endpoint, no auth required).
 - LinkedIn posts and own intel are sent in the POST body (`linkedinPosts[]`, `ownIntel`) and injected into the prompt as highest-priority verified context.
-- **Account Map** defaults to `claude-sonnet-4-6` (Sonnet). Briefs and other routes stay on `claude-haiku-4-5-20251001`. Override: `MAPPING_MODEL`, `MAPPING_PASS_2_MODEL` in Secrets.
+- **Account Map is cheap by default:** Haiku (`claude-haiku-4-5-20251001`) + structure-only (no leadership pass). Opt into the expensive path in Secrets: `MAPPING_MODEL=claude-sonnet-4-6`, `MAP_STRUCTURE_ONLY=0` (re-enables Pass 2 leadership), `MAPPING_PASS_2_MODEL` for a Pass-2-only model. Briefs and other routes stay on Haiku.
 
 ## Product
 

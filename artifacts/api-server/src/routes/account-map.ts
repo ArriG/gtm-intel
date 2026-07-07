@@ -26,8 +26,8 @@ const client = new Anthropic({
 });
 
 const MAPPING_PACK_ID = "european-financial-services";
-const DEFAULT_MAPPING_MODEL = "claude-sonnet-4-6";
-/** Revert Mapping to Haiku: MAPPING_MODEL=claude-haiku-4-5-20251001 */
+/** Cheap by default. Opt into Sonnet with MAPPING_MODEL=claude-sonnet-4-6 */
+const DEFAULT_MAPPING_MODEL = "claude-haiku-4-5-20251001";
 const MAPPING_MODEL =
   process.env.MAPPING_MODEL?.trim() || DEFAULT_MAPPING_MODEL;
 const PASS_2_MODEL =
@@ -210,13 +210,15 @@ const MAP_DOMAIN_FILTER =
   process.env.MAP_DOMAIN_FILTER === "1" ||
   process.env.MAP_DOMAIN_FILTER?.toLowerCase() === "true";
 /**
- * Safety switch: set MAP_STRUCTURE_ONLY=1 (or true) to skip the Pass 2 leadership
- * enrichment entirely. Pass 1 alone is the cheapest possible map — use this for a
- * low-cost smoke test before re-enabling the full two-pass run.
+ * Cheap by default: the Pass 2 leadership enrichment (the expensive extra searches)
+ * is SKIPPED unless explicitly enabled with MAP_STRUCTURE_ONLY=0 (or false).
+ * A normal map is a single structure pass — fast, cheap, and reliably returns.
  */
-const STRUCTURE_ONLY =
-  process.env.MAP_STRUCTURE_ONLY === "1" ||
-  process.env.MAP_STRUCTURE_ONLY?.toLowerCase() === "true";
+const STRUCTURE_ONLY = (() => {
+  const raw = process.env.MAP_STRUCTURE_ONLY?.trim().toLowerCase();
+  if (raw === "0" || raw === "false") return false;
+  return true;
+})();
 
 /** Logged once at server boot — confirm Replit pulled latest code after restart. */
 export const ACCOUNT_MAP_RUNTIME_CONFIG = {
@@ -329,6 +331,9 @@ function logAccountMapConfigAtBoot(): void {
 
 logAccountMapConfigAtBoot();
 
+/** Raised when the whole route exceeds its time budget — mapped to HTTP 504. */
+class MappingDeadlineError extends Error {}
+
 function mappingPassError(err: unknown, passLabel: "Pass 1 (structure)" | "Pass 2 (leadership)"): Error {
   const name = (err as { name?: string })?.name ?? "";
   const message = err instanceof Error ? err.message : String(err);
@@ -435,6 +440,7 @@ async function callMappingPass(
   maxTokens: number,
   maxSearches: number,
   timeoutMs: number,
+  signal: AbortSignal,
   region: MapRegion,
   allowedDomains?: string[],
 ): Promise<MappingPassResult> {
@@ -454,6 +460,7 @@ async function callMappingPass(
       {
         timeout: timeoutMs,
         maxRetries: 0,
+        signal,
       },
     );
   } catch (err) {
@@ -544,12 +551,29 @@ router.post("/account-map", async (req, res): Promise<void> => {
   }
 
   const generatedAt = new Date().toISOString();
-  const deadline = Date.now() + MAPPING_TIMEOUT_MS;
   const requestStartedAt = Date.now();
+  // Route deadline guard: abort in-flight SDK calls and respond before the client's
+  // own abort fires — the server must never hang past its budget and silently bill.
+  const routeDeadlineMs = Math.max(MAPPING_TIMEOUT_MS - 2_000, 10_000);
+  const deadline = Date.now() + routeDeadlineMs;
+  const controller = new AbortController();
+  const deadlineTimer = setTimeout(() => controller.abort(), routeDeadlineMs);
+  const deadlineRejection = new Promise<never>((_, reject) => {
+    controller.signal.addEventListener(
+      "abort",
+      () =>
+        reject(
+          new MappingDeadlineError(
+            "Mapping hit the server time budget and was stopped. Try again — the structure-only default is the fastest path.",
+          ),
+        ),
+      { once: true },
+    );
+  });
   let pass2Status: AccountMapResponseMeta["pass2Status"] = "not_needed";
   let pass2Meta: AccountMapPassMeta | undefined;
 
-  try {
+  const runMapping = async (): Promise<void> => {
     const pass1Timeout = Math.min(PASS_1_TIMEOUT_MS, deadline - Date.now());
     const scopeLine = `Focus the full-depth map on ${REGION_SCOPES[region].label}. List other-region entities by name only in unmappedEntities[].`;
     req.log.info(
@@ -567,6 +591,7 @@ Return ONLY the JSON object — no other text.`,
       PASS_1_MAX_TOKENS,
       PASS_1_MAX_SEARCHES,
       pass1Timeout,
+      controller.signal,
       region,
     );
     const structureRaw = pass1.raw;
@@ -590,7 +615,7 @@ Return ONLY the JSON object — no other text.`,
       pass2Status = "structure_only";
       req.log.info(
         { company: companyName },
-        "MAP_STRUCTURE_ONLY enabled — skipping pass 2 leadership enrichment",
+        "Structure-only mode (default) — skipping pass 2 leadership enrichment. Set MAP_STRUCTURE_ONLY=0 to enable leadership.",
       );
     }
 
@@ -624,6 +649,7 @@ Return ONLY the JSON object — no other text.`,
           PASS_2_MAX_TOKENS,
           pass2Searches,
           pass2Timeout,
+          controller.signal,
           region,
           pass2AllowedDomains,
         );
@@ -689,10 +715,22 @@ Return ONLY the JSON object — no other text.`,
       "Account map complete",
     );
     res.json({ ...normalized, meta });
+  };
+
+  try {
+    const mappingPromise = runMapping();
+    // Swallow the late rejection if the deadline wins the race first.
+    mappingPromise.catch(() => {});
+    await Promise.race([mappingPromise, deadlineRejection]);
   } catch (err) {
     const message = err instanceof Error ? err.message : "AI request failed";
     req.log.error({ err, company: companyName }, message);
-    res.status(500).json({ error: message });
+    if (!res.headersSent) {
+      const status = err instanceof MappingDeadlineError ? 504 : 500;
+      res.status(status).json({ error: message });
+    }
+  } finally {
+    clearTimeout(deadlineTimer);
   }
 });
 

@@ -9,6 +9,8 @@ import {
   buildYourCompanyContext,
   callClaudeJson,
   callClaudeJsonWithSearch,
+  DEFAULT_SEARCH_MAX_USES,
+  friendlyAiError,
   parseJsonFromResponse,
   textFromMessageContent,
   yourCompanyHasContext,
@@ -77,29 +79,40 @@ router.post("/account-brief", async (req, res): Promise<void> => {
 ICP SCORING INSTRUCTIONS:
 ${icpContext}${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildDealMotionInstruction(yourCompany)}${buildEmailToneInstruction(tone)}`;
 
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Research timed out — please try again")), composed.timeoutMs),
-  );
-
   try {
-    const message = await Promise.race([
-      client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 4000,
-        tools: [{ type: "web_search_20250305", name: "web_search" } as any],
-        system: systemPrompt,
-        messages: [{
-          role: "user",
-          content: `Research this company across the priority sources and generate a complete account brief: ${parsedUrl.href}
+    // RequestOptions (timeout/maxRetries) MUST be the second arg — a Promise.race
+    // timeout only abandons the promise; the request keeps running and billing.
+    // max_uses caps web searches so a single brief can't run unbounded searches.
+    let message: Anthropic.Message;
+    try {
+      message = await client.messages.create(
+        {
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 4000,
+          tools: [{
+            type: "web_search_20250305",
+            name: "web_search",
+            max_uses: DEFAULT_SEARCH_MAX_USES,
+          } as any],
+          system: systemPrompt,
+          messages: [{
+            role: "user",
+            content: `Research this company across the priority sources and generate a complete account brief: ${parsedUrl.href}
 
 Work through the sources in priority order (${composed.enabledSourceCount} sources configured).
 Stop each search after one attempt if nothing useful is returned. Return the JSON as soon as all configured sources are checked.
 
 Return ONLY the JSON object. No markdown, no explanation.`,
-        }],
-      }),
-      timeoutPromise,
-    ]) as Anthropic.Message;
+          }],
+        },
+        {
+          timeout: composed.timeoutMs,
+          maxRetries: 0,
+        },
+      );
+    } catch (aiErr) {
+      throw friendlyAiError(aiErr);
+    }
 
     const responseText = textFromMessageContent(message.content);
     if (!responseText) {
