@@ -18,6 +18,7 @@ import {
   type YourCompanyInput,
 } from "../lib/brief-ai";
 import { composeAccountBriefPrompt } from "../prompts/compose-system-prompt";
+import { detectAuSegment } from "../lib/research-source-plan";
 import { normalizeAccountBriefWithMeta, normalizeColdEmailOnly } from "../lib/brief-normalize";
 
 const router: IRouter = Router();
@@ -73,7 +74,9 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   const icpContext = buildIcpScoringContext([], userContext, yourCompany);
 
   const tone = emailTone || "direct";
-  const composed = composeAccountBriefPrompt(yourCompany);
+  const companyInput = url.trim();
+  console.info("[account-brief] au segment", detectAuSegment(companyInput));
+  const composed = composeAccountBriefPrompt(yourCompany, companyInput);
   const systemPrompt = `${composed.systemPrompt}
 
 ICP SCORING INSTRUCTIONS:

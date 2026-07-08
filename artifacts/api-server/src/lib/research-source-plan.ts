@@ -21,6 +21,121 @@ SOURCE 4 — LinkedIn leadership signals: Search "site:linkedin.com [CEO name] [
 
 SOURCE 5 — Australian press: Search "[company name] site:afr.com OR site:smartcompany.com.au OR site:fintech.com.au" for recent coverage in the last 12 months.`;
 
+export type AuSegment = "government" | "asx_listed" | "private_default";
+
+export function detectAuSegment(companyInput: string): AuSegment {
+  const s = companyInput.toLowerCase();
+  const govSignals = [
+    ".gov.au", "department of", "dept of", "agency", "commission",
+    "authority", "council", "services australia", "transport for", "ministry",
+  ];
+  if (govSignals.some((g) => s.includes(g))) return "government";
+  const asxSignals = ["asx:", "asx listed", " limited", " ltd"];
+  if (asxSignals.some((a) => s.includes(a))) return "asx_listed";
+  return "private_default";
+}
+
+interface AuResearchArgs {
+  company: string;
+  segment: AuSegment;
+  whyNowPattern?: string;
+  painPointsSolved?: string[];
+  buyerTitles?: string[];
+}
+
+const GOV_SOURCES = `GOVERNMENT:
+- AusTender (tenders.gov.au) or the relevant state portal (NSW eTendering, Buying for Victoria, QTenders): open tenders + recent awards in the seller's category.
+- directory.gov.au (federal) or the agency "our leadership" page: org structure and named executives.
+- Latest corporate plan or annual report LANDING PAGE (HTML only) for stated priorities.
+- ANAO or state Auditor-General findings mentioning the target.
+- Press: The Mandarin, InnovationAus, iTnews.
+Note: for Commonwealth employers the WHS regulator is Comcare, not SafeWork NSW.`;
+
+const ASX_SOURCES = `ASX-LISTED:
+- ASX announcements for the target (last 6 months): results, leadership changes, restructures, guidance changes.
+- Latest annual report or investor presentation LANDING PAGE (HTML only): strategy pillars, risk factors, people & culture disclosures.
+- Press: AFR, Capital Brief, The Australian.
+- LinkedIn posts from C-suite / relevant leaders.`;
+
+const PRIVATE_SOURCES = `PRIVATE:
+- Company website + blog.
+- ABN/ASIC lookup: size, registration, directors.
+- Seek job ads: hiring = pain-point and tech-stack signal.
+- LinkedIn posts from founders/C-suite.
+- Press: AFR, SmartCompany, sector trade press.`;
+
+function orderedSourceLists(segment: AuSegment): string {
+  const lists: Record<AuSegment, string> = {
+    government: GOV_SOURCES,
+    asx_listed: ASX_SOURCES,
+    private_default: PRIVATE_SOURCES,
+  };
+  const first = lists[segment];
+  const rest = Object.entries(lists)
+    .filter(([key]) => key !== segment)
+    .map(([, text]) => text);
+  return [first, ...rest].join("\n\n");
+}
+
+export function buildAuResearchProcedure(args: AuResearchArgs): string {
+  const whyNow = args.whyNowPattern?.trim() || "No why-now pattern provided — infer likely urgency drivers from the seller's pain points.";
+  const pains = args.painPointsSolved?.length ? args.painPointsSolved.join(", ") : "not specified";
+  const titles = args.buyerTitles?.length ? args.buyerTitles.join(", ") : "senior decision-makers";
+
+  return `# RESEARCH PROCEDURE — follow steps in order. Search budget: 6 searches MAXIMUM.
+
+## Step 0 — Verify segment (uses search 1)
+Working segment: ${args.segment}.
+Search 1: "${args.company} Australia" — confirm identity and check:
+- Government body (federal/state/agency/council)? → use GOVERNMENT sources below.
+- ASX-listed (ticker, investor centre)? → use ASX-LISTED sources below.
+- Otherwise → use PRIVATE sources below.
+If the working segment was wrong, switch source lists NOW and note it in sourceSummary.
+
+## Step 1 — Seller-trigger hunt (searches 2–3, the MOST important searches)
+The seller's "why now" pattern is:
+"""${whyNow}"""
+The seller solves: ${pains}.
+
+Translate this into 2 target-specific trigger searches. Rules:
+- Search for events at ${args.company} that CREATE the pain the seller solves — not events that make ${args.company} look commercially successful.
+- Include regulator names, enforcement terms, or disruption terms implied by the why-now pattern (e.g. if the pattern involves a regulator, search "${args.company} + [regulator] + enforcement/notice/prosecution"; if it involves organisational risk, search "${args.company} + restructure OR redundancies OR review OR inquiry").
+- A NEGATIVE event at the target (restructure, adverse finding, dispute, audit criticism) is usually a POSITIVE buying trigger for this seller.
+
+## Step 2 — Segment sources (searches 4–5)
+Use ONLY the list for your confirmed segment:
+
+${orderedSourceLists(args.segment)}
+
+## Step 3 — Buying committee (search 6, only if budget remains)
+Find named holders of these titles at ${args.company}: ${titles}. Prefer leadership pages and LinkedIn.
+
+## HARD RULES
+- NEVER open PDF files (annual reports, budget papers, tender documents, filings). Use HTML announcement pages, summaries, and press coverage. If a fact only exists in a PDF, cite the landing page and flag it in manualResearchTips.
+- Stop searching once you have enough for a call decision. Fewer, better searches beat exhausting the budget.
+- Empty results are fine — record gaps honestly in manualResearchTips rather than searching repeatedly.`;
+}
+
+function isAuResearchPath(yourCompany?: YourCompanyInput): boolean {
+  if (!yourCompany?.geographies?.length) return true;
+  return detectPrimaryRegion(yourCompany.geographies) === "au";
+}
+
+function buildAuResearchProcedureBlock(
+  yourCompany: YourCompanyInput | undefined,
+  companyInput?: string,
+): string {
+  const segment = companyInput ? detectAuSegment(companyInput) : "private_default";
+  const company = companyInput?.trim() || "the target company";
+  return buildAuResearchProcedure({
+    company,
+    segment,
+    whyNowPattern: yourCompany?.whyNowPattern,
+    painPointsSolved: yourCompany?.painPointsSolved,
+    buyerTitles: yourCompany?.buyerTitles,
+  });
+}
+
 function normaliseGeo(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -278,7 +393,14 @@ function sellerContextLine(yourCompany: YourCompanyInput): string {
   return `Seller context: you are researching target accounts for a ${motion} seller offering ${product} into ${industry} across ${geographies}. Prioritise sources and signals relevant to that motion.`;
 }
 
-export function buildResearchSourceInstructions(yourCompany?: YourCompanyInput): string {
+export function buildResearchSourceInstructions(
+  yourCompany?: YourCompanyInput,
+  companyInput?: string,
+): string {
+  if (isAuResearchPath(yourCompany)) {
+    return buildAuResearchProcedureBlock(yourCompany, companyInput);
+  }
+
   if (!yourCompany?.geographies?.length) {
     return DEFAULT_AU_SOURCE_BLOCK;
   }
@@ -296,6 +418,7 @@ ${lines.join("\n\n")}`;
 }
 
 export function countConfiguredSources(yourCompany?: YourCompanyInput): number {
+  if (isAuResearchPath(yourCompany)) return 6;
   if (!yourCompany?.geographies?.length) return 5;
   return buildSourcesForProfile(yourCompany).length;
 }
