@@ -18,7 +18,7 @@ import {
   type YourCompanyInput,
 } from "../lib/brief-ai";
 import { composeAccountBriefPrompt } from "../prompts/compose-system-prompt";
-import { detectAuSegment } from "../lib/research-source-plan";
+import { detectAuSegment, resolveBriefTarget } from "../lib/research-source-plan";
 import { normalizeAccountBriefWithMeta, normalizeColdEmailOnly } from "../lib/brief-normalize";
 
 const router: IRouter = Router();
@@ -49,21 +49,13 @@ router.post("/account-brief", async (req, res): Promise<void> => {
     emailTone?: EmailTone;
   };
 
-  if (!url || typeof url !== "string") {
+  if (!url || typeof url !== "string" || !url.trim()) {
     res.status(400).json({ error: "url is required" });
     return;
   }
 
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(url.startsWith("http") ? url : `https://${url}`);
-  } catch {
-    res.status(400).json({ error: "Invalid URL format" });
-    return;
-  }
-
-  const hostname = parsedUrl.hostname.replace(/^www\./, "");
-  req.log.info({ hostname }, "Generating account brief");
+  const target = resolveBriefTarget(url);
+  req.log.info({ hostname: target.hostname, researchLabel: target.researchLabel }, "Generating account brief");
 
   const userContext = {
     hasLinkedIn: !!(linkedinPosts && linkedinPosts.length > 0),
@@ -74,9 +66,8 @@ router.post("/account-brief", async (req, res): Promise<void> => {
   const icpContext = buildIcpScoringContext([], userContext, yourCompany);
 
   const tone = emailTone || "direct";
-  const companyInput = url.trim();
-  console.info("[account-brief] au segment", detectAuSegment(companyInput));
-  const composed = composeAccountBriefPrompt(yourCompany, companyInput);
+  console.info("[account-brief] au segment", detectAuSegment(target.segmentInput));
+  const composed = composeAccountBriefPrompt(yourCompany, url.trim());
   const systemPrompt = `${composed.systemPrompt}
 
 ICP SCORING INSTRUCTIONS:
@@ -100,10 +91,10 @@ ${icpContext}${buildActionContext(linkedinPosts, ownIntel, yourCompany)}${buildD
           system: systemPrompt,
           messages: [{
             role: "user",
-            content: `Research this company across the priority sources and generate a complete account brief: ${parsedUrl.href}
+            content: `Research this company across the priority sources and generate a complete account brief: ${target.researchLabel}
 
-Work through the sources in priority order (${composed.enabledSourceCount} sources configured).
-Stop each search after one attempt if nothing useful is returned. Return the JSON as soon as all configured sources are checked.
+Follow the research instructions in the system prompt. Search budget: ${composed.enabledSourceCount} searches maximum.
+Stop each search after one attempt if nothing useful is returned. Return the JSON as soon as the research steps are complete.
 
 Return ONLY the JSON object. No markdown, no explanation.`,
           }],
@@ -135,10 +126,10 @@ Return ONLY the JSON object. No markdown, no explanation.`,
     const { normalized, meta } = normalizeAccountBriefWithMeta(brief);
 
     if (meta.derivedOpener) {
-      req.log.info({ hostname }, "Derived cold email opener after model omitted it");
+      req.log.info({ hostname: target.hostname }, "Derived cold email opener after model omitted it");
     }
     if (meta.derivedCallDecision) {
-      req.log.info({ hostname }, "Derived call decision after model omitted it");
+      req.log.info({ hostname: target.hostname }, "Derived call decision after model omitted it");
     }
 
     res.json({

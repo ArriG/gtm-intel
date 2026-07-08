@@ -23,7 +23,57 @@ SOURCE 5 — Australian press: Search "[company name] site:afr.com OR site:smart
 
 export type AuSegment = "government" | "asx_listed" | "private_default";
 
+export type BriefTargetContext = {
+  /** Human-readable name for prompts and the Claude user message */
+  researchLabel: string;
+  /** Combined name/URL string for segment heuristics */
+  segmentInput: string;
+  hostname: string;
+};
+
+/** Resolve a brief search box value (company name or URL) for segment detection and prompts. */
+export function resolveBriefTarget(raw: string): BriefTargetContext {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return { researchLabel: "the target company", segmentInput: "", hostname: "" };
+  }
+
+  const withScheme = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withScheme);
+    const host = parsed.hostname.replace(/^www\./, "");
+    if (host.includes(".")) {
+      return {
+        researchLabel: labelFromDomainHost(host),
+        segmentInput: withScheme,
+        hostname: host,
+      };
+    }
+    const name = host || trimmed.replace(/^https?:\/\//i, "").trim();
+    return {
+      researchLabel: name,
+      segmentInput: name,
+      hostname: name.toLowerCase().replace(/\s+/g, ""),
+    };
+  } catch {
+    const name = trimmed.replace(/^https?:\/\//i, "").trim() || trimmed;
+    return {
+      researchLabel: name,
+      segmentInput: name,
+      hostname: name.toLowerCase().replace(/\s+/g, ""),
+    };
+  }
+}
+
+function labelFromDomainHost(host: string): string {
+  const slug = host.split(".")[0] ?? host;
+  if (!slug) return host;
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
 export function detectAuSegment(companyInput: string): AuSegment {
+  if (!companyInput.trim()) return "private_default";
   const s = companyInput.toLowerCase();
   const govSignals = [
     ".gov.au", "department of", "dept of", "agency", "commission",
@@ -125,10 +175,19 @@ function buildAuResearchProcedureBlock(
   yourCompany: YourCompanyInput | undefined,
   companyInput?: string,
 ): string {
-  const segment = companyInput ? detectAuSegment(companyInput) : "private_default";
-  const company = companyInput?.trim() || "the target company";
+  if (!companyInput?.trim()) {
+    return buildAuResearchProcedure({
+      company: "the target company",
+      segment: "private_default",
+      whyNowPattern: yourCompany?.whyNowPattern,
+      painPointsSolved: yourCompany?.painPointsSolved,
+      buyerTitles: yourCompany?.buyerTitles,
+    });
+  }
+  const target = resolveBriefTarget(companyInput);
+  const segment = detectAuSegment(target.segmentInput);
   return buildAuResearchProcedure({
-    company,
+    company: target.researchLabel,
     segment,
     whyNowPattern: yourCompany?.whyNowPattern,
     painPointsSolved: yourCompany?.painPointsSolved,

@@ -7,6 +7,7 @@ import type { YourCompanyInput } from "../src/lib/brief-ai.ts";
 import {
   detectAuSegment,
   buildResearchSourceInstructions,
+  resolveBriefTarget,
 } from "../src/lib/research-source-plan.ts";
 import { composeAccountBriefPrompt } from "../src/prompts/compose-system-prompt.ts";
 
@@ -52,10 +53,23 @@ function assert(condition: boolean, message: string): void {
 
 console.log("\n=== Phase 1: Segment detection (live brief path) ===\n");
 for (const { label, input, expected } of segmentCases) {
-  const segment = detectAuSegment(input);
+  const target = resolveBriefTarget(input.startsWith("http") ? input : `https://${input}`);
+  const segment = detectAuSegment(target.segmentInput);
   console.log(`[account-brief] au segment ${segment}  ← ${label} ("${input}")`);
   assert(segment === expected, `${label} → ${expected} (got ${segment})`);
 }
+
+console.log("\n=== Phase 1b: resolveBriefTarget (name vs URL) ===\n");
+const servicesTarget = resolveBriefTarget("https://Services Australia");
+assert(servicesTarget.researchLabel === "Services Australia", "Name search preserves researchLabel");
+assert(detectAuSegment(servicesTarget.segmentInput) === "government", "Name search segment via segmentInput");
+
+const qantasUrlTarget = resolveBriefTarget("https://www.qantas.com");
+assert(qantasUrlTarget.researchLabel === "Qantas", "Domain URL humanizes researchLabel");
+assert(
+  buildResearchSourceInstructions(refreshProfile, "https://www.qantas.com").includes('Search 1: "Qantas Australia"'),
+  "Procedure Step 0 uses researchLabel not raw URL",
+);
 
 console.log("\n=== Phase 2: Reasoning preview (no companyInput) ===\n");
 const preview = composeAccountBriefPrompt(refreshProfile);
@@ -82,7 +96,8 @@ assert(
 
 console.log("\n=== Phase 3: Live prompt per test input (procedure segment line) ===\n");
 for (const { label, input, expected } of segmentCases) {
-  const instructions = buildResearchSourceInstructions(refreshProfile, input);
+  const briefInput = input.startsWith("http") ? input : `https://${input}`;
+  const instructions = buildResearchSourceInstructions(refreshProfile, briefInput);
   assert(
     instructions.includes(`Working segment: ${expected}.`),
     `${label} procedure uses segment ${expected}`,
@@ -94,8 +109,8 @@ for (const { label, input, expected } of segmentCases) {
 }
 
 console.log("\n=== Phase 4: Qantas pair (Step 0 vs deterministic ASX) ===\n");
-const qantasWeak = buildResearchSourceInstructions(refreshProfile, "Qantas");
-const qantasStrong = buildResearchSourceInstructions(refreshProfile, "Qantas Airways Limited");
+const qantasWeak = buildResearchSourceInstructions(refreshProfile, "https://Qantas");
+const qantasStrong = buildResearchSourceInstructions(refreshProfile, "https://Qantas Airways Limited");
 assert(qantasWeak.includes("Working segment: private_default."), "Qantas → private_default in procedure");
 assert(qantasStrong.includes("Working segment: asx_listed."), "Qantas Airways Limited → asx_listed in procedure");
 assert(
@@ -125,7 +140,6 @@ assert(
 
 console.log("\n=== Phase 6: Deploy check ===\n");
 console.log("  Local HEAD should be d976053+ on fix/brief-normalize-opener");
-console.log("  Replit: git log -1 --oneline → d976053, then Stop → Run");
 console.log("  Live briefs: watch Console for [account-brief] au segment ... per search");
 
 console.log("\n=== ALL LOCAL CHECKS PASSED ===\n");
