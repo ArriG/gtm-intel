@@ -99,7 +99,7 @@ export function downloadBriefTxt(content: string, companyName: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `gtm-brief-${slug}.txt`;
+  a.download = `g3po-brief-${slug}.txt`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -116,7 +116,7 @@ export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrac
     ? `<h2>Check Manually</h2><ul>${brief.manualResearchTips.map(t => `<li>${t.tip}</li>`).join("")}</ul>`
     : "";
 
-  const html = `<!DOCTYPE html><html><head><title>GTM Brief — ${companyName}</title>
+  const html = `<!DOCTYPE html><html><head><title>G-3PO Brief — ${companyName}</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; color: #111; line-height: 1.5; }
   h1 { font-size: 22px; margin-bottom: 4px; }

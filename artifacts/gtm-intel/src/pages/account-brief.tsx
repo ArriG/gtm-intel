@@ -1156,7 +1156,7 @@ export default function AccountBriefPage() {
         <div className="px-8 pt-12 sm:pt-14 pb-8">
           <PageHero
             showBear
-            eyebrow="GTM research"
+            eyebrow="G-3PO research"
             title="Company snapshots, buying committees, and triggers"
             subtitle={
               isYourCompanyConfigured(yourCompany)

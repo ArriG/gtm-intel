@@ -262,7 +262,7 @@ export default function YourCompanyPage() {
   }
 
   const heroTitle = savedConfigured && !editing
-    ? "Your GTM foundation is set"
+    ? "Your company profile is set"
     : "Start here — this drives everything else";
 
   const heroSubtitle = savedConfigured && !editing
