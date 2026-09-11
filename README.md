@@ -36,7 +36,7 @@ Deploy on [Replit](https://replit.com) — pull from this repo and set `ANTHROPI
 - Region-scoped searches with per-region locality, env-tunable caps and timeouts, stricter region filtering, and telemetry on each pass.
 
 **Design system**
-- Inter font, a lighter neutral canvas, a shared page hero and a restyled sidebar. G-3PO's Bear First mark uses charcoal, ivory and restrained gold; existing interface accents remain unchanged.
+- Inter font, a lighter neutral canvas, a shared page hero and a restyled sidebar. G-3PO's Bear First mark and interface accents use charcoal, ivory and restrained gold.
 
 ## What it does
 
