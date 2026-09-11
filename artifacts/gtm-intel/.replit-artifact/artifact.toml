@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "GTM Intelligence"
+title = "G-3PO"
 version = "1.0.0"
 id = "artifacts/gtm-intel"
 router = "path"

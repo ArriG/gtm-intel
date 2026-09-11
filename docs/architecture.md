@@ -1,4 +1,4 @@
-# GTM Intelligence — Architecture
+# G-3PO — Architecture
 
 Durable record of database, API, and routing decisions. Update this when changing persistence or endpoint shapes.
 

@@ -1,4 +1,4 @@
-# GTM Intelligence
+# G-3PO
 
 An AI-powered research tool for AEs and SDRs — type a company name and get a sourced account brief in ~30 seconds, including company snapshot, ICP fit score, buying committee, recent triggers, and a personalised cold email opener.
 

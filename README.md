@@ -1,13 +1,12 @@
-# GTM Intelligence
+<img src="artifacts/gtm-intel/public/g3po-mark.svg" width="120" alt="G-3PO — Bear First logo" />
 
-An AI-powered research tool for AEs and SDRs. Type a company name, get a sourced account brief in ~30 seconds — company snapshot, ICP fit score, buying committee, recent triggers, cold email opener, and discovery talk track.
+# G-3PO
 
-![GTM Intelligence app — generated account brief](https://github.com/user-attachments/assets/18da5e7d-8a1f-4f2f-aa09-16c544a38169)
+Formerly GTM Intelligence. The product has a new name and a charcoal, ivory and gold space-bear identity; the repository remains `ArriG/gtm-intel`.
 
-### Latest UI (Kraken-style refresh)
+An AI-powered account research tool for AEs and SDRs. Start with a company you already have in mind: research the account, explore its entities and follow company signals. Built to help salespeople make sense of complex organisations and prepare for their next conversation.
 
-<!-- Drag-and-drop your new screenshot here on GitHub to generate the URL -->
-![GTM Intelligence — refreshed search and account map](REPLACE_WITH_UPLOADED_URL)
+![Earlier GTM Intelligence interface, before the G-3PO rebrand](https://github.com/user-attachments/assets/18da5e7d-8a1f-4f2f-aa09-16c544a38169)
 
 Built by a Salesman with 15+ years SaaS experience and zero prior coding background — a portfolio piece demonstrating full-stack product thinking from the seller's chair.
 
@@ -37,7 +36,7 @@ Deploy on [Replit](https://replit.com) — pull from this repo and set `ANTHROPI
 - Region-scoped searches with per-region locality, env-tunable caps and timeouts, stricter region filtering, and telemetry on each pass.
 
 **Design system**
-- Kraken-style refresh: Inter font, a lighter neutral canvas, a shared page hero, a restyled sidebar, and a purple accent with a new bear logo.
+- Inter font, a lighter neutral canvas, a shared page hero and a restyled sidebar. G-3PO's Bear First mark uses charcoal, ivory and restrained gold; existing interface accents remain unchanged.
 
 ## What it does
 

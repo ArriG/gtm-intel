@@ -12,7 +12,7 @@ import {
 export function formatBriefForExport(brief: AccountBrief, companyName: string, talkTrack?: TalkTrack | null): string {
   const pains = snapshotPainPoints(brief);
   const lines = [
-    `GTM INTELLIGENCE BRIEF`,
+    `G-3PO BRIEF`,
     `Company: ${companyName}`,
     `Generated: ${new Date().toLocaleString()}`,
     ``,
@@ -128,7 +128,7 @@ export function printBriefPdf(brief: AccountBrief, companyName: string, talkTrac
   @media print { body { margin: 20px; } }
 </style></head><body>
 <h1>${companyName}</h1>
-<p class="meta">GTM Intelligence Brief · ${new Date().toLocaleDateString()}</p>
+<p class="meta">G-3PO Brief · ${new Date().toLocaleDateString()}</p>
 ${callBlock}
 <h2>Opener</h2>
 <p><em>${brief.coldEmail.opener}</em></p>

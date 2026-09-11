@@ -581,7 +581,7 @@ export default function ReasoningPage() {
 
   const packOptions = packsQuery.data?.packs ?? [];
   const hasOverrides = hasReasoningOverrides(profile);
-  const heroTitle = editing ? "Tune how briefs think" : "How GTM Intel will reason for you";
+  const heroTitle = editing ? "Tune how briefs think" : "How G-3PO will reason for you";
   const heroSubtitle = editing
     ? "Adjust sector pack, why-now patterns, and overrides. Save when you are done."
     : hasOverrides

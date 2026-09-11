@@ -127,7 +127,7 @@ function Sidebar() {
       <div className="px-4 py-4 border-b border-border bg-sidebar">
         <Link href="/your-company" className="flex items-center gap-2.5 font-bold tracking-tight text-foreground">
           <BearMark size={32} />
-          <span>GTM Intel</span>
+          <span>G-3PO</span>
         </Link>
       </div>
       <nav className="flex-1 p-2">

@@ -84,7 +84,7 @@ export function BetaGate({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col items-center gap-3">
             <BearMark size={40} />
             <div>
-              <p className="text-lg font-semibold text-foreground">GTM Intel</p>
+              <p className="text-lg font-semibold text-foreground">G-3PO</p>
               <p className="text-sm text-muted-foreground mt-1">Private beta</p>
             </div>
           </div>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <title>G-3PO — Bear First</title>
+  <path d="M215 72V29" stroke="#25282B" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="215" cy="25" r="9" fill="#E7BC62" stroke="#25282B" stroke-width="3"/>
+  <circle cx="212" cy="22" r="3" fill="#FBE5AC"/>
+  <circle cx="64" cy="77" r="38" fill="#25282B"/>
+  <circle cx="192" cy="77" r="38" fill="#25282B"/>
+  <circle cx="64" cy="77" r="20" fill="#FFF5DC"/>
+  <circle cx="192" cy="77" r="20" fill="#FFF5DC"/>
+  <path d="M128 54C64 54 30 92 30 150C30 205 71 236 128 236C185 236 226 205 226 150C226 92 192 54 128 54Z" fill="#25282B"/>
+  <path d="M100 56L105 83M156 56L151 83" stroke="#77766F" stroke-width="2.5"/>
+  <path d="M105 210L94 231M151 210L162 231" stroke="#1B1E21" stroke-width="4"/>
+  <path d="M128 82C77 82 45 109 45 152C45 197 78 212 128 212C178 212 211 197 211 152C211 109 179 82 128 82Z" stroke="#FFF5DC" stroke-width="6"/>
+  <path d="M128 143C97 143 76 163 76 185C76 209 99 215 128 215C157 215 180 209 180 185C180 163 159 143 128 143Z" fill="#FFF5DC"/>
+  <circle cx="87" cy="134" r="9.5" fill="#FFF5DC"/>
+  <path d="M168 109L174 125L190 131L174 137L168 154L162 137L146 131L162 125Z" fill="#E7BC62"/>
+  <path d="M115 155C119 151 137 151 141 155C146 161 134 172 128 172C122 172 110 161 115 155Z" fill="#202428"/>
+  <path d="M128 169V185M110 178C116 190 140 190 146 178" stroke="#202428" stroke-width="4.5" stroke-linecap="round"/>
+</svg>

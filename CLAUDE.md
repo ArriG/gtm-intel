@@ -1,4 +1,4 @@
-# GTM Intelligence — Claude Code Context
+# G-3PO — Claude Code Context
 
 ## What this project is
 
